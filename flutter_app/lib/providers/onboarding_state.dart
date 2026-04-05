@@ -90,6 +90,7 @@ class OnboardingState extends ChangeNotifier {
 
   // === P42: Pet Skin ===
   String selectedPetSkin = 'default';
+  String? selectedAccessory;
   final List<Map<String, dynamic>> petSkins = [
     {'id': 'default', 'name': 'Classic', 'color': Colors.grey},
     {'id': 'monet', 'name': 'Monet', 'color': Colors.pink},
@@ -295,6 +296,11 @@ class OnboardingState extends ChangeNotifier {
 
   void setPetSkin(String skinId) {
     selectedPetSkin = skinId;
+    notifyListeners();
+  }
+
+  void setPetAccessory(String? accessoryId) {
+    selectedAccessory = accessoryId;
     notifyListeners();
   }
 

@@ -160,6 +160,67 @@ class HivePersistenceService {
     await _quotesBoxInstance?.clear();
   }
   
+  // ===== Notification Settings (P45) =====
+  
+  static Future<void> saveNotificationSetting(String key, bool value) async {
+    final box = _userBoxInstance!;
+    await box.put('notification_$key', value);
+  }
+  
+  static Map<String, bool>? loadNotificationSettings() {
+    final box = _userBoxInstance!;
+    
+    // If no settings saved, return null (use defaults)
+    if (!box.containsKey('notification_mealReminders')) return null;
+    
+    return {
+      'mealReminders': box.get('notification_mealReminders', defaultValue: true) as bool,
+      'waterReminders': box.get('notification_waterReminders', defaultValue: true) as bool,
+      'fastingReminders': box.get('notification_fastingReminders', defaultValue: true) as bool,
+      'dailyDigest': box.get('notification_dailyDigest', defaultValue: false) as bool,
+      'achievementAlerts': box.get('notification_achievementAlerts', defaultValue: true) as bool,
+      'streakReminders': box.get('notification_streakReminders', defaultValue: true) as bool,
+      'motivationalQuotes': box.get('notification_motivationalQuotes', defaultValue: true) as bool,
+      'soundEnabled': box.get('notification_soundEnabled', defaultValue: true) as bool,
+      'vibrationEnabled': box.get('notification_vibrationEnabled', defaultValue: true) as bool,
+    };
+  }
+  
+  // ===== Pet Customization (P42) =====
+  
+  static Future<void> savePetCustomization({
+    required String skinId,
+    String? accessoryId,
+  }) async {
+    final box = _userBoxInstance!;
+    await box.put('pet_skin', skinId);
+    if (accessoryId != null) {
+      await box.put('pet_accessory', accessoryId);
+    }
+  }
+  
+  static Map<String, String?> loadPetCustomization() {
+    final box = _userBoxInstance!;
+    return {
+      'skinId': box.get('pet_skin') as String?,
+      'accessoryId': box.get('pet_accessory') as String?,
+    };
+  }
+  
+  // ===== Celebration Triggered (P41) =====
+  
+  static bool hasShownCelebrationToday() {
+    final box = _userBoxInstance!;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return box.get('celebration_$today', defaultValue: false) as bool;
+  }
+  
+  static Future<void> markCelebrationShown() async {
+    final box = _userBoxInstance!;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    await box.put('celebration_$today', true);
+  }
+  
   // ===== Clear All Data =====
   
   static Future<void> clearAll() async {
