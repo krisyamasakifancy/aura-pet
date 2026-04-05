@@ -75,6 +75,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return NutritionScreen(onComplete: _nextPage);
                 case 7:
                   return ChannelSurveyScreen(onComplete: _nextPage);
+                case 8:
+                  return GoalSurveyScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -3073,6 +3075,291 @@ class _ChannelCard extends StatelessWidget {
                       Icons.check,
                       color: Colors.white,
                       size: 16,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// P9: Goal Survey Screen
+/// ============================================
+class GoalSurveyScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const GoalSurveyScreen({super.key, required this.onComplete});
+
+  @override
+  State<GoalSurveyScreen> createState() => _GoalSurveyScreenState();
+}
+
+class _GoalSurveyScreenState extends State<GoalSurveyScreen> {
+  String? _selectedGoal;
+
+  final List<_GoalOption> _goals = [
+    _GoalOption(
+      id: 'lose_weight',
+      name: 'Lose weight',
+      emoji: '⚖️',
+      description: 'Burn fat and slim down',
+    ),
+    _GoalOption(
+      id: 'maintain',
+      name: 'Maintain weight',
+      emoji: '🎯',
+      description: 'Keep your current shape',
+    ),
+    _GoalOption(
+      id: 'build_muscle',
+      name: 'Build muscle',
+      emoji: '💪',
+      description: 'Get stronger and bigger',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              // 标题
+              const Text(
+                'What is your\nmain goal?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Choose your primary objective',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // 目标选项列表
+              Expanded(
+                child: ListView.separated(
+                  itemCount: _goals.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final goal = _goals[index];
+                    return _GoalCard(
+                      goal: goal,
+                      isSelected: _selectedGoal == goal.id,
+                      onTap: () {
+                        setState(() {
+                          _selectedGoal = goal.id;
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 胶囊按钮
+              GestureDetector(
+                onTap: _selectedGoal != null ? widget.onComplete : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selectedGoal != null
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          )
+                        : null,
+                    color: _selectedGoal == null ? Colors.grey.shade300 : null,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _selectedGoal != null
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: _selectedGoal != null ? Colors.white : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: _selectedGoal != null ? Colors.white : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 目标数据模型
+class _GoalOption {
+  final String id;
+  final String name;
+  final String emoji;
+  final String description;
+  _GoalOption({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.description,
+  });
+}
+
+/// 目标卡片组件
+class _GoalCard extends StatelessWidget {
+  final _GoalOption goal;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _GoalCard({
+    required this.goal,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Row(
+          children: [
+            // Emoji图标
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF4CAF50).withOpacity(0.2)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Text(
+                  goal.emoji,
+                  style: const TextStyle(fontSize: 32),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 名称和描述
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    goal.name,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    goal.description,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 选中指示
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
                     )
                   : null,
             ),
