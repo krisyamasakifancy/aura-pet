@@ -132,6 +132,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return HomeScreen(onComplete: _nextPage);
                 case 28:
                   return NutrientsScreen(onComplete: _nextPage);
+                case 29:
+                  return MoodScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -11784,6 +11786,497 @@ class _NutritionBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _NutritionBearPainter oldDelegate) =>
+      oldDelegate.mood != mood;
+}
+
+
+/// ============================================
+/// P30: Mood Tracking Screen
+/// ============================================
+class MoodScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const MoodScreen({super.key, required this.onComplete});
+
+  @override
+  State<MoodScreen> createState() => _MoodScreenState();
+}
+
+class _MoodScreenState extends State<MoodScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bearController;
+  late Animation<double> _bounceAnim;
+  String? _selectedMood;
+
+  final List<_MoodOption> _moods = [
+    _MoodOption(id: 'happy', emoji: '😊', label: 'Happy'),
+    _MoodOption(id: 'calm', emoji: '😌', label: 'Calm'),
+    _MoodOption(id: 'tired', emoji: '😴', label: 'Tired'),
+    _MoodOption(id: 'energetic', emoji: '💪', label: 'Energetic'),
+    _MoodOption(id: 'stressed', emoji: '😰', label: 'Stressed'),
+  ];
+
+  final List<String> _affirmations = [
+    'Every feeling is welcome here 💜',
+    'You are doing better than you think 🌟',
+    'Take a deep breath. You\'ve got this 🌸',
+    'Progress, not perfection ✨',
+    'Your effort matters every day 💫',
+    'Be kind to yourself today 🌻',
+    'Small steps lead to big changes 🌱',
+    'You are stronger than you feel 💪',
+  ];
+
+  late String _currentAffirmation;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentAffirmation = _affirmations[DateTime.now().second % _affirmations.length];
+    
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _bounceAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -15.0), weight: 25),
+      TweenSequenceItem(tween: Tween(begin: -15.0, end: 8.0), weight: 25),
+      TweenSequenceItem(tween: Tween(begin: 8.0, end: -4.0), weight: 25),
+      TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 25),
+    ]).animate(CurvedAnimation(parent: _bearController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _selectMood(String moodId) {
+    if (_selectedMood != moodId) {
+      setState(() {
+        _selectedMood = moodId;
+      });
+      _bearController.reset();
+      _bearController.forward();
+      _currentAffirmation = _affirmations[DateTime.now().millisecond % _affirmations.length];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Mood',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // 标题
+              const Text(
+                'How are you\nfeeling today?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  height: 1.2,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Canvas表情小熊
+              AnimatedBuilder(
+                animation: _bounceAnim,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _bounceAnim.value),
+                    child: child,
+                  );
+                },
+                child: CustomPaint(
+                  size: const Size(160, 160),
+                  painter: _MoodBearPainter(mood: _selectedMood ?? 'neutral'),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 情绪安抚文案
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: Text(
+                  _currentAffirmation,
+                  key: ValueKey(_currentAffirmation),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // 情绪选择器
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Tap to select your mood',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: _moods.map((mood) {
+                        final isSelected = _selectedMood == mood.id;
+                        return GestureDetector(
+                          onTap: () => _selectMood(mood.id),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? _getMoodColor(mood.id).withOpacity(0.15)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _getMoodColor(mood.id)
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  mood.emoji,
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 36 : 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  mood.label,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 10,
+                                    color: isSelected
+                                        ? _getMoodColor(mood.id)
+                                        : Colors.grey,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: _selectedMood != null ? widget.onComplete : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selectedMood != null
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          )
+                        : null,
+                    color: _selectedMood == null ? Colors.grey.shade300 : null,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _selectedMood != null
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: _selectedMood != null
+                                ? Colors.white
+                                : Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: _selectedMood != null
+                              ? Colors.white
+                              : Colors.grey.shade500,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getMoodColor(String moodId) {
+    switch (moodId) {
+      case 'happy':
+        return const Color(0xFFFFD700);
+      case 'calm':
+        return const Color(0xFF4ECDC4);
+      case 'tired':
+        return const Color(0xFF9B59B6);
+      case 'energetic':
+        return const Color(0xFFFF6B6B);
+      case 'stressed':
+        return const Color(0xFFE67E22);
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
+/// 情绪选项
+class _MoodOption {
+  final String id;
+  final String emoji;
+  final String label;
+
+  _MoodOption({required this.id, required this.emoji, required this.label});
+}
+
+/// Canvas: 表情小熊
+class _MoodBearPainter extends CustomPainter {
+  final String mood;
+
+  _MoodBearPainter({required this.mood});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.1), width: r * 1.4, height: r * 1.0),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.0, height: r * 0.85),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 根据心情绘制表情
+    switch (mood) {
+      case 'happy':
+        _drawHappyFace(canvas, c, r);
+        break;
+      case 'calm':
+        _drawCalmFace(canvas, c, r);
+        break;
+      case 'tired':
+        _drawTiredFace(canvas, c, r);
+        break;
+      case 'energetic':
+        _drawEnergeticFace(canvas, c, r);
+        break;
+      case 'stressed':
+        _drawStressedFace(canvas, c, r);
+        break;
+      default:
+        _drawNeutralFace(canvas, c, r);
+    }
+
+    // 腮红
+    if (mood == 'happy' || mood == 'energetic') {
+      canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+      canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    }
+  }
+
+  void _drawHappyFace(Canvas canvas, Offset c, double r) {
+    // 弯弯笑眼
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15);
+    // 开心嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.2, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.45, c.dx + r * 0.2, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2.5..strokeCap = StrokeCap.round);
+  }
+
+  void _drawCalmFace(Canvas canvas, Offset c, double r) {
+    // 平静半闭眼
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.28, c.dy - r * 0.05), width: r * 0.3, height: r * 0.1), Paint()..color = const Color(0xFF5D4037));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.28, c.dy - r * 0.05), width: r * 0.3, height: r * 0.1), Paint()..color = const Color(0xFF5D4037));
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.38, c.dx + r * 0.15, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+  }
+
+  void _drawTiredFace(Canvas canvas, Offset c, double r) {
+    // 疲惫半闭眼
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.28, c.dy - r * 0.02), width: r * 0.25, height: r * 0.08), Paint()..color = const Color(0xFF5D4037));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.28, c.dy - r * 0.02), width: r * 0.25, height: r * 0.08), Paint()..color = const Color(0xFF5D4037));
+    // 直线嘴
+    canvas.drawLine(Offset(c.dx - r * 0.12, c.dy + r * 0.35), Offset(c.dx + r * 0.12, c.dy + r * 0.35), Paint()..color = const Color(0xFF8B4513)..strokeWidth = 2..strokeCap = StrokeCap.round);
+    // 眼袋
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.28, c.dy + r * 0.1), width: r * 0.2, height: r * 0.06), Paint()..color = const Color(0xFF9B59B6).withOpacity(0.3));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.28, c.dy + r * 0.1), width: r * 0.2, height: r * 0.06), Paint()..color = const Color(0xFF9B59B6).withOpacity(0.3));
+  }
+
+  void _drawEnergeticFace(Canvas canvas, Offset c, double r) {
+    // 闪亮大眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.08), r * 0.18, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.08), r * 0.14, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.08), r * 0.08, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx - r * 0.32, c.dy - r * 0.12), r * 0.04, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.08), r * 0.18, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.08), r * 0.14, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.08), r * 0.08, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.24, c.dy - r * 0.12), r * 0.04, Paint()..color = Colors.white);
+    // 大笑嘴
+    final laughPath = Path();
+    laughPath.moveTo(c.dx - r * 0.25, c.dy + r * 0.25);
+    laughPath.quadraticBezierTo(c.dx, c.dy + r * 0.55, c.dx + r * 0.25, c.dy + r * 0.25);
+    canvas.drawPath(laughPath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2.5..strokeCap = StrokeCap.round);
+    // 星星特效
+    _drawSparkle(canvas, Offset(c.dx - r * 0.9, c.dy - r * 0.9), r * 0.15);
+    _drawSparkle(canvas, Offset(c.dx + r * 0.9, c.dy - r * 0.8), r * 0.12);
+  }
+
+  void _drawStressedFace(Canvas canvas, Offset c, double r) {
+    // 紧张眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.07, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.07, Paint()..color = Colors.black);
+    // 冒汗
+    canvas.drawOval(Rect.fromLTWH(c.dx + r * 0.6, c.dy - r * 0.4, r * 0.15, r * 0.2), Paint()..color = const Color(0xFF64B5F6));
+    canvas.drawOval(Rect.fromLTWH(c.dx + r * 0.4, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFF64B5F6));
+    // 紧绑嘴
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.35), width: r * 0.12, height: r * 0.08), Paint()..color = const Color(0xFF8B4513));
+  }
+
+  void _drawNeutralFace(Canvas canvas, Offset c, double r) {
+    // 普通眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.06, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.06, Paint()..color = Colors.black);
+    // 直线嘴
+    canvas.drawLine(Offset(c.dx - r * 0.12, c.dy + r * 0.32), Offset(c.dx + r * 0.12, c.dy + r * 0.32), Paint()..color = const Color(0xFF8B4513)..strokeWidth = 2..strokeCap = StrokeCap.round);
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.8, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawSparkle(Canvas canvas, Offset center, double size) {
+    final paint = Paint()..color = const Color(0xFFFFD700);
+    // 星形
+    for (int i = 0; i < 4; i++) {
+      final angle = i * math.pi / 2;
+      canvas.drawLine(
+        center + Offset(math.cos(angle) * size * 0.3, math.sin(angle) * size * 0.3),
+        center + Offset(math.cos(angle) * size, math.sin(angle) * size),
+        Paint()..color = const Color(0xFFFFD700)..strokeWidth = 2..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MoodBearPainter oldDelegate) =>
       oldDelegate.mood != mood;
 }
 
