@@ -3,26 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aura-Pet | 横向精准切页</title>
+  <title>Aura-Pet | 44页全量体验</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    :root {
-      --pink: #FF8BA0;
-      --blue: #1976D2;
-      --purple: #6C63FF;
-      --gold: #FFD700;
-      --green: #4CAF50;
-      --orange: #FFB74D;
-    }
-
     body {
       font-family: 'Poppins', -apple-system, sans-serif;
       min-height: 100vh;
       overflow: hidden;
-      background: linear-gradient(180deg, #FFF0F5 0%, #FFE4E1 100%);
+      background: #FFF0F5;
       transition: background 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
@@ -34,21 +25,25 @@
       overflow: hidden;
     }
 
-    /* 页面指示器 */
+    /* 指示器 */
     .indicator {
       position: fixed;
-      top: max(20px, env(safe-area-inset-top));
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 8px;
+      gap: 4px;
       z-index: 100;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.8);
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(10px);
       border-radius: 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: calc(100% - 48px);
+      overflow-x: auto;
     }
+
+    .indicator::-webkit-scrollbar { display: none; }
 
     .dot {
       width: 8px;
@@ -56,15 +51,16 @@
       border-radius: 4px;
       background: #B2BEC3;
       transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      flex-shrink: 0;
     }
 
     .dot.active {
-      width: 24px;
-      background: var(--pink);
+      width: 20px;
+      background: #FF8BA0;
       box-shadow: 0 2px 8px rgba(255,139,160,0.4);
     }
 
-    /* 主内容 */
+    /* 页面 */
     .pages {
       display: flex;
       transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -81,128 +77,61 @@
       padding: 80px 24px 140px;
     }
 
-    /* ========== 页面样式 ========== */
-
-    /* P1: 首页 - 比心小熊 */
-    .page-1 {
-      background: linear-gradient(180deg, #FFF0F5 0%, #FFE4E1 100%);
-    }
-    .page-1 .page-title { color: #2D3436; }
-    .page-1 .page-subtitle { color: #636E72; }
-    .page-1 .glow { background: radial-gradient(circle, rgba(255,139,160,0.4) 0%, transparent 70%); }
-    .page-1 .btn-gradient { background: linear-gradient(135deg, #FF8BA0, #FFB4C4); }
-
-    /* P2: 喝水 - 潜水模式 */
-    .page-2 {
-      background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 100%);
-    }
-    .page-2 .page-title { color: #1565C0; }
-    .page-2 .page-subtitle { color: #1976D2; }
-    .page-2 .glow { background: radial-gradient(circle, rgba(100,181,246,0.4) 0%, transparent 70%); }
-    .page-2 .btn-gradient { background: linear-gradient(135deg, #1976D2, #64B5F6); }
-
-    /* P3: 禁食 - 深眠模式 */
-    .page-3 {
-      background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
-    }
-    .page-3 .page-title { color: #FFFFFF; }
-    .page-3 .page-subtitle { color: rgba(255,255,255,0.7); }
-    .page-3 .glow { background: radial-gradient(circle, rgba(108,99,255,0.4) 0%, transparent 70%); }
-    .page-3 .btn-gradient { background: linear-gradient(135deg, #6C63FF, #9B8FE8); }
-
-    /* P4: 进度 - 折线图 */
-    .page-4 {
-      background: linear-gradient(180deg, #FFF8F0 0%, #FFE4D6 100%);
-    }
-    .page-4 .page-title { color: #2D3436; }
-    .page-4 .page-subtitle { color: #4CAF50; }
-    .page-4 .glow { background: radial-gradient(circle, rgba(255,139,160,0.3) 0%, transparent 70%); }
-    .page-4 .btn-gradient { background: linear-gradient(135deg, #FF8BA0, #FFB74D); }
-
-    /* P5: 营养 - 雷达图 */
-    .page-5 {
-      background: linear-gradient(180deg, #FFF5F5 0%, #FFE8E8 100%);
-    }
-    .page-5 .page-title { color: #2D3436; }
-    .page-5 .page-subtitle { color: #FFB74D; }
-    .page-5 .glow { background: radial-gradient(circle, rgba(255,183,77,0.4) 0%, transparent 70%); }
-    .page-5 .btn-gradient { background: linear-gradient(135deg, #FFB74D, #FFD700); }
-
-    /* P6: 目标 - 滑块 */
-    .page-6 {
-      background: linear-gradient(180deg, #F5F5F5 0%, #EEEEEE 100%);
-    }
-    .page-6 .page-title { color: #2D3436; }
-    .page-6 .page-subtitle { color: #9B8FE8; }
-    .page-6 .glow { background: radial-gradient(circle, rgba(155,143,232,0.4) 0%, transparent 70%); }
-    .page-6 .btn-gradient { background: linear-gradient(135deg, #9B8FE8, #BA68C8); }
-
-    /* P7: 商店 - 皇冠 */
-    .page-7 {
-      background: linear-gradient(180deg, #FFF8E1 0%, #FFE4B5 100%);
-    }
-    .page-7 .page-title { color: #2D3436; }
-    .page-7 .page-subtitle { color: #B8860B; }
-    .page-7 .glow { background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%); }
-    .page-7 .btn-gradient { background: linear-gradient(135deg, #FFD700, #FFE57F); }
-
-    /* P8: Paywall - Premium */
-    .page-8 {
-      background: linear-gradient(180deg, #1A1A2E 0%, #0F3460 100%);
-    }
-    .page-8 .page-title { color: #FFFFFF; }
-    .page-8 .page-subtitle { color: rgba(255,255,255,0.7); }
-    .page-8 .glow { background: radial-gradient(circle, rgba(155,89,182,0.5) 0%, transparent 70%); }
-    .page-8 .btn-gradient { background: linear-gradient(135deg, #9B59B6, #BA68C8); }
-
-    /* ========== 页面内容 ========== */
-
     .page-emoji {
       font-size: 56px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .page-title {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
       margin-bottom: 8px;
       text-align: center;
     }
 
     .page-subtitle {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 500;
       text-align: center;
+      opacity: 0.7;
+    }
+
+    .page-counter {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     /* 小熊 */
     .pet-wrapper {
       position: relative;
-      width: 160px;
-      height: 160px;
+      width: 150px;
+      height: 150px;
       margin: 32px auto;
     }
 
     .pet-glow {
       position: absolute;
-      top: -20%;
-      left: -20%;
-      width: 140%;
-      height: 140%;
+      top: -15%;
+      left: -15%;
+      width: 130%;
+      height: 130%;
       border-radius: 50%;
       animation: glow-pulse 2.5s ease-in-out infinite;
     }
 
     @keyframes glow-pulse {
       0%, 100% { opacity: 0.5; transform: scale(1); }
-      50% { opacity: 0.9; transform: scale(1.08); }
+      50% { opacity: 0.9; transform: scale(1.06); }
     }
 
     .pet {
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: linear-gradient(135deg, #B8C5D0 0%, #8E9EAB 100%);
       position: relative;
       animation: breathe 2.5s ease-in-out infinite;
       box-shadow: 0 12px 40px rgba(0,0,0,0.12);
@@ -215,10 +144,10 @@
 
     .pet-face {
       position: absolute;
-      top: 22%;
-      left: 12%;
-      width: 76%;
-      height: 50%;
+      top: 20%;
+      left: 10%;
+      width: 80%;
+      height: 55%;
       background: white;
       border-radius: 40%;
     }
@@ -229,7 +158,7 @@
       height: 14%;
       background: #2D3436;
       border-radius: 50%;
-      top: 32%;
+      top: 30%;
     }
 
     .pet-eye.left { left: 22%; }
@@ -268,190 +197,48 @@
       border-radius: 0 0 50% 50%;
     }
 
-    /* 比心 */
     .pet-heart {
       position: absolute;
-      bottom: 52%;
-      right: 4%;
-      font-size: 32px;
+      bottom: 50%;
+      right: 2%;
+      font-size: 28px;
       animation: heart-float 1.5s ease-in-out infinite;
-      filter: drop-shadow(0 4px 8px rgba(255,139,160,0.4));
     }
 
     @keyframes heart-float {
       0%, 100% { transform: translateY(0) rotate(-15deg) scale(1); }
-      50% { transform: translateY(-8px) rotate(-15deg) scale(1.15); }
-    }
-
-    /* 潜水模式 */
-    .pet-diving .pet {
-      background: linear-gradient(135deg, #90CAF9 0%, #64B5F6 100%);
-    }
-
-    .goggles {
-      position: absolute;
-      top: 26%;
-      left: 16%;
-      width: 28%;
-      height: 20%;
-      background: rgba(100,181,246,0.5);
-      border: 3px solid white;
-      border-radius: 35%;
-    }
-
-    .goggles.right { left: auto; right: 16%; }
-
-    .bubble {
-      position: absolute;
-      bottom: 8%;
-      right: 2%;
-      font-size: 22px;
+      50% { transform: translateY(-6px) rotate(-15deg) scale(1.12); }
     }
 
     /* 睡眠模式 */
-    .pet-sleeping .pet {
-      background: linear-gradient(135deg, #7986CB 0%, #5C6BC0 100%);
-    }
+    .pet-sleeping .pet { background: linear-gradient(135deg, #7986CB, #5C6BC0); }
+    .pet-sleeping .pet-glow { background: radial-gradient(circle, rgba(108,99,255,0.4) 0%, transparent 70%); }
+    .pet-sleeping .sleep-hat { position: absolute; top: -12%; left: 50%; transform: translateX(-50%); font-size: 28px; }
+    .pet-sleeping .zzz { position: absolute; top: 5%; right: 15%; font-size: 22px; animation: zzz-float 2s ease-in-out infinite; }
+    @keyframes zzz-float { 0%, 100% { transform: translateY(0) rotate(-10deg); opacity: 1; } 50% { transform: translateY(-12px); opacity: 0.4; } }
+    .pet-sleeping .sleep-eye { position: absolute; top: 35%; width: 20%; height: 4%; background: #2D3436; border-radius: 2px; }
+    .pet-sleeping .sleep-eye.left { left: 24%; }
+    .pet-sleeping .sleep-eye.right { right: 24%; }
 
-    .sleep-hat {
-      position: absolute;
-      top: -18%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 32px;
-      filter: drop-shadow(0 4px 8px rgba(108,99,255,0.4));
-    }
-
-    .zzz {
-      position: absolute;
-      top: 2%;
-      right: 12%;
-      font-size: 26px;
-      animation: zzz-float 2s ease-in-out infinite;
-    }
-
-    @keyframes zzz-float {
-      0%, 100% { transform: translateY(0) rotate(-10deg); opacity: 1; }
-      50% { transform: translateY(-18px) rotate(5deg); opacity: 0.4; }
-    }
-
-    .sleep-eye {
-      position: absolute;
-      top: 36%;
-      width: 20%;
-      height: 5%;
-      background: #2D3436;
-      border-radius: 3px;
-    }
-
-    .sleep-eye.left { left: 24%; }
-    .sleep-eye.right { right: 24%; }
+    /* 潜水模式 */
+    .pet-diving .pet { background: linear-gradient(135deg, #64B5F6, #42A5F5); }
+    .pet-diving .pet-glow { background: radial-gradient(circle, rgba(100,181,246,0.4) 0%, transparent 70%); }
+    .pet-diving .goggles { position: absolute; top: 24%; left: 14%; width: 26%; height: 18%; background: rgba(100,181,246,0.5); border: 3px solid white; border-radius: 35%; }
+    .pet-diving .goggles.right { left: auto; right: 14%; }
+    .pet-diving .bubble { position: absolute; bottom: 8%; right: 2%; font-size: 18px; }
 
     /* 庆祝模式 */
-    .pet-celebrating .pet {
-      background: linear-gradient(135deg, #FFD700 0%, #FFB74D 100%);
-      box-shadow: 0 12px 40px rgba(255,215,0,0.3);
-    }
+    .pet-celebrating .pet { background: linear-gradient(135deg, #FFD700, #FFB74D); }
+    .pet-celebrating .pet-glow { background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%); }
+    .pet-celebrating .crown { position: absolute; top: -22%; left: 50%; transform: translateX(-50%); font-size: 36px; }
+    .pet-celebrating .star-eye { position: absolute; top: 28%; font-size: 14px; }
+    .pet-celebrating .star-eye.left { left: 22%; }
+    .pet-celebrating .star-eye.right { right: 22%; }
 
-    .crown {
-      position: absolute;
-      top: -28%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 44px;
-      filter: drop-shadow(0 4px 12px rgba(255,215,0,0.5));
-    }
-
-    .star-eye {
-      position: absolute;
-      top: 30%;
-      font-size: 18px;
-    }
-
-    .star-eye.left { left: 22%; }
-    .star-eye.right { right: 22%; }
-
-    /* 折线图 */
-    .chart-container {
-      width: 220px;
-      height: 100px;
-      margin: 24px auto;
-      position: relative;
-    }
-
-    .chart-glow {
-      position: absolute;
-      top: -10%;
-      left: -10%;
-      width: 120%;
-      height: 120%;
-      background: radial-gradient(ellipse, rgba(255,139,160,0.2) 0%, transparent 70%);
-      border-radius: 20px;
-    }
-
-    .chart {
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.9);
-      border-radius: 20px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .chart svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* 进度条 */
-    .progress-container {
-      width: 200px;
-      margin: 20px auto;
-    }
-
-    .progress-track {
-      height: 10px;
-      background: rgba(155,143,232,0.2);
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #9B8FE8, #BA68C8);
-      border-radius: 5px;
-      transition: width 0.8s ease;
-    }
-
-    /* 雷达图 */
-    .radar-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin: 24px 0;
-    }
-
-    .mini-pet { transform: scale(0.65); }
-
-    .mini-radar {
-      width: 90px;
-      height: 90px;
-      border: 4px solid #FFB74D;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      background: rgba(255,183,77,0.1);
-    }
-
-    /* ========== 底部导航 ========== */
-
+    /* 底部导航 */
     .bottom-nav {
       position: fixed;
-      bottom: max(20px, env(safe-area-inset-bottom));
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       max-width: 386px;
@@ -480,16 +267,8 @@
       flex-shrink: 0;
     }
 
-    .nav-back:active {
-      transform: scale(0.9);
-      background: #EEEEEE;
-    }
-
-    .nav-back svg {
-      width: 22px;
-      height: 22px;
-      color: #636E72;
-    }
+    .nav-back:active { transform: scale(0.9); }
+    .nav-back.hidden { opacity: 0; pointer-events: none; width: 0; overflow: hidden; }
 
     .nav-main {
       flex: 1;
@@ -504,61 +283,26 @@
       color: white;
       font-weight: 700;
       font-size: 15px;
-      font-family: 'Poppins', sans-serif;
       box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     }
 
-    .nav-main:active {
-      transform: scale(0.96);
-    }
-
-    .nav-main .emoji { font-size: 20px; }
-    .nav-main .arrow { font-size: 16px; opacity: 0.7; }
-
-    .nav-back.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .nav-main .arrow.hidden {
-      display: none;
-    }
-
-    /* 页面过渡动画 */
-    .page-content {
-      opacity: 1;
-      transform: translateY(0);
-      transition: all 0.4s ease;
-    }
-
-    .page.leaving .page-content {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-
-    .page.entering .page-content {
-      opacity: 0;
-      transform: translateY(30px);
-    }
+    .nav-main:active { transform: scale(0.96); }
+    .nav-main .arrow { opacity: 0.7; font-size: 14px; }
+    .nav-main .emoji { font-size: 18px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 指示器 -->
     <div class="indicator" id="indicator"></div>
-
-    <!-- 页面 -->
     <div class="pages" id="pages"></div>
-
-    <!-- 底部导航 -->
     <div class="bottom-nav">
       <div class="nav-back hidden" id="navBack">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
       </div>
-      <div class="nav-main btn-gradient" id="navMain">
-        <span class="emoji" id="navEmoji">💕</span>
+      <div class="nav-main" id="navMain">
+        <span class="emoji" id="navEmoji">💫</span>
         <span id="navText">开始体验</span>
         <span class="arrow" id="navArrow">→</span>
       </div>
@@ -566,59 +310,54 @@
   </div>
 
   <script>
-    const TOTAL = 8;
+    const TOTAL = 44;
     let current = 0;
-    let isAnimating = false;
 
     const data = [
-      {
-        emoji: '💕', title: 'Welcome Home!', subtitle: 'Your pet is waiting',
-        petClass: 'pet-hearting', glowColor: 'rgba(255,139,160,0.4)',
-        btnGradient: 'linear-gradient(135deg, #FF8BA0, #FFB4C4)',
-        btnEmoji: '💕', btnText: '开始体验', pageClass: 'page-1'
-      },
-      {
-        emoji: '💧', title: 'Stay Hydrated!', subtitle: 'Diving mode activated',
-        petClass: 'pet-diving', glowColor: 'rgba(100,181,246,0.4)',
-        btnGradient: 'linear-gradient(135deg, #1976D2, #64B5F6)',
-        btnEmoji: '💧', btnText: '记录喝水', pageClass: 'page-2'
-      },
-      {
-        emoji: '🌙', title: 'Deep Sleep Mode', subtitle: '16:8 Fasting',
-        petClass: 'pet-sleeping', glowColor: 'rgba(108,99,255,0.4)',
-        btnGradient: 'linear-gradient(135deg, #6C63FF, #9B8FE8)',
-        btnEmoji: '🌙', btnText: '开启禁食', pageClass: 'page-3'
-      },
-      {
-        emoji: '📈', title: 'Weight Progress', subtitle: '-20kg achieved!',
-        petClass: 'pet-hearting', glowColor: 'rgba(255,139,160,0.3)',
-        btnGradient: 'linear-gradient(135deg, #FF8BA0, #FFB74D)',
-        btnEmoji: '📈', btnText: '查看进度', pageClass: 'page-4'
-      },
-      {
-        emoji: '🍎', title: 'Nutrition Balance', subtitle: 'Well Balanced!',
-        petClass: 'pet-hearting', glowColor: 'rgba(255,183,77,0.4)',
-        btnGradient: 'linear-gradient(135deg, #FFB74D, #FFD700)',
-        btnEmoji: '🍎', btnText: '分析营养', pageClass: 'page-5'
-      },
-      {
-        emoji: '🎯', title: 'Set Your Goals', subtitle: 'Slide to adjust',
-        petClass: 'pet-hearting', glowColor: 'rgba(155,143,232,0.4)',
-        btnGradient: 'linear-gradient(135deg, #9B8FE8, #BA68C8)',
-        btnEmoji: '🎯', btnText: '设置目标', pageClass: 'page-6'
-      },
-      {
-        emoji: '🛍️', title: 'Pet Shop', subtitle: 'Unlock new skins!',
-        petClass: 'pet-celebrating', glowColor: 'rgba(255,215,0,0.4)',
-        btnGradient: 'linear-gradient(135deg, #FFD700, #FFE57F)',
-        btnEmoji: '🛍️', btnText: '逛逛商店', pageClass: 'page-7'
-      },
-      {
-        emoji: '👑', title: 'Unlock Premium', subtitle: 'Unlock new world',
-        petClass: 'pet-celebrating', glowColor: 'rgba(155,89,182,0.5)',
-        btnGradient: 'linear-gradient(135deg, #9B59B6, #BA68C8)',
-        btnEmoji: '👑', btnText: '解锁 premium', pageClass: 'page-8'
-      }
+      {emoji: '💫', title: 'Aura-Pet', subtitle: 'Welcome!', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🌟', title: 'Track Journey', subtitle: 'Your progress matters', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '💕', title: 'Pet Misses You', subtitle: 'Come play with me!', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '✨', title: 'Start Today', subtitle: 'Begin your journey', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '🏠', title: 'Good Morning!', subtitle: 'Your pet is waiting', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '📸', title: 'Snap & Log', subtitle: 'AI food recognition', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '🍽️', title: 'Delicious!', subtitle: '320 kcal logged', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '📋', title: 'Meal History', subtitle: 'Track your meals', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '🍎', title: 'Nutrition Info', subtitle: 'Balanced diet', petState: 'hearting', bg: '#FFF5F5', glow: 'rgba(255,183,77,0.4)', color: '#FFB74D'},
+      {emoji: '💧', title: 'Stay Hydrated!', subtitle: 'Diving mode', petState: 'diving', bg: '#E3F2FD', glow: 'rgba(100,181,246,0.4)', color: '#1976D2'},
+      {emoji: '⚖️', title: 'Weight Log', subtitle: '65.5 kg today', petState: 'hearting', bg: '#FFF8F0', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '📊', title: 'BMI Calculator', subtitle: '22.5 - Healthy', petState: 'hearting', bg: '#FFF8F0', glow: 'rgba(255,183,77,0.4)', color: '#FFB74D'},
+      {emoji: '🌙', title: '16:8 Fasting', subtitle: 'Deep sleep mode', petState: 'sleeping', bg: '#1A1A2E', glow: 'rgba(108,99,255,0.4)', color: '#6C63FF'},
+      {emoji: '⏰', title: 'Fasting Schedule', subtitle: 'Set your plan', petState: 'hearting', bg: '#E8F5E9', glow: 'rgba(76,175,80,0.4)', color: '#4CAF50'},
+      {emoji: '📈', title: 'Progress', subtitle: '-5kg this month', petState: 'hearting', bg: '#FFF8F0', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '📅', title: 'Weekly Report', subtitle: '7 days streak', petState: 'hearting', bg: '#FFF8F0', glow: 'rgba(255,183,77,0.4)', color: '#FFB74D'},
+      {emoji: '📆', title: 'Monthly Report', subtitle: '30 days streak', petState: 'hearting', bg: '#FFF8F0', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '🏆', title: 'Achievements', subtitle: '12 badges earned', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🎖️', title: 'Badge Unlocked', subtitle: 'Consistency King', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🛍️', title: 'Pet Shop', subtitle: 'Unlock new skins', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🎁', title: 'Product Detail', subtitle: 'Royal Crown - 500 coins', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '💳', title: 'Confirm Purchase', subtitle: 'Royal Crown x1', petState: 'celebrating', bg: '#FFE4B5', glow: 'rgba(155,89,182,0.4)', color: '#9B59B6'},
+      {emoji: '🐻', title: 'My Pet', subtitle: 'Level 15 Bear', petState: 'hearting', bg: '#FFF0F5', glow: 'rgba(255,139,160,0.4)', color: '#FF8BA0'},
+      {emoji: '👗', title: 'Dress Up', subtitle: 'Customize your pet', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '👤', title: 'Profile', subtitle: 'Edit your info', petState: 'hearting', bg: '#F5F5F5', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '⚙️', title: 'Settings', subtitle: 'Preferences', petState: 'hearting', bg: '#FAFAFA', glow: 'rgba(99,110,114,0.3)', color: '#636E72'},
+      {emoji: '🔔', title: 'Notifications', subtitle: 'Stay informed', petState: 'hearting', bg: '#F5F5F5', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '🎯', title: 'Set Goals', subtitle: 'Define your targets', petState: 'hearting', bg: '#F0F4FF', glow: 'rgba(155,143,232,0.4)', color: '#9B8FE8'},
+      {emoji: '👑', title: 'Go Premium', subtitle: 'Unlock all features', petState: 'celebrating', bg: '#1A1A2E', glow: 'rgba(155,89,182,0.5)', color: '#9B59B6'},
+      {emoji: '🔐', title: 'Welcome Back', subtitle: 'Sign in to continue', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '📝', title: 'Create Account', subtitle: 'Join our family', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '🔑', title: 'Reset Password', subtitle: 'Recover your account', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '🔍', title: 'Search', subtitle: 'Find anything', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '📅', title: 'Calendar', subtitle: 'Your schedule', petState: 'hearting', bg: '#E3F2FD', glow: 'rgba(25,118,210,0.4)', color: '#1976D2'},
+      {emoji: '🔄', title: 'Sync Data', subtitle: 'Cloud backup', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '❓', title: 'Help & Support', subtitle: 'We are here', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: 'ℹ️', title: 'About Us', subtitle: 'Learn more', petState: 'hearting', bg: '#FFFFFF', glow: 'rgba(107,158,184,0.4)', color: '#6B9EB8'},
+      {emoji: '🔒', title: 'Privacy Policy', subtitle: 'Your data is safe', petState: 'hearting', bg: '#FAFAFA', glow: 'rgba(99,110,114,0.3)', color: '#636E72'},
+      {emoji: '📜', title: 'Terms of Service', subtitle: 'Read our terms', petState: 'hearting', bg: '#FAFAFA', glow: 'rgba(99,110,114,0.3)', color: '#636E72'},
+      {emoji: '🏅', title: 'Hall of Fame', subtitle: 'Top performers', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '✅', title: 'Daily Tasks', subtitle: '3/5 completed', petState: 'hearting', bg: '#E8F5E9', glow: 'rgba(76,175,80,0.4)', color: '#4CAF50'},
+      {emoji: '🎉', title: 'Activities', subtitle: 'Join events', petState: 'celebrating', bg: '#FFF8E1', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🎊', title: 'Congratulations!', subtitle: 'Goal achieved!', petState: 'celebrating', bg: '#FFE4B5', glow: 'rgba(255,215,0,0.4)', color: '#FFD700'},
+      {emoji: '🎉', title: 'All Done!', subtitle: 'Mission complete', petState: 'celebrating', bg: '#FFD700', glow: 'rgba(255,183,77,0.4)', color: '#FFB74D'},
     ];
 
     const pagesEl = document.getElementById('pages');
@@ -631,167 +370,87 @@
 
     // 创建页面
     data.forEach((d, i) => {
-      // 指示器点
       const dot = document.createElement('div');
       dot.className = 'dot' + (i === 0 ? ' active' : '');
       indicatorEl.appendChild(dot);
 
-      // 页面
       const page = document.createElement('div');
-      page.className = `page ${d.pageClass}`;
+      page.className = 'page';
+      page.style.background = `linear-gradient(180deg, ${d.bg} 0%, ${adjustColor(d.bg, 20)} 100%)`;
+      page.style.color = isDark(d.bg) ? 'white' : '#2D3436';
       page.innerHTML = `
-        <div class="page-content">
-          <div class="page-emoji">${d.emoji}</div>
-          ${buildPet(d.petClass, d.glowColor)}
-          <h1 class="page-title">${d.title}</h1>
-          <p class="page-subtitle">${d.subtitle}</p>
-          ${buildExtra(i)}
+        <div class="page-emoji">${d.emoji}</div>
+        <div class="pet-wrapper pet-${d.petState}">
+          <div class="pet-glow" style="background: ${d.glow};"></div>
+          <div class="pet">
+            <div class="pet-face">
+              ${buildPetExtras(d.petState)}
+            </div>
+          </div>
         </div>
+        <h1 class="page-title">${d.title}</h1>
+        <p class="page-subtitle">${d.subtitle}</p>
+        <div class="page-counter">P${String(i+1).padStart(2,'0')}/44</div>
       `;
       pagesEl.appendChild(page);
     });
 
-    function buildPet(petClass, glowColor) {
-      let extras = '';
-      
-      if (petClass === 'pet-diving') {
-        extras = '<div class="goggles"></div><div class="goggles right"></div><div class="bubble">🫧</div>';
-      } else if (petClass === 'pet-sleeping') {
-        extras = '<div class="sleep-hat">⭐</div><div class="zzz">💤</div><div class="sleep-eye left"></div><div class="sleep-eye right"></div>';
-      } else if (petClass === 'pet-celebrating') {
-        extras = '<div class="crown">👑</div><div class="star-eye left">⭐</div><div class="star-eye right">⭐</div>';
+    function buildPetExtras(state) {
+      if (state === 'sleeping') {
+        return `<div class="sleep-hat">⭐</div><div class="sleep-eye left"></div><div class="sleep-eye right"></div><div class="zzz">💤</div>`;
+      } else if (state === 'diving') {
+        return `<div class="goggles"></div><div class="goggles right"></div><div class="bubble">🫧</div>`;
+      } else if (state === 'celebrating') {
+        return `<div class="crown">👑</div><div class="star-eye left">⭐</div><div class="star-eye right">⭐</div>`;
       } else {
-        extras = '<div class="pet-heart">💕</div>';
+        return `<div class="pet-eye left"><div class="pet-eye-shine"></div></div><div class="pet-eye right"><div class="pet-eye-shine"></div></div><div class="pet-blush left"></div><div class="pet-blush right"></div><div class="pet-mouth"></div><div class="pet-heart">💕</div>`;
       }
-
-      return `
-        <div class="pet-wrapper ${petClass}">
-          <div class="pet-glow" style="background: ${glowColor};"></div>
-          <div class="pet">
-            <div class="pet-face">
-              <div class="pet-eye left"><div class="pet-eye-shine"></div></div>
-              <div class="pet-eye right"><div class="pet-eye-shine"></div></div>
-              <div class="pet-blush left"></div>
-              <div class="pet-blush right"></div>
-              <div class="pet-mouth"></div>
-            </div>
-            ${extras}
-          </div>
-        </div>
-      `;
     }
 
-    function buildExtra(index) {
-      switch (index) {
-        case 3: // 进度
-          return `
-            <div class="chart-container">
-              <div class="chart-glow"></div>
-              <div class="chart">
-                <svg viewBox="0 0 220 100" preserveAspectRatio="none">
-                  <polyline
-                    points="0,80 30,70 60,75 90,50 120,55 150,35 180,40 220,20"
-                    fill="none"
-                    stroke="#FF8BA0"
-                    stroke-width="4"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <circle cx="180" cy="40" r="6" fill="white" stroke="#FF8BA0" stroke-width="3"/>
-                </svg>
-              </div>
-            </div>
-          `;
-        case 4: // 营养
-          return `
-            <div class="radar-row">
-              <div class="mini-pet">${buildPet('pet-hearting', 'rgba(255,183,77,0.4)')}</div>
-              <div class="mini-radar">📊</div>
-            </div>
-          `;
-        case 5: // 目标
-          return `
-            <div class="progress-container">
-              <div class="progress-track">
-                <div class="progress-fill" style="width: 65%;"></div>
-              </div>
-            </div>
-          `;
-        default:
-          return '';
-      }
+    function adjustColor(hex, amount) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = Math.min(255, (num >> 16) + amount);
+      const g = Math.min(255, ((num >> 8) & 0x00FF) + amount);
+      const b = Math.min(255, (num & 0x0000FF) + amount);
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+
+    function isDark(hex) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = num >> 16;
+      const g = (num >> 8) & 0x00FF;
+      const b = num & 0x0000FF;
+      return (r * 299 + g * 587 + b * 114) / 1000 < 128;
     }
 
     function update() {
-      // 移动页面
       pagesEl.style.transform = `translateX(-${current * 100}%)`;
-
-      // 更新指示器
-      document.querySelectorAll('.dot').forEach((dot, i) => {
-        dot.classList.toggle('active', i === current);
-      });
-
-      // 更新背景
-      document.body.className = data[current].pageClass;
-
-      // 更新按钮
-      navMain.style.background = data[current].btnGradient;
-      navEmoji.textContent = data[current].btnEmoji;
-      navText.textContent = data[current].btnText;
-
-      // 导航状态
+      document.querySelectorAll('.dot').forEach((dot, i) => dot.classList.toggle('active', i === current));
+      body.style.background = data[current].bg;
+      
+      const isLast = current === TOTAL - 1;
+      navMain.style.background = `linear-gradient(135deg, ${data[current].color}, ${adjustColor(data[current].color.replace('#', ''), 30)})`;
+      navEmoji.textContent = data[current].emoji;
+      navText.textContent = isLast ? '完成' : '下一步';
+      navArrow.style.opacity = isLast ? '0' : '1';
       navBack.classList.toggle('hidden', current === 0);
-      navArrow.classList.toggle('hidden', current === TOTAL - 1);
-
-      // 页面动画
-      const page = pagesEl.children[current];
-      page.classList.remove('leaving');
-      page.classList.add('entering');
-      setTimeout(() => page.classList.remove('entering'), 50);
-
-      // 震动反馈
+      
       if (navigator.vibrate) navigator.vibrate(8);
     }
 
-    function next() {
-      if (current < TOTAL - 1 && !isAnimating) {
-        isAnimating = true;
-        const page = pagesEl.children[current];
-        page.classList.add('leaving');
-        
-        setTimeout(() => {
-          current++;
-          update();
-          setTimeout(() => isAnimating = false, 600);
-        }, 150);
-      }
-    }
+    function next() { if (current < TOTAL - 1) { current++; update(); } }
+    function prev() { if (current > 0) { current--; update(); } }
 
-    function prev() {
-      if (current > 0 && !isAnimating) {
-        isAnimating = true;
-        current--;
-        update();
-        setTimeout(() => isAnimating = false, 600);
-      }
-    }
-
-    // 事件
     navMain.addEventListener('click', next);
     navBack.addEventListener('click', prev);
 
-    // 触摸滑动
     let startX = 0;
     document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
     document.addEventListener('touchend', e => {
       const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 60) {
-        if (diff > 0) next();
-        else prev();
-      }
+      if (Math.abs(diff) > 60) { diff > 0 ? next() : prev(); }
     });
 
-    // 键盘
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight' || e.key === ' ') next();
       if (e.key === 'ArrowLeft') prev();
