@@ -156,6 +156,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return ProfileScreen(onComplete: _nextPage);
                 case 39:
                   return SettingsScreen(onComplete: _nextPage);
+                case 40:
+                  return GoalReachedScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -16779,6 +16781,527 @@ class _SettingsBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P41: Goal Reached Screen
+/// ============================================
+class GoalReachedScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const GoalReachedScreen({super.key, required this.onComplete});
+
+  @override
+  State<GoalReachedScreen> createState() => _GoalReachedScreenState();
+}
+
+class _GoalReachedScreenState extends State<GoalReachedScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _bearController;
+  late AnimationController _confettiController;
+  late Animation<double> _bearBounce;
+  late Animation<double> _bearScale;
+  late Animation<double> _confettiAnim;
+
+  // 模拟数据
+  final int _caloriesGoal = 1850;
+  final int _caloriesActual = 1850;
+  final double _waterGoal = 2.5;
+  final double _waterActual = 2.5;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 小熊欢呼动画
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _bearBounce = Tween<double>(begin: 0, end: 15).animate(
+      CurvedAnimation(parent: _bearController, curve: Curves.easeInOut),
+    );
+
+    _bearScale = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _bearController, curve: Curves.elasticOut),
+    );
+
+    // Confetti动画
+    _confettiController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..forward();
+
+    _confettiAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _confettiController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: Stack(
+        children: [
+          // 莫奈色渐变背景
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFF8E7), // 淡黄
+                  Color(0xFFE8F5E9), // 淡绿
+                  Color(0xFFE3F2FD), // 淡蓝
+                ],
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 32),
+
+                // 标题
+                const Text(
+                  '🎉 Daily Goal Reached! 🎉',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Amazing work today!',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // 达标卡片
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      // 卡路里达标
+                      _GoalCard(
+                        emoji: '🔥',
+                        title: 'Calories',
+                        current: _caloriesActual,
+                        goal: _caloriesGoal,
+                        unit: 'kcal',
+                        color: const Color(0xFFFF6B6B),
+                        progress: _caloriesActual / _caloriesGoal,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // 饮水达标
+                      _GoalCard(
+                        emoji: '💧',
+                        title: 'Water',
+                        current: _waterActual,
+                        goal: _waterGoal,
+                        unit: 'L',
+                        color: const Color(0xFF64B5F6),
+                        progress: _waterActual / _waterGoal,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Canvas小熊欢呼动画
+                AnimatedBuilder(
+                  animation: _bearController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, -_bearBounce.value),
+                      child: Transform.scale(
+                        scale: _bearScale.value,
+                        alignment: Alignment.bottomCenter,
+                        child: CustomPaint(
+                          size: const Size(120, 120),
+                          painter: _CelebratingBearPainter(
+                            waveProgress: _bearController.value,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // 鼓励语
+                Text(
+                  'You\'re unstoppable! 🌟',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFFF6B6B),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Next胶囊按钮
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 56,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Next',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 全屏Confetti
+          AnimatedBuilder(
+            animation: _confettiAnim,
+            builder: (context, child) {
+              return CustomPaint(
+                size: Size.infinite,
+                painter: _MonetConfettiPainter(progress: _confettiAnim.value),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 达标卡片
+class _GoalCard extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final num current;
+  final num goal;
+  final String unit;
+  final Color color;
+  final double progress;
+
+  const _GoalCard({
+    required this.emoji,
+    required this.title,
+    required this.current,
+    required this.goal,
+    required this.unit,
+    required this.color,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const Spacer(),
+              // 勾选标记
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, color: Colors.white, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 数值
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${unit == 'kcal' ? current.toStringAsFixed(0) : current.toStringAsFixed(1)}',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 36,
+                  color: color,
+                ),
+              ),
+              Text(
+                ' / ${unit == 'kcal' ? goal.toStringAsFixed(0) : goal.toStringAsFixed(1)} $unit',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 进度条
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: color.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Canvas: 欢呼小熊
+class _CelebratingBearPainter extends CustomPainter {
+  final double waveProgress;
+
+  _CelebratingBearPainter({required this.waveProgress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // 身体
+    final bodyPath = Path();
+    bodyPath.addOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.3), width: r * 1.2, height: r * 1.0));
+    canvas.drawPath(bodyPath, Paint()..color = const Color(0xFFD4A574));
+
+    // 头
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 欢呼手臂 (左右摇摆)
+    final armWave = math.sin(waveProgress * math.pi * 2) * 0.3;
+    
+    // 左臂
+    canvas.save();
+    canvas.translate(c.dx - r * 0.8, c.dy);
+    canvas.rotate(-0.5 + armWave);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -r * 0.3), width: r * 0.4, height: r * 0.7), Paint()..color = const Color(0xFFD4A574));
+    canvas.restore();
+
+    // 右臂
+    canvas.save();
+    canvas.translate(c.dx + r * 0.8, c.dy);
+    canvas.rotate(0.5 - armWave);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -r * 0.3), width: r * 0.4, height: r * 0.7), Paint()..color = const Color(0xFFD4A574));
+    canvas.restore();
+
+    // 开心眼睛 (眯眼笑)
+    final eyeY = c.dy - r * 0.05;
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, eyeY), r * 0.12);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, eyeY), r * 0.12);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 张嘴大笑
+    final mouthPath = Path();
+    mouthPath.moveTo(c.dx - r * 0.2, c.dy + r * 0.25);
+    mouthPath.quadraticBezierTo(c.dx, c.dy + r * 0.5, c.dx + r * 0.2, c.dy + r * 0.25);
+    mouthPath.quadraticBezierTo(c.dx, c.dy + r * 0.35, c.dx - r * 0.2, c.dy + r * 0.25);
+    canvas.drawPath(mouthPath, Paint()..color = const Color(0xFFFF6B6B));
+
+    // 星星装饰
+    _drawStar(canvas, Offset(c.dx - r * 1.2, c.dy - r * 0.5), 8, const Color(0xFFFFD700));
+    _drawStar(canvas, Offset(c.dx + r * 1.2, c.dy - r * 0.8), 6, const Color(0xFFFFD700));
+    _drawStar(canvas, Offset(c.dx - r * 0.5, c.dy - r * 1.2), 5, const Color(0xFFFFD700));
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.6, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawStar(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 144 - 90) * math.pi / 180;
+      final x = center.dx + math.cos(angle) * size;
+      final y = center.dy + math.sin(angle) * size;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CelebratingBearPainter oldDelegate) =>
+      oldDelegate.waveProgress != waveProgress;
+}
+
+/// Canvas: 莫奈彩纸
+class _MonetConfettiPainter extends CustomPainter {
+  final double progress;
+  final math.Random _random = math.Random(42);
+
+  // 莫奈色系
+  static const _colors = [
+    Color(0xFFFF6B6B), // 红
+    Color(0xFFFFE066), // 黄
+    Color(0xFF4ECDC4), // 青
+    Color(0xFF64B5F6), // 蓝
+    Color(0xFFDDA0DD), // 紫
+    Color(0xFFFFB5B5), // 粉
+    Color(0xFF8BC34A), // 绿
+  ];
+
+  _MonetConfettiPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < 60; i++) {
+      final seed = _random.nextDouble();
+      final startX = _random.nextDouble() * size.width;
+      final startY = -20.0 - _random.nextDouble() * 100;
+      final endY = size.height + 50;
+
+      final x = startX + math.sin(seed * 10 + progress * 5) * 30;
+      final y = startY + (endY - startY) * progress + _random.nextDouble() * 50 * progress;
+      final opacity = (1 - progress).clamp(0.0, 1.0);
+      final color = _colors[_random.nextInt(_colors.length)].withOpacity(opacity);
+      final shapeSize = 4.0 + _random.nextDouble() * 8;
+
+      // 旋转
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(progress * math.pi * 2 + seed * 10);
+
+      final paint = Paint()..color = color;
+      final shapeType = _random.nextInt(4);
+
+      switch (shapeType) {
+        case 0: // 圆形
+          canvas.drawCircle(Offset.zero, shapeSize / 2, paint);
+          break;
+        case 1: // 矩形
+          canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: shapeSize, height: shapeSize * 0.6), paint);
+          break;
+        case 2: // 三角形
+          final path = Path();
+          path.moveTo(0, -shapeSize / 2);
+          path.lineTo(-shapeSize / 2, shapeSize / 2);
+          path.lineTo(shapeSize / 2, shapeSize / 2);
+          path.close();
+          canvas.drawPath(path, paint);
+          break;
+        case 3: // 椭圆
+          canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: shapeSize, height: shapeSize * 0.5), paint);
+          break;
+      }
+
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MonetConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// 占位页
