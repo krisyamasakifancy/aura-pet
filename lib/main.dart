@@ -116,6 +116,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return NotificationScreen(onComplete: _nextPage);
                 case 20:
                   return CreatingPlanScreen(onComplete: _nextPage);
+                case 21:
+                  return WeightPredictionScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -7952,6 +7954,524 @@ class _ThinkingBearPainter extends CustomPainter {
     );
     textPainter.layout();
     textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P22: Weight Prediction Screen
+/// ============================================
+class WeightPredictionScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WeightPredictionScreen({super.key, required this.onComplete});
+
+  @override
+  State<WeightPredictionScreen> createState() => _WeightPredictionScreenState();
+}
+
+class _WeightPredictionScreenState extends State<WeightPredictionScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _chartController;
+  late AnimationController _bearController;
+
+  // 从UserMetrics获取体重数据
+  double get _startWeight => UserMetrics.weight ?? 70.0;
+  double get _goalWeight => UserMetrics.goalWeight ?? 65.0;
+  double get _weightLoss => _startWeight - _goalWeight;
+
+  // 生成12周预测数据
+  List<double> get _predictionData {
+    final data = <double>[];
+    for (int i = 0; i <= 12; i++) {
+      final progress = i / 12;
+      // 使用缓动曲线模拟真实减肥过程
+      final eased = 1 - math.pow(1 - progress, 2);
+      final weight = _startWeight - (_weightLoss * eased);
+      data.add(double.parse(weight.toStringAsFixed(1)));
+    }
+    return data;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _chartController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..forward();
+
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _chartController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'Believe in\nyourself!',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Your projected weight journey',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 统计卡片
+              Row(
+                children: [
+                  _StatCard(
+                    label: 'Start',
+                    value: '${_startWeight.toStringAsFixed(1)} kg',
+                    color: const Color(0xFF64B5F6),
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'Goal',
+                    value: '${_goalWeight.toStringAsFixed(1)} kg',
+                    color: const Color(0xFF4CAF50),
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'To lose',
+                    value: '${_weightLoss.toStringAsFixed(1)} kg',
+                    color: const Color(0xFFFF6B6B),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // 体重预测图表
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _chartController,
+                  builder: (context, child) {
+                    return Stack(
+                      children: [
+                        // 图表
+                        CustomPaint(
+                          size: Size.infinite,
+                          painter: _WeightChartPainter(
+                            data: _predictionData,
+                            progress: _chartController.value,
+                            startWeight: _startWeight,
+                            goalWeight: _goalWeight,
+                          ),
+                        ),
+                        // 终点比心小熊
+                        Positioned(
+                          right: 40,
+                          bottom: 60 + (_goalWeight - _startWeight).abs() * 2,
+                          child: AnimatedBuilder(
+                            animation: _bearController,
+                            builder: (context, child) {
+                              final bounce = math.sin(_bearController.value * math.pi * 2) * 5;
+                              return Transform.translate(
+                                offset: Offset(0, bounce),
+                                child: child,
+                              );
+                            },
+                            child: CustomPaint(
+                              size: const Size(60, 60),
+                              painter: _HeartBearPainter(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 时间轴
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Week 1', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey.shade500)),
+                  Text('Week 6', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey.shade500)),
+                  Text('Week 12', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey.shade500)),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Continue胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 统计卡片
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 体重预测曲线图
+class _WeightChartPainter extends CustomPainter {
+  final List<double> data;
+  final double progress;
+  final double startWeight;
+  final double goalWeight;
+
+  _WeightChartPainter({
+    required this.data,
+    required this.progress,
+    required this.startWeight,
+    required this.goalWeight,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final padding = 50.0;
+    final chartWidth = size.width - padding * 2;
+    final chartHeight = size.height - padding * 2;
+
+    // 找到数据范围
+    final maxWeight = data.reduce((a, b) => a > b ? a : b);
+    final minWeight = data.reduce((a, b) => a < b ? a : b);
+    final weightRange = maxWeight - minWeight;
+
+    // 坐标转换
+    List<Offset> points = [];
+    for (int i = 0; i < data.length; i++) {
+      final x = padding + (i / (data.length - 1)) * chartWidth;
+      final y = padding + chartHeight - ((data[i] - minWeight) / weightRange) * chartHeight;
+      points.add(Offset(x, y));
+    }
+
+    // 裁剪动画进度
+    if (progress < 1.0) {
+      final visiblePoints = 2 + (points.length - 2) * progress;
+      points = points.sublist(0, visiblePoints.ceil().clamp(2, points.length));
+    }
+
+    if (points.length < 2) return;
+
+    // 绘制渐变填充
+    final fillPath = Path();
+    fillPath.moveTo(points.first.dx, size.height - padding);
+    fillPath.lineTo(points.first.dx, points.first.dy);
+
+    for (int i = 0; i < points.length - 1; i++) {
+      fillPath.lineTo(points[i + 1].dx, points[i + 1].dy);
+    }
+
+    fillPath.lineTo(points.last.dx, size.height - padding);
+    fillPath.close();
+
+    final gradientPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF4CAF50).withOpacity(0.4),
+          const Color(0xFF4CAF50).withOpacity(0.1),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(fillPath, gradientPaint);
+
+    // 绘制曲线
+    final curvePath = Path();
+    curvePath.moveTo(points.first.dx, points.first.dy);
+
+    for (int i = 0; i < points.length - 1; i++) {
+      curvePath.lineTo(points[i + 1].dx, points[i + 1].dy);
+    }
+
+    canvas.drawPath(
+      curvePath,
+      Paint()
+        ..color = const Color(0xFF4CAF50)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // 数据点
+    for (int i = 0; i < points.length; i++) {
+      final point = points[i];
+      final isStart = i == 0;
+      final isEnd = i == points.length - 1;
+
+      // 外圈
+      canvas.drawCircle(
+        point,
+        isEnd ? 10 : 6,
+        Paint()..color = Colors.white,
+      );
+      // 内圈
+      canvas.drawCircle(
+        point,
+        isEnd ? 7 : 4,
+        Paint()..color = isStart ? const Color(0xFF64B5F6) : (isEnd ? const Color(0xFF4CAF50) : const Color(0xFF4CAF50).withOpacity(0.5)),
+      );
+    }
+
+    // 绘制坐标轴
+    final axisPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
+
+    // Y轴标签
+    for (int i = 0; i <= 4; i++) {
+      final y = padding + (chartHeight / 4) * i;
+      final weight = maxWeight - (weightRange / 4) * i;
+
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${weight.toInt()}',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 10,
+            color: Colors.grey.shade500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(5, y - textPainter.height / 2));
+
+      // 网格线
+      canvas.drawLine(
+        Offset(padding, y),
+        Offset(size.width - padding, y),
+        Paint()..color = Colors.grey.withOpacity(0.1),
+      );
+    }
+
+    // X轴标签
+    final weeks = ['W1', 'W4', 'W8', 'W12'];
+    final indices = [0, 3, 7, 11];
+    for (int i = 0; i < weeks.length; i++) {
+      if (indices[i] < points.length) {
+        final x = points[indices[i]].dx;
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: weeks[i],
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - textPainter.width / 2, size.height - padding + 8),
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WeightChartPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.data != data;
+}
+
+/// Canvas: 比心小熊
+class _HeartBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2;
+
+    // 头
+    canvas.drawCircle(c, r * 0.8, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.6, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.6, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.6, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.6, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.1), width: r * 0.9, height: r * 0.7), Paint()..color = const Color(0xFFE8C4A0));
+
+    // 爱心眼
+    _drawHeartEye(canvas, Offset(c.dx - r * 0.25, c.dy - r * 0.1), r * 0.18);
+    _drawHeartEye(canvas, Offset(c.dx + r * 0.25, c.dy - r * 0.1), r * 0.18);
+
+    // 微笑嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.3);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.45, c.dx + r * 0.15, c.dy + r * 0.3);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.35, c.dy + r * 0.1), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.35, c.dy + r * 0.1), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 比心手势
+    _drawHeartHand(canvas, Offset(c.dx - r * 0.7, c.dy + r * 0.2), r * 0.3, -0.3);
+    _drawHeartHand(canvas, Offset(c.dx + r * 0.7, c.dy + r * 0.2), r * 0.3, 0.3);
+  }
+
+  void _drawHeartEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()..color = const Color(0xFFFF6B6B);
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(center.dx - size * 1.2, center.dy - size * 0.3, center.dx - size * 1.2, center.dy - size * 1.2, center.dx, center.dy - size * 0.3);
+    path.cubicTo(center.dx + size * 1.2, center.dy - size * 1.2, center.dx + size * 1.2, center.dy - size * 0.3, center.dx, center.dy + size * 0.3);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawHeartHand(Canvas canvas, Offset center, double size, double angle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+
+    final paint = Paint()..color = const Color(0xFFFF6B6B);
+    final path = Path();
+    path.moveTo(0, size * 0.5);
+    path.cubicTo(-size * 0.8, size * 0.2, -size * 0.8, -size * 0.8, 0, -size * 0.2);
+    path.cubicTo(size * 0.8, -size * 0.8, size * 0.8, size * 0.2, 0, size * 0.5);
+    canvas.drawPath(path, paint);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(0, size * 0.5), width: size * 0.4, height: size * 0.6), const Radius.circular(6)), Paint()..color = const Color(0xFFD4A574));
+
+    canvas.restore();
   }
 
   @override
