@@ -110,6 +110,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return AnalyzingScreen(onComplete: _nextPage);
                 case 17:
                   return PlanReadyScreen(onComplete: _nextPage);
+                case 18:
+                  return ReviewsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -6948,6 +6950,316 @@ class _CelebratingBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P19: User Reviews Screen
+/// ============================================
+class ReviewsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const ReviewsScreen({super.key, required this.onComplete});
+
+  @override
+  State<ReviewsScreen> createState() => _ReviewsScreenState();
+}
+
+class _ReviewsScreenState extends State<ReviewsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _autoScrollController;
+  late PageController _pageController;
+  
+  final List<_Review> _reviews = [
+    _Review(
+      name: 'Sarah M.',
+      avatar: '👩',
+      rating: 5,
+      text: 'This app changed my life! The personalized plan fits perfectly into my busy schedule. Highly recommend!',
+    ),
+    _Review(
+      name: 'James K.',
+      avatar: '👨',
+      rating: 5,
+      text: 'Lost 10 pounds in 6 weeks! The calorie tracking is so easy and the fasting timer works flawlessly.',
+    ),
+    _Review(
+      name: 'Emma L.',
+      avatar: '👩‍🦰',
+      rating: 5,
+      text: 'Love the cute bear mascot! It makes tracking my water intake actually fun. Best health app ever!',
+    ),
+    _Review(
+      name: 'Michael T.',
+      avatar: '👨‍🦱',
+      rating: 5,
+      text: 'The radar chart shows all my progress at a glance. Great motivation to keep going every day!',
+    ),
+    _Review(
+      name: 'Lisa W.',
+      avatar: '👩‍🦱',
+      rating: 5,
+      text: 'Finally an app that understands my goals. The fasting feature is exactly what I needed.',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.85);
+    
+    _autoScrollController = AnimationController(
+      duration: Duration(seconds: 3 + _reviews.length * 2),
+      vsync: this,
+    )..repeat();
+    
+    _autoScrollController.addListener(() {
+      if (_pageController.hasClients) {
+        final page = _autoScrollController.value * (_reviews.length - 1);
+        _pageController.animateToPage(
+          page.round() % _reviews.length,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoScrollController.dispose();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'What our\nusers say',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 评价卡片流
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: _reviews.length,
+                  itemBuilder: (context, index) {
+                    return _ReviewCard(review: _reviews[index]);
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 页码指示器
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _reviews.length,
+                  (index) => AnimatedBuilder(
+                    animation: _autoScrollController,
+                    builder: (context, child) {
+                      final currentPage = (_autoScrollController.value * (_reviews.length - 1)).round() % _reviews.length;
+                      final isActive = index == currentPage;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isActive ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Continue胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 评价数据
+class _Review {
+  final String name;
+  final String avatar;
+  final int rating;
+  final String text;
+  _Review({
+    required this.name,
+    required this.avatar,
+    required this.rating,
+    required this.text,
+  });
+}
+
+/// 评价卡片
+class _ReviewCard extends StatelessWidget {
+  final _Review review;
+
+  const _ReviewCard({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 头像和用户名
+          Row(
+            children: [
+              // 头像
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    review.avatar,
+                    style: const TextStyle(fontSize: 28),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // 用户名和评分
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // 五星
+                    Row(
+                      children: List.generate(
+                        5,
+                        (index) => Text(
+                          '⭐',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: index < review.rating
+                                ? const Color(0xFFFFD700)
+                                : Colors.grey.shade300,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // 评价文案
+          Expanded(
+            child: Text(
+              '"${review.text}"',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 15,
+                color: Colors.grey.shade700,
+                height: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 占位页
