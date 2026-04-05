@@ -16,7 +16,7 @@ import 'screens/page_navigator.dart';
 import 'screens/bitepal_onboarding/main_onboarding.dart';
 import 'screens/fasting/aura_fasting_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'services/quote_engine.dart';
+import 'providers/fullstack_providers.dart';
 import 'services/monet_clock.dart';
 import 'services/haptic_audio.dart';
 import 'utils/aura_theme.dart';
@@ -94,6 +94,9 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
         
         // Achievements - progress, unlocks
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        
+        // Global Theme Controller - fasting mode, water tracking
+        ChangeNotifierProvider(create: (_) => ThemeController()),
         
         // MonetClock for time-aware theming
         ChangeNotifierProvider.value(value: MonetClock.instance),

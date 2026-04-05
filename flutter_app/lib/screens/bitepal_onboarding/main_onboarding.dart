@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/onboarding_state.dart';
+import '../../providers/fullstack_providers.dart';
 import 'p01_splash.dart';
 import 'p02_welcome.dart';
 import 'p03_feature_calories.dart';
@@ -50,7 +51,7 @@ import 'p46_about.dart';
 import '../../widgets/monet_background.dart';
 
 /// Main BitePal Onboarding Scaffold
-/// 46 screens with PageView navigation
+/// 46 screens with PageView navigation + Persistence + ThemeController
 class BitePalOnboarding extends StatefulWidget {
   final VoidCallback? onComplete;
   
@@ -67,11 +68,16 @@ class _BitePalOnboardingState extends State<BitePalOnboarding> {
   
   // Auto-advance timer for splash
   bool _autoAdvance = true;
+  final _persistence = PersistenceService();
+  String _currentQuote = '';
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    
+    // Load quote for current context
+    _updateQuote();
     
     // Splash auto-advances
     if (_autoAdvance && _currentPage == 0) {
@@ -96,34 +102,88 @@ class _BitePalOnboardingState extends State<BitePalOnboarding> {
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOutCubic,
       );
+      
+      // Update theme and quote on page change
+      _updateThemeForPage(page);
+      _updateQuote();
     }
+  }
+
+  void _updateThemeForPage(int page) {
+    final theme = Provider.of<ThemeController>(context, listen: false);
+    
+    // Fasting mode triggers (P34 start fasting, P35 timer)
+    if (page >= 33 && page <= 35) {
+      theme.startFasting();
+    } else {
+      theme.stopFasting();
+    }
+    
+    // Water level sync (P28 home shows water progress)
+    final state = Provider.of<OnboardingState>(context, listen: false);
+    theme.updateWaterLevel(state.waterIntakeMl, state.waterGoalMl);
+  }
+
+  void _updateQuote() {
+    setState(() {
+      // Default motivational quote
+      _currentQuote = QuoteEngine.instance.getMotivationQuote();
+    });
+  }
+
+  void _onQuoteTriggered(String context) {
+    final quote = QuoteEngine.instance.getQuote(context: context);
+    setState(() {
+      _currentQuote = quote;
+    });
   }
 
   void _nextPage() {
+    // Save data when completing onboarding (P46)
+    if (_currentPage == _totalPages - 1) {
+      _saveUserData();
+      widget.onComplete?.call();
+      return;
+    }
+    
     if (_currentPage < _totalPages - 1) {
       _goToPage(_currentPage + 1);
-    } else {
-      widget.onComplete?.call();
     }
   }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
+  Future<void> _saveUserData() async {
+    final state = Provider.of<OnboardingState>(context, listen: false);
     
-    // Disable auto-advance after splash
-    if (page > 0) {
-      setState(() => _autoAdvance = false);
-    }
+    await _persistence.saveUserMetrics(
+      age: state.age,
+      heightCm: state.heightCm,
+      currentWeightKg: state.currentWeightKg,
+      goalWeightKg: state.goalWeightKg,
+      gender: state.gender,
+      activityLevel: state.activityLevel,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeController>(context);
+    
     return Scaffold(
       body: ChangeNotifierProvider(
-        create: (_) => OnboardingState(),
-        child: Stack(
+        create: (_) => OnboardingState()..addListener(_onStateChanged),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                theme.backgroundColor,
+                theme.backgroundGradientEnd,
+              ],
+            ),
+          ),
+          child: Stack(
           children: [
             // Monet gradient background
             MonetBackground(
