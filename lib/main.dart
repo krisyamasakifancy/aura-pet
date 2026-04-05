@@ -11,6 +11,7 @@ class UserMetrics {
   static final Set<String> additionalGoals = {};
   static double? height;
   static double? weight;
+  static int? age;
 }
 
 void main() {
@@ -93,6 +94,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return AdditionalGoalsScreen(onComplete: _nextPage);
                 case 10:
                   return GenderScreen(onComplete: _nextPage);
+                case 11:
+                  return AgeScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -3994,6 +3997,560 @@ class _FemaleIconPainter extends CustomPainter {
 }
 
 /// ============================================
+/// P12: Age Input Screen
+/// ============================================
+class AgeScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AgeScreen({super.key, required this.onComplete});
+
+  @override
+  State<AgeScreen> createState() => _AgeScreenState();
+}
+
+class _AgeScreenState extends State<AgeScreen> with SingleTickerProviderStateMixin {
+  late FixedExtentScrollController _scrollController;
+  late AnimationController _bearController;
+  
+  int _selectedAge = 25;
+  final int _minAge = 18;
+  final int _maxAge = 80;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = FixedExtentScrollController(initialItem: _selectedAge - _minAge);
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'How old\nare you?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Slide to select your age',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Canvas好奇小熊
+              Center(
+                child: AnimatedBuilder(
+                  animation: _bearController,
+                  builder: (context, child) {
+                    final tilt = math.sin(_bearController.value * math.pi * 2) * 0.05;
+                    return Transform.rotate(
+                      angle: tilt,
+                      child: child,
+                    );
+                  },
+                  child: CustomPaint(
+                    size: const Size(100, 100),
+                    painter: _CuriousBearPainter(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // 年龄显示
+              Center(
+                child: TweenAnimationBuilder<int>(
+                  tween: IntTween(begin: _selectedAge, end: _selectedAge),
+                  duration: const Duration(milliseconds: 100),
+                  builder: (context, value, child) {
+                    return Text(
+                      '$value',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 72,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 刻度尺选择器
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 刻度尺
+                    Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        controller: _scrollController,
+                        physics: const FixedExtentScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        itemCount: _maxAge - _minAge + 1,
+                        itemBuilder: (context, index) {
+                          final age = _minAge + index;
+                          final isSelected = age == _selectedAge;
+                          return GestureDetector(
+                            onTap: () {
+                              _scrollController.animateToItem(
+                                index,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                              );
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 50,
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: isSelected ? 4 : 2,
+                                    height: isSelected ? 60 : 40,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? const Color(0xFF4CAF50)
+                                          : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  AnimatedDefaultTextStyle(
+                                    duration: const Duration(milliseconds: 200),
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: isSelected ? 16 : 12,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected
+                                          ? const Color(0xFF4CAF50)
+                                          : Colors.grey.shade500,
+                                    ),
+                                    child: Text('$age'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // 中间指示器
+                    Container(
+                      width: 3,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        borderRadius: BorderRadius.circular(2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.5),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 胶囊按钮
+              GestureDetector(
+                onTap: () {
+                  UserMetrics.age = _selectedAge;
+                  widget.onComplete();
+                },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// Canvas: 好奇小熊
+/// ============================================
+class _CuriousBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 1.0), width: radius * 1.8, height: radius * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头部
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.75), radius * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.75), radius * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.75), radius * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.75), radius * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.12), width: radius * 1.1, height: radius * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 好奇眼睛 - 一大一小
+    _drawCuriousEye(canvas, Offset(center.dx - radius * 0.3, center.dy - radius * 0.1), radius * 0.22);
+    _drawCuriousEye(canvas, Offset(center.dx + radius * 0.3, center.dy - radius * 0.15), radius * 0.18);
+
+    // 问号表情
+    _drawQuestionMouth(canvas, center, radius);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx - radius * 0.45, center.dy + radius * 0.1), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx + radius * 0.45, center.dy + radius * 0.1), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+  }
+
+  void _drawCuriousEye(Canvas canvas, Offset center, double radius) {
+    // 眼白
+    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
+    // 眼眶
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    // 大瞳孔
+    canvas.drawCircle(center, radius * 0.6, Paint()..color = Colors.black);
+    // 高光
+    canvas.drawCircle(center + Offset(-radius * 0.2, -radius * 0.2), radius * 0.25, Paint()..color = Colors.white);
+  }
+
+  void _drawQuestionMouth(Canvas canvas, Offset center, double radius) {
+    // 小O型好奇嘴
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.4), width: radius * 0.2, height: radius * 0.15),
+      Paint()..color = const Color(0xFF8B4513),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.42), width: radius * 0.12, height: radius * 0.08),
+      Paint()..color = const Color(0xFFFF6B6B),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+
+/// ============================================
+/// P12: Age Input Screen
+/// ============================================
+class AgeScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AgeScreen({super.key, required this.onComplete});
+
+  @override
+  State<AgeScreen> createState() => _AgeScreenState();
+}
+
+class _AgeScreenState extends State<AgeScreen> with SingleTickerProviderStateMixin {
+  late FixedExtentScrollController _scrollController;
+  late AnimationController _bearController;
+  
+  int _selectedAge = 25;
+  final int _minAge = 18;
+  final int _maxAge = 80;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = FixedExtentScrollController(initialItem: _selectedAge - _minAge);
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'How old\nare you?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Slide to select your age',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: AnimatedBuilder(
+                  animation: _bearController,
+                  builder: (context, child) {
+                    final tilt = math.sin(_bearController.value * math.pi * 2) * 0.05;
+                    return Transform.rotate(angle: tilt, child: child);
+                  },
+                  child: CustomPaint(size: const Size(100, 100), painter: _CuriousBearPainter()),
+                ),
+              ),
+              const SizedBox(height: 40),
+              Center(
+                child: Text(
+                  '$_selectedAge',
+                  style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 72, color: Color(0xFF4CAF50)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                      ),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        controller: _scrollController,
+                        physics: const FixedExtentScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        itemCount: _maxAge - _minAge + 1,
+                        itemBuilder: (context, index) {
+                          final age = _minAge + index;
+                          final isSelected = age == _selectedAge;
+                          return GestureDetector(
+                            onTap: () => _scrollController.animateToItem(index, duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+                            child: AnimatedBuilder(
+                              animation: _scrollController,
+                              builder: (context, child) {
+                                final currentIndex = _scrollController.hasClients ? _scrollController.selectedItem : 7;
+                                final selected = (currentIndex + _minAge) == age;
+                                if (age == _selectedAge && age != (currentIndex + _minAge)) {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    if (mounted) setState(() {});
+                                  });
+                                }
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 50,
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        width: selected ? 4 : 2,
+                                        height: selected ? 60 : 40,
+                                        decoration: BoxDecoration(
+                                          color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(2),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      AnimatedDefaultTextStyle(
+                                        duration: const Duration(milliseconds: 200),
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: selected ? 16 : 12,
+                                          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                                          color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade500,
+                                        ),
+                                        child: Text('$age'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      width: 3,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        borderRadius: BorderRadius.circular(2),
+                        boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.5), blurRadius: 8)],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () {
+                  UserMetrics.age = _selectedAge;
+                  widget.onComplete();
+                },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                  ),
+                  child: const Center(child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Next', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  )),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 好奇小熊
+class _CuriousBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.0), width: r * 1.8, height: r * 1.2), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9), Paint()..color = const Color(0xFFE8C4A0));
+    _drawCuriousEye(canvas, Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.22);
+    _drawCuriousEye(canvas, Offset(c.dx + r * 0.3, c.dy - r * 0.15), r * 0.18);
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.4), width: r * 0.2, height: r * 0.15), Paint()..color = const Color(0xFF8B4513));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.42), width: r * 0.12, height: r * 0.08), Paint()..color = const Color(0xFFFF6B6B));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+  }
+  void _drawCuriousEye(Canvas canvas, Offset center, double radius) {
+    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(center, radius * 0.6, Paint()..color = Colors.black);
+    canvas.drawCircle(center + Offset(-radius * 0.2, -radius * 0.2), radius * 0.25, Paint()..color = Colors.white);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 /// 占位页
 /// ============================================
 class _PlaceholderPage extends StatelessWidget {
