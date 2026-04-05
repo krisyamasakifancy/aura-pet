@@ -120,6 +120,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WeightPredictionScreen(onComplete: _nextPage);
                 case 22:
                   return HabitAnalysisScreen(onComplete: _nextPage);
+                case 23:
+                  return PremiumPaywallScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -8805,6 +8807,425 @@ class _LegendItem extends StatelessWidget {
       ],
     );
   }
+}
+
+
+/// ============================================
+/// P24: Premium Paywall Screen
+/// ============================================
+class PremiumPaywallScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const PremiumPaywallScreen({super.key, required this.onComplete});
+
+  @override
+  State<PremiumPaywallScreen> createState() => _PremiumPaywallScreenState();
+}
+
+class _PremiumPaywallScreenState extends State<PremiumPaywallScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _cardController;
+  late AnimationController _shimmerController;
+  late AnimationController _pulseController;
+  
+  int _secondsRemaining = 900; // 15分钟
+  bool _timerStarted = false;
+
+  final List<_ProFeature> _proFeatures = [
+    _ProFeature(icon: '🍽️', text: 'Unlimited diet logging'),
+    _ProFeature(icon: '📊', text: 'Deep analytics reports'),
+    _ProFeature(icon: '⏰', text: 'Advanced fasting timer'),
+    _ProFeature(icon: '🎯', text: 'Personalized meal plans'),
+    _ProFeature(icon: '💪', text: 'Progress tracking & insights'),
+    _ProFeature(icon: '🔔', text: 'Smart reminders & notifications'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
+
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat();
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // 启动倒计时
+    _startTimer();
+  }
+
+  void _startTimer() {
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted && _secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+        return true;
+      }
+      return false;
+    });
+  }
+
+  String get _formattedTime {
+    final minutes = _secondsRemaining ~/ 60;
+    final seconds = _secondsRemaining % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _cardController.dispose();
+    _shimmerController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF2D3748),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'Get your\npersonalized plan',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Unlock all features with Pro membership',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 倒计时器
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final scale = 1.0 + _pulseController.value * 0.05;
+                  return Transform.scale(
+                    scale: scale,
+                    child: child,
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B6B).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.timer, color: Color(0xFFFF6B6B), size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '⏰ Limited offer: $_formattedTime',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFFFF6B6B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 金卡会员卡片
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _cardController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, 30 * (1 - _cardController.value)),
+                      child: Opacity(
+                        opacity: _cardController.value,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildProCard(),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Get my plan 按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withOpacity(0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Get my plan for \$49.99',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 安全提示
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock, color: Colors.white.withOpacity(0.5), size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Secure payment • Cancel anytime',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProCard() {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFFD700),
+                Color(0xFFFFA500),
+                Color(0xFFFF8C00),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFFD700).withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // 光泽效果
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: CustomPaint(
+                    painter: _ShimmerPainter(progress: _shimmerController.value),
+                  ),
+                ),
+              ),
+
+              // 卡片内容
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    // PRO 标签
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2D3748),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            '👑 PRO',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Color(0xFFFFD700),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'Best Value',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: const Color(0xFF2D3748).withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+
+                    // Pro 功能列表
+                    ..._proFeatures.map((feature) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2D3748).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(feature.icon, style: const TextStyle(fontSize: 16)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              feature.text,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                color: Color(0xFF2D3748),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.check_circle, color: Color(0xFF2D3748), size: 20),
+                        ],
+                      ),
+                    )),
+
+                    const Spacer(),
+
+                    // 价格
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '\$49.99',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 36,
+                            color: const Color(0xFF2D3748),
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '/ lifetime',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            color: const Color(0xFF2D3748).withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Pro功能数据
+class _ProFeature {
+  final String icon;
+  final String text;
+  _ProFeature({required this.icon, required this.text});
+}
+
+/// 光泽效果
+class _ShimmerPainter extends CustomPainter {
+  final double progress;
+
+  _ShimmerPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Colors.white.withOpacity(0.0),
+        Colors.white.withOpacity(0.3),
+        Colors.white.withOpacity(0.0),
+      ],
+      stops: [
+        (progress - 0.3).clamp(0.0, 1.0),
+        progress.clamp(0.0, 1.0),
+        (progress + 0.3).clamp(0.0, 1.0),
+      ],
+    );
+
+    final paint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShimmerPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// 占位页
