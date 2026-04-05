@@ -65,6 +65,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WelcomeScreen(onComplete: _nextPage);
                 case 2:
                   return CalorieFeatureScreen(onComplete: _nextPage);
+                case 3:
+                  return FastingFeatureScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -1116,6 +1118,523 @@ class _PrayingBearPainter extends CustomPainter {
     }
     
     canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+/// P4: Fasting Feature Screen
+/// ============================================
+class FastingFeatureScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const FastingFeatureScreen({super.key, required this.onComplete});
+
+  @override
+  State<FastingFeatureScreen> createState() => _FastingFeatureScreenState();
+}
+
+class _FastingFeatureScreenState extends State<FastingFeatureScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _breathingController;
+  late AnimationController _ringPulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // 深眠呼吸动画 - 缓慢起伏
+    _breathingController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    // 进度环脉冲动画
+    _ringPulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _breathingController.dispose();
+    _ringPulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A0033), // 深紫色背景
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // ========== 绿色草地 ==========
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: CustomPaint(
+                size: Size(MediaQuery.of(context).size.width, 150),
+                painter: _GrassPainter(),
+              ),
+            ),
+
+            // ========== 主内容 ==========
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+
+                  // 标题
+                  const Text(
+                    'Enjoy fasting\nwithout the struggle',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 副标题
+                  Text(
+                    'Build a healthy habit that sticks',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.7),
+                      height: 1.4,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas小熊 + 禁食环
+                  Center(
+                    child: AnimatedBuilder(
+                      animation: _breathingController,
+                      builder: (context, child) {
+                        // 深眠呼吸起伏
+                        final breathScale = 1.0 + _breathingController.value * 0.03;
+                        return Transform.scale(
+                          scale: breathScale,
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 禁食进度环
+                          AnimatedBuilder(
+                            animation: _ringPulseController,
+                            builder: (context, _) {
+                              final pulse = 1.0 + _ringPulseController.value * 0.05;
+                              return Transform.scale(
+                                scale: pulse,
+                                child: CustomPaint(
+                                  size: const Size(280, 280),
+                                  painter: _FastingRingPainter(
+                                    progress: 0.15, // 15% 完成度
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          
+                          // Canvas睡熊
+                          CustomPaint(
+                            size: const Size(200, 180),
+                            painter: _SleepingBearPainter(),
+                          ),
+                          
+                          // 时间显示
+                          Positioned(
+                            bottom: 40,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                '00:01:20',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // 胶囊按钮
+                  GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF9C27B0).withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Next',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// Canvas: 睡帽小熊
+/// ============================================
+class _SleepingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 + 20);
+    final radius = size.width / 2 - 30;
+
+    // ========== 身体 ==========
+    // 躺着的身体
+    final bodyPath = Path();
+    bodyPath.moveTo(center.dx - radius * 1.2, center.dy + radius * 0.5);
+    bodyPath.quadraticBezierTo(
+      center.dx - radius * 0.5,
+      center.dy + radius * 0.8,
+      center.dx + radius * 0.3,
+      center.dy + radius * 0.5,
+    );
+    bodyPath.quadraticBezierTo(
+      center.dx + radius * 0.8,
+      center.dy + radius * 0.3,
+      center.dx + radius * 1.2,
+      center.dy + radius * 0.2,
+    );
+    bodyPath.lineTo(center.dx + radius * 1.2, center.dy + radius * 0.8);
+    bodyPath.lineTo(center.dx - radius * 1.2, center.dy + radius * 0.8);
+    bodyPath.close();
+    
+    canvas.drawPath(bodyPath, Paint()..color = const Color(0xFFD4A574));
+
+    // ========== 头部 ==========
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(
+      Offset(center.dx - radius * 0.75, center.dy - radius * 0.7),
+      radius * 0.3, Paint()..color = const Color(0xFFD4A574),
+    );
+    canvas.drawCircle(
+      Offset(center.dx - radius * 0.75, center.dy - radius * 0.7),
+      radius * 0.18, Paint()..color = const Color(0xFFE8C4A0),
+    );
+    canvas.drawCircle(
+      Offset(center.dx + radius * 0.75, center.dy - radius * 0.7),
+      radius * 0.3, Paint()..color = const Color(0xFFD4A574),
+    );
+    canvas.drawCircle(
+      Offset(center.dx + radius * 0.75, center.dy - radius * 0.7),
+      radius * 0.18, Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy + radius * 0.15),
+        width: radius * 1.2, height: radius,
+      ),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // ========== 睡帽 ==========
+    _drawSleepingHat(canvas, Offset(center.dx, center.dy - radius * 1.0), radius * 0.8);
+
+    // 闭眼表情 - Zzz
+    _drawClosedEye(canvas, Offset(center.dx - radius * 0.35, center.dy - radius * 0.1), radius * 0.15);
+    _drawClosedEye(canvas, Offset(center.dx + radius * 0.35, center.dy - radius * 0.1), radius * 0.15);
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - radius * 0.2, center.dy + radius * 0.35);
+    smilePath.quadraticBezierTo(
+      center.dx, center.dy + radius * 0.5,
+      center.dx + radius * 0.2, center.dy + radius * 0.35,
+    );
+    canvas.drawPath(
+      smilePath,
+      Paint()
+        ..color = const Color(0xFF8B4513)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 腮红
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - radius * 0.5, center.dy + radius * 0.1),
+        width: radius * 0.3, height: radius * 0.15,
+      ),
+      Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + radius * 0.5, center.dy + radius * 0.1),
+        width: radius * 0.3, height: radius * 0.15,
+      ),
+      Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5),
+    );
+
+    // Zzz 动画
+    _drawZzz(canvas, Offset(center.dx + radius * 0.8, center.dy - radius * 0.5));
+  }
+
+  void _drawClosedEye(Canvas canvas, Offset center, double size) {
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(
+      center.dx, center.dy + size,
+      center.dx + size, center.dy,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFF5D4037)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  void _drawSleepingHat(Canvas canvas, Offset center, double size) {
+    // 帽身
+    final hatPath = Path();
+    hatPath.moveTo(center.dx - size * 0.6, center.dy + size * 0.5);
+    hatPath.quadraticBezierTo(
+      center.dx - size * 0.3, center.dy - size * 0.5,
+      center.dx, center.dy - size,
+    );
+    hatPath.quadraticBezierTo(
+      center.dx + size * 0.3, center.dy - size * 0.5,
+      center.dx + size * 0.6, center.dy + size * 0.5,
+    );
+    hatPath.close();
+    
+    canvas.drawPath(hatPath, Paint()..color = const Color(0xFF9C27B0));
+
+    // 帽边
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy + size * 0.4),
+        width: size * 1.4,
+        height: size * 0.4,
+      ),
+      Paint()..color = const Color(0xFF7B1FA2),
+    );
+
+    // 帽子装饰球
+    canvas.drawCircle(
+      Offset(center.dx, center.dy - size),
+      size * 0.15,
+      Paint()..color = const Color(0xFFE1BEE7),
+    );
+  }
+
+  void _drawZzz(Canvas canvas, Offset start) {
+    // Zzz 文字效果
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: 'Zzz',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF9C27B0),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, start);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+/// Canvas: 禁食进度环
+/// ============================================
+class _FastingRingPainter extends CustomPainter {
+  final double progress;
+  
+  _FastingRingPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 20;
+
+    // 背景环
+    final bgPaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16
+      ..strokeCap = StrokeCap.round;
+    
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // 进度环
+    final progressPaint = Paint()
+      ..shader = SweepGradient(
+        startAngle: -1.57,
+        endAngle: 3.14,
+        colors: const [
+          Color(0xFF9C27B0),
+          Color(0xFFE91E63),
+          Color(0xFFFF5722),
+        ],
+        tileMode: TileMode.clamp,
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.57, // 从12点钟方向开始
+      progress * 2 * 3.14159,
+      false,
+      progressPaint,
+    );
+
+    // 发光效果
+    final glowPaint = Paint()
+      ..color = const Color(0xFFE91E63).withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 24
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.57,
+      progress * 2 * 3.14159,
+      false,
+      glowPaint,
+    );
+
+    // 开始点高光
+    final startAngle = -1.57;
+    final startX = center.dx + radius * math.cos(startAngle);
+    final startY = center.dy + radius * math.sin(startAngle);
+    canvas.drawCircle(
+      Offset(startX, startY),
+      10,
+      Paint()..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _FastingRingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+/// ============================================
+/// Canvas: 草地
+/// ============================================
+class _GrassPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 草地背景
+    final grassPath = Path();
+    grassPath.moveTo(0, size.height * 0.3);
+    
+    // 波浪形草地边缘
+    for (int i = 0; i <= size.width.toInt(); i += 20) {
+      final y = size.height * 0.3 + math.sin(i * 0.05) * 10;
+      grassPath.lineTo(i.toDouble(), y);
+    }
+    
+    grassPath.lineTo(size.width, size.height);
+    grassPath.lineTo(0, size.height);
+    grassPath.close();
+    
+    canvas.drawPath(
+      grassPath,
+      Paint()..color = const Color(0xFF4CAF50),
+    );
+
+    // 小草
+    for (int i = 0; i < size.width.toInt(); i += 15) {
+      final grassHeight = 10.0 + math.Random(i).nextDouble() * 15;
+      final x = i.toDouble();
+      final y = size.height * 0.35 + math.sin(i * 0.05) * 10;
+      
+      final grass = Path();
+      grass.moveTo(x, y);
+      grass.quadraticBezierTo(
+        x - 3, y - grassHeight * 0.6,
+        x, y - grassHeight,
+      );
+      grass.quadraticBezierTo(
+        x + 3, y - grassHeight * 0.6,
+        x, y,
+      );
+      
+      canvas.drawPath(
+        grass,
+        Paint()..color = const Color(0xFF66BB6A),
+      );
+    }
   }
 
   @override
