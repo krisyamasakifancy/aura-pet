@@ -126,6 +126,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return PricingScreen(onComplete: _nextPage);
                 case 25:
                   return PaymentCommitmentScreen(onComplete: _nextPage);
+                case 26:
+                  return WelcomeScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -10033,6 +10035,343 @@ class _CommitmentBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P27: Welcome Screen
+/// ============================================
+class WelcomeScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WelcomeScreen({super.key, required this.onComplete});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _bounceController;
+  late AnimationController _confettiController;
+  late Animation<double> _bounceAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _bounceAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 300.0, end: -20.0).chain(CurveTween(curve: Curves.easeOut)), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: -20.0, end: 10.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 10.0, end: -5.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 15),
+      TweenSequenceItem(tween: Tween(begin: -5.0, end: 0.0).chain(CurveTween(curve: Curves.bounceOut)), weight: 25),
+    ]).animate(_bounceController);
+
+    _confettiController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+
+    // 小熊弹入动画
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        _bounceController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: Stack(
+        children: [
+          // 撒花背景
+          AnimatedBuilder(
+            animation: _confettiController,
+            builder: (context, child) {
+              return CustomPaint(
+                size: Size.infinite,
+                painter: _WelcomeConfettiPainter(progress: _confettiController.value),
+              );
+            },
+          ),
+
+          // 内容
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+
+                  // 标题
+                  AnimatedBuilder(
+                    animation: _bounceController,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _bounceController.value.clamp(0.0, 1.0),
+                        child: child,
+                      );
+                    },
+                    child: const Text(
+                      'Welcome to\nyour new life!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 36,
+                        height: 1.1,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas弹入小熊
+                  AnimatedBuilder(
+                    animation: _bounceAnim,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, _bounceAnim.value),
+                        child: child,
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(200, 200),
+                      painter: _WelcomeBearPainter(),
+                    ),
+                  ),
+
+                  const Spacer(flex: 2),
+
+                  // Start Journey胶囊按钮
+                  GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Start Journey',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.rocket_launch,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 副文案
+                  Text(
+                    'Your personalized plan is ready',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Canvas: 撒花庆祝小熊
+class _WelcomeBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.0), width: r * 1.6, height: r * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.7), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.7), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.7), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.7), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.0, height: r * 0.85),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 开心眼睛 (弯弯笑眼)
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15);
+
+    // 开心嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.25, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.5, c.dx + r * 0.25, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()
+      ..color = const Color(0xFF8B4513)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 0.15), width: r * 0.22, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 0.15), width: r * 0.22, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 庆祝举起的双手
+    _drawCelebratingArm(canvas, Offset(c.dx - r * 1.1, c.dy - r * 0.5), r * 0.35, -0.5);
+    _drawCelebratingArm(canvas, Offset(c.dx + r * 1.1, c.dy - r * 0.5), r * 0.35, 0.5);
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.8, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawCelebratingArm(Canvas canvas, Offset center, double size, double angle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    
+    // 手臂
+    final armPath = Path();
+    armPath.moveTo(0, size * 0.5);
+    armPath.quadraticBezierTo(size * 0.3, 0, 0, -size * 0.8);
+    canvas.drawPath(armPath, Paint()
+      ..color = const Color(0xFFD4A574)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size * 0.25
+      ..strokeCap = StrokeCap.round);
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Canvas: 撒花背景
+class _WelcomeConfettiPainter extends CustomPainter {
+  final double progress;
+
+  _WelcomeConfettiPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFFFF6B6B),
+      const Color(0xFF4ECDC4),
+      const Color(0xFFFFE66D),
+      const Color(0xFFA8E6CF),
+      const Color(0xFFDDA0DD),
+      const Color(0xFFFFD700),
+      const Color(0xFF64B5F6),
+    ];
+
+    final random = math.Random(42);
+
+    for (int i = 0; i < 40; i++) {
+      final seed = random.nextDouble();
+      final x = seed * size.width;
+      final startY = -20 - random.nextDouble() * 100;
+      final endY = size.height + 50;
+      final y = startY + (endY - startY) * progress + random.nextDouble() * 30;
+      final color = colors[i % colors.length];
+      final confettiSize = 4.0 + random.nextDouble() * 8;
+      final rotation = progress * math.pi * 4 + i;
+      final opacity = 0.5 + random.nextDouble() * 0.5;
+
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(rotation);
+
+      final paint = Paint()
+        ..color = color.withOpacity(opacity)
+        ..style = PaintingStyle.fill;
+
+      // 各种形状
+      final shapeType = i % 4;
+      if (shapeType == 0) {
+        canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: confettiSize, height: confettiSize * 0.6), paint);
+      } else if (shapeType == 1) {
+        canvas.drawCircle(Offset.zero, confettiSize / 2, paint);
+      } else if (shapeType == 2) {
+        final path = Path();
+        path.moveTo(0, -confettiSize / 2);
+        path.lineTo(confettiSize / 2, confettiSize / 2);
+        path.lineTo(-confettiSize / 2, confettiSize / 2);
+        path.close();
+        canvas.drawPath(path, paint);
+      } else {
+        canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: confettiSize, height: confettiSize * 0.5), paint);
+      }
+
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WelcomeConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// 占位页
