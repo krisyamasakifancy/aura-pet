@@ -98,6 +98,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return AgeScreen(onComplete: _nextPage);
                 case 12:
                   return HeightScreen(onComplete: _nextPage);
+                case 13:
+                  return WeightScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -5001,6 +5003,434 @@ class _MeasuringBearPainter extends CustomPainter {
   void _drawMeasuringEye(Canvas canvas, Offset center, double radius) {
     canvas.drawCircle(center, radius, Paint()..color = Colors.black);
     canvas.drawCircle(center + Offset(-radius * 0.3, -radius * 0.3), radius * 0.3, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P14: Weight Input Screen
+/// ============================================
+class WeightScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WeightScreen({super.key, required this.onComplete});
+
+  @override
+  State<WeightScreen> createState() => _WeightScreenState();
+}
+
+class _WeightScreenState extends State<WeightScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _dialController;
+  late AnimationController _bearController;
+  
+  double _selectedWeight = 65.0;
+  final double _minWeight = 30.0;
+  final double _maxWeight = 200.0;
+  final double _precision = 0.5;
+
+  @override
+  void initState() {
+    super.initState();
+    _dialController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _dialController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _updateWeight(double delta) {
+    setState(() {
+      _selectedWeight = (_selectedWeight + delta).clamp(_minWeight, _maxWeight);
+      _selectedWeight = double.parse(_selectedWeight.toStringAsFixed(1));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF2D3748), // 深色背景模拟机械秤
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              
+              // 标题
+              const Text(
+                "What's your\ncurrent weight?",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Turn the dial to adjust',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.white.withOpacity(0.7)),
+              ),
+
+              const Spacer(),
+
+              // 主内容区
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Canvas小熊
+                    AnimatedBuilder(
+                      animation: _bearController,
+                      builder: (context, child) {
+                        final tilt = math.sin(_bearController.value * math.pi * 2) * 0.03;
+                        return Transform.rotate(
+                          angle: tilt,
+                          child: child,
+                        );
+                      },
+                      child: CustomPaint(
+                        size: const Size(120, 120),
+                        painter: _ScaleBearPainter(),
+                      ),
+                    ),
+
+                    const SizedBox(width: 32),
+
+                    // 弧形转盘
+                    GestureDetector(
+                      onPanUpdate: (details) {
+                        // 根据拖动方向调整体重
+                        final center = const Offset(120, 120);
+                        final touchPos = details.localPosition;
+                        final angle = math.atan2(touchPos.dy - center.dy, touchPos.dx - center.dx);
+                        
+                        // 拖动增量
+                        final delta = -details.delta.dy * 0.2;
+                        _updateWeight(delta);
+                      },
+                      child: CustomPaint(
+                        size: const Size(240, 240),
+                        painter: _WeightDialPainter(
+                          weight: _selectedWeight,
+                          minWeight: _minWeight,
+                          maxWeight: _maxWeight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // +/- 按钮
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // - 按钮
+                  _WeightButton(
+                    icon: Icons.remove,
+                    onTap: () => _updateWeight(-_precision),
+                    onLongPressStart: () => _dialController.repeat(),
+                    onLongPressEnd: () => _dialController.stop(),
+                  ),
+                  const SizedBox(width: 24),
+                  
+                  // 体重显示
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${_selectedWeight.toStringAsFixed(1)}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 48,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          'kg',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 24),
+                  
+                  // + 按钮
+                  _WeightButton(
+                    icon: Icons.add,
+                    onTap: () => _updateWeight(_precision),
+                    onLongPressStart: () => _dialController.repeat(),
+                    onLongPressEnd: () => _dialController.stop(),
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: () {
+                  UserMetrics.weight = _selectedWeight;
+                  widget.onComplete();
+                },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))],
+                  ),
+                  child: const Center(child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Next', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  )),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 加减按钮
+class _WeightButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final VoidCallback onLongPressStart;
+  final VoidCallback onLongPressEnd;
+
+  const _WeightButton({
+    required this.icon,
+    required this.onTap,
+    required this.onLongPressStart,
+    required this.onLongPressEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      onLongPressStart: (_) => onLongPressStart(),
+      onLongPressEnd: (_) => onLongPressEnd(),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+        ),
+        child: Icon(icon, color: Colors.white, size: 28),
+      ),
+    );
+  }
+}
+
+/// Canvas: 转盘
+class _WeightDialPainter extends CustomPainter {
+  final double weight;
+  final double minWeight;
+  final double maxWeight;
+
+  _WeightDialPainter({required this.weight, required this.minWeight, required this.maxWeight});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+
+    // 外圈
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = const Color(0xFF3D4F5F)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 刻度环
+    canvas.drawCircle(
+      center,
+      radius - 5,
+      Paint()
+        ..color = const Color(0xFF2D3748)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 绘制刻度
+    final totalRange = maxWeight - minWeight;
+    final angleRange = 270.0; // 270度范围
+    const startAngle = 135.0; // 从左下开始
+
+    for (int i = 0; i <= (totalRange / 5).toInt(); i++) {
+      final tickWeight = minWeight + i * 5;
+      final progress = (tickWeight - minWeight) / totalRange;
+      final angle = (startAngle + progress * angleRange) * math.pi / 180;
+
+      final isMainTick = i % 2 == 0;
+      final tickLength = isMainTick ? 15.0 : 8.0;
+      final tickWidth = isMainTick ? 3.0 : 1.5;
+
+      final outerRadius = radius - 15;
+      final innerRadius = outerRadius - tickLength;
+
+      final outerX = center.dx + outerRadius * math.cos(angle);
+      final outerY = center.dy + outerRadius * math.sin(angle);
+      final innerX = center.dx + innerRadius * math.cos(angle);
+      final innerY = center.dy + innerRadius * math.sin(angle);
+
+      canvas.drawLine(
+        Offset(outerX, outerY),
+        Offset(innerX, innerY),
+        Paint()
+          ..color = isMainTick ? Colors.white : Colors.white54
+          ..strokeWidth = tickWidth
+          ..strokeCap = StrokeCap.round,
+      );
+
+      // 刻度数字
+      if (isMainTick) {
+        final textRadius = innerRadius - 15;
+        final textX = center.dx + textRadius * math.cos(angle);
+        final textY = center.dy + textRadius * math.sin(angle);
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: '${tickWeight.toInt()}',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              color: Colors.white70,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        canvas.save();
+        canvas.translate(textX - textPainter.width / 2, textY - textPainter.height / 2);
+        canvas.rotate(angle + math.pi / 2);
+        textPainter.paint(canvas, Offset.zero);
+        canvas.restore();
+      }
+    }
+
+    // 中心圆
+    canvas.drawCircle(
+      center,
+      radius * 0.35,
+      Paint()
+        ..color = const Color(0xFF1A202C)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 指针 (指向当前体重)
+    final progress = (weight - minWeight) / totalRange;
+    final pointerAngle = (startAngle + progress * angleRange) * math.pi / 180;
+    final pointerRadius = radius - 30;
+
+    canvas.drawLine(
+      center,
+      Offset(
+        center.dx + pointerRadius * math.cos(pointerAngle),
+        center.dy + pointerRadius * math.sin(pointerAngle),
+      ),
+      Paint()
+        ..color = const Color(0xFFFF6B6B)
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 指针圆头
+    canvas.drawCircle(
+      Offset(
+        center.dx + pointerRadius * math.cos(pointerAngle),
+        center.dy + pointerRadius * math.sin(pointerAngle),
+      ),
+      6,
+      Paint()..color = const Color(0xFFFF6B6B),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WeightDialPainter oldDelegate) =>
+      oldDelegate.weight != weight;
+}
+
+/// Canvas: 体重秤旁小熊
+class _ScaleBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+
+    // 身体
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.8), width: r * 1.6, height: r * 1.2), Paint()..color = const Color(0xFFD4A574));
+
+    // 头
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9), Paint()..color = const Color(0xFFE8C4A0));
+
+    // 眼睛 (期待表情)
+    canvas.drawCircle(Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.18, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx - r * 0.35, c.dy - r * 0.18), r * 0.08, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy - r * 0.1), r * 0.18, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.25, c.dy - r * 0.18), r * 0.08, Paint()..color = Colors.white);
+
+    // 期待嘴 (微微张开)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.38), width: r * 0.2, height: r * 0.15), Paint()..color = const Color(0xFF8B4513));
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 手 (扶着秤的姿势)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 1.0, c.dy + r * 0.5), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
   }
 
   @override
