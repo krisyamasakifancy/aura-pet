@@ -119,7 +119,30 @@ body{font-family:'Noto Sans SC',Inter,sans-serif;background:linear-gradient(135d
 <div class="page" id="page-31" style="">
 <div style="font-size:52px">&#x1F37D;&#xFE0F;</div>
 <div class="card"><h1 class="title">Today's meals &#x1F37D;&#xFE0F;</h1></div>
-<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t31" width="120" height="140"></canvas></div></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t31" width="120" height="140"></canvas></div>
+<div style="position:fixed;bottom:162px;right:22px;z-index:250">
+<button id="camFab" onclick="document.getElementById('camInput').click()" style="width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,#FF6B8A,#FF8BAA);border:none;box-shadow:0 6px 20px rgba(255,107,138,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:pulse 2s ease-in-out infinite">
+<span style="font-size:30px">&#x1F4F7;</span>
+</button>
+<input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handleCameraUpload(this)">
+</div>
+<div id="scanOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.82);z-index:500;flex-direction:column;align-items:center;justify-content:center">
+<canvas id="scanAnimCanvas" width="260" height="200" style="border-radius:18px;box-shadow:0 0 40px rgba(78,205,196,.5)"></canvas>
+<p style="color:#fff;margin-top:18px;font-size:15px;font-weight:600" id="scanStatus">&#x1F4F7; 深度扫描中...</p>
+<div style="display:flex;gap:10px;margin-top:12px"><div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#4ECDC4"></div></div>
+</div>
+<div id="resultPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:600;flex-direction:column;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:22px;padding:24px;max-width:310px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.22)">
+<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;text-align:center;margin-bottom:14px;color:#2D3436">&#x2728; AI 营养识别结果</h3>
+<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin:4px 0"><span>&#x1F35C; 食物</span><span id="resFood" style="font-weight:600;color:#2D3436">--</span></div></div>
+<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin:4px 0"><span>&#x1F9C8; 重量</span><span id="resWeight" style="font-weight:600">--</span></div></div>
+<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px;color:#FF6B8A;margin:4px 0"><span>&#x1F525; 热量</span><span id="resCal" style="font-weight:700">-- kcal</span></div></div>
+<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin:3px 0"><span>碳水</span><span id="resCarbs">--g</span></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin:3px 0"><span>蛋白质</span><span id="resProtein">--g</span></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin:3px 0"><span>脂肪</span><span id="resFat">--g</span></div></div>
+<div style="display:flex;gap:10px;margin-top:16px">
+<button onclick="closeResultPopup()" style="flex:1;padding:11px;border:2px solid #E8E8E8;border-radius:14px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#888">取消</button>
+<button onclick="confirmFood()" style="flex:1;padding:11px;border:none;border-radius:14px;background:linear-gradient(135deg,#4ECDC4,#38E8D0);font-size:13px;font-weight:700;cursor:pointer;color:#fff;box-shadow:0 4px 14px rgba(78,205,196,.35)">确认存入</button>
+</div></div></div>
+</div>
 <div class="page" id="page-32" style="">
 <div style="font-size:52px">&#x1F9EE;</div>
 <div class="card"><h1 class="title">Calculator &#x1F9EE;</h1></div>
@@ -303,7 +326,7 @@ const TEDDY_MAP=[
 {id:'t15',m:'default'},{id:'t17',m:'default'},{id:'t18',m:'default'},{id:'t19',m:'default'},
 {id:'t21',m:'default'},{id:'t22',m:'celebrate'},
 {id:'t23',m:'default'},{id:'t24',m:'default'},{id:'t25',m:'default'},{id:'t26',m:'celebrate'},{id:'t27',m:'default'},{id:'t28',m:'default'},
-{id:'t29',m:'default'},{id:'t30',m:'default'},{id:'t31',m:'default'},{id:'t32',m:'default'},{id:'t33',m:'default'},
+{id:'t29',m:'default'},{id:'t30',m:'default'},{id:'t31',m:'sci'},{id:'t32',m:'default'},{id:'t33',m:'default'},
 {id:'t34',m:'sleepy'},{id:'t35',m:'sleepy'},
 {id:'t36',m:'default'},{id:'t37',m:'default'},{id:'t38',m:'default'},{id:'t39',m:'default'},
 {id:'t40',m:'celebrate'},{id:'t41',m:'celebrate'},{id:'t42',m:'default'},{id:'t43',m:'default'},
@@ -331,7 +354,28 @@ function selectOption(el,type){document.querySelectorAll('.option').forEach(o=>o
 
 // Update UI
 function updatePlanInfo(){document.getElementById('planCalories').textContent=U.budget+' kcal'}
-function updateHome(){const pct=Math.min(100,Math.round(0/U.budget*100));const offset=408*(1-pct/100);const ring=document.getElementById('calorieRing');if(ring)ring.style.strokeDashoffset=offset;document.getElementById('calorieDisplay').textContent='0';document.getElementById('calorieBudget').textContent='/ '+U.budget+' kcal';const m=U.macros;const macroDisplay=document.getElementById('macroDisplay');if(macroDisplay)macroDisplay.innerHTML='<div class="ticker-item">碳水 '+m.carbs+'g</div><div class="ticker-item pink">蛋白质 '+m.protein+'g</div><div class="ticker-item">脂肪 '+m.fat+'g</div>';document.getElementById('tickerMsg').textContent='目标: '+U.goalWeight+'kg | 每日: '+U.budget+'kcal'}
+function updateHome(){
+  const budget=U.budget||1800;
+  const cal=parseFloat(localStorage.getItem('ap_todayCalories')||'0');
+  const carbs=parseFloat(localStorage.getItem('ap_todayCarbs')||'0');
+  const protein=parseFloat(localStorage.getItem('ap_todayProtein')||'0');
+  const fat=parseFloat(localStorage.getItem('ap_todayFat')||'0');
+  const pct=Math.min(100,Math.round(cal/budget*100));
+  const offset=408*(1-pct/100);
+  const ring=document.getElementById('calorieRing');
+  if(ring)ring.style.strokeDashoffset=offset;
+  const disp=document.getElementById('calorieDisplay');
+  if(disp)disp.textContent=Math.round(cal);
+  document.getElementById('calorieBudget').textContent='/ '+budget+' kcal';
+  const macroDisplay=document.getElementById('macroDisplay');
+  if(macroDisplay)macroDisplay.innerHTML=
+    '<div class="ticker-item">碳水 '+Math.round(carbs)+'g</div>'+
+    '<div class="ticker-item pink">蛋白质 '+Math.round(protein)+'g</div>'+
+    '<div class="ticker-item">脂肪 '+Math.round(fat)+'g</div>';
+  document.getElementById('tickerMsg').textContent='已摄入: '+Math.round(cal)+' / '+budget+' kcal';
+  const mealL=document.getElementById('mealL');
+  if(mealL)mealL.textContent=Math.round(cal)+' kcal';
+}
 function updateNutrients(){const m=U.macros;const total=m.carbs*4+m.protein*4+m.fat*9||1;document.getElementById('carbsBar').style.width='45%';document.getElementById('carbsBarPct').textContent='45%';document.getElementById('carbsBarG').textContent=m.carbs+'g';document.getElementById('proteinBar').style.width='30%';document.getElementById('proteinBarPct').textContent='30%';document.getElementById('proteinBarG').textContent=m.protein+'g';document.getElementById('fatBar').style.width='25%';document.getElementById('fatBarPct').textContent='25%';document.getElementById('fatBarG').textContent=m.fat+'g'}
 function updateProfile(){document.getElementById('bmiDisplay').textContent=U.bmi+' ('+getBMICat()+')';document.getElementById('bmrDisplay').textContent=Math.round(U.bmr)+' kcal';document.getElementById('tdeeDisplay').textContent=Math.round(U.tdee)+' kcal'}
 function getBMICat(){if(U.bmi<18.5)return'偏瘦';if(U.bmi<24)return'正常';if(U.bmi<28)return'偏胖';return'肥胖'}
@@ -346,6 +390,345 @@ function createConfetti(pid){const id=pid?('confetti'+pid):'confetti1';const c=d
 
 // Touch swipe
 let touchX=0;document.addEventListener('touchstart',e=>touchX=e.touches[0].clientX);document.addEventListener('touchend',e=>{if(touchX-e.changedTouches[0].clientX>50)nextPage()});
+
+// ═══════════════════════════════════════════════════════════════
+// 🔬 SCI TEDDY — monocular + scanning mode
+// ═══════════════════════════════════════════════════════════════
+Teddy.prototype.drawSci = function() {
+  const ctx = this.x;
+  ctx.clearRect(0, 0, this.w, this.h);
+  const cx = this.w / 2;
+  const cy = this.h / 2;
+  const by = cy + 28 + Math.sin(this.t * 1.5) * 3;
+
+  // Head
+  this.ear(cx - cx * 0.82, cy - cy * 0.58, cx * 0.3);
+  this.ear(cx + cx * 0.82, cy - cy * 0.58, cx * 0.3);
+  ctx.beginPath();
+  ctx.arc(cx, cy, cx * 0.82, 0, Math.PI * 2);
+  ctx.fillStyle = this.bg(cx, cy, cx * 0.82);
+  ctx.fill();
+  this.sh(cx, cy, cx * 0.82, 0.1);
+
+  // Sci goggles — cyan glowing rim + lens
+  const gogX = cx;
+  const gogY = cy - cy * 0.06;
+  const gogW = cx * 0.62;
+  const gogH = cy * 0.28;
+
+  // Glowing lens area (cyan)
+  ctx.save();
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = '#00E5FF';
+  ctx.strokeStyle = '#00E5FF';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.roundRect(gogX - gogW / 2, gogY - gogH / 2, gogW, gogH, 10);
+  ctx.stroke();
+  ctx.restore();
+
+  // Lens fill
+  const lg = ctx.createLinearGradient(gogX - gogW / 2, 0, gogX + gogW / 2, 0);
+  lg.addColorStop(0, 'rgba(0,229,255,0.12)');
+  lg.addColorStop(0.5, 'rgba(0,229,255,0.22)');
+  lg.addColorStop(1, 'rgba(0,229,255,0.12)');
+  ctx.fillStyle = lg;
+  ctx.beginPath();
+  ctx.roundRect(gogX - gogW / 2, gogY - gogH / 2, gogW, gogH, 10);
+  ctx.fill();
+
+  // Scan line inside lens (animated)
+  const scanY = gogY - gogH / 2 + (gogH * ((this.t * 1.2) % 1));
+  ctx.save();
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = '#00E5FF';
+  ctx.strokeStyle = 'rgba(0,229,255,0.9)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(gogX - gogW / 2 + 6, scanY);
+  ctx.lineTo(gogX + gogW / 2 - 6, scanY);
+  ctx.stroke();
+  ctx.restore();
+
+  // Lens reflections
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(gogX - gogW * 0.2, gogY - gogH * 0.2, gogW * 0.12, gogH * 0.2, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bridge
+  ctx.strokeStyle = '#00BCD4';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(gogX - gogW * 0.28, gogY);
+  ctx.lineTo(gogX + gogW * 0.28, gogY);
+  ctx.stroke();
+
+  // Strap
+  ctx.strokeStyle = '#00796B';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(gogX - gogW / 2 - 2, gogY);
+  ctx.lineTo(cx - cx * 0.82, gogY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(gogX + gogW / 2 + 2, gogY);
+  ctx.lineTo(cx + cx * 0.82, gogY);
+  ctx.stroke();
+
+  // Smile
+  this.smile(cx, cy + cy * 0.38, cx * 0.18);
+  // Nose
+  this.nose(cx, cy + cy * 0.22, cx * 0.11);
+
+  // Body with heartbeat
+  const hbeat = 1 + Math.sin(this.t * 3.5) * 0.04;
+  ctx.save();
+  ctx.translate(cx, by + 28);
+  ctx.scale(1, hbeat);
+  ctx.translate(-cx, -(by + 28));
+  this.body(cx, by + 28, cx * 1.1, cy * 0.88);
+  ctx.restore();
+  this.legs(by + 36, 12);
+
+  // Raised arms
+  this.raised(by + 8, 10);
+};
+
+// Override draw() to handle sci mode
+const _origDraw = Teddy.prototype.draw;
+Teddy.prototype.draw = function() {
+  if (this.m === 'sci') {
+    this.drawSci();
+  } else {
+    _origDraw.call(this);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 📷 CAMERA + AI VISION SYSTEM
+// ═══════════════════════════════════════════════════════════════
+let pendingFoodData = null;
+let foodLog = JSON.parse(localStorage.getItem('ap_foodLog') || '[]');
+let totalCalories = parseFloat(localStorage.getItem('ap_todayCalories') || '0');
+let totalCarbs = parseFloat(localStorage.getItem('ap_todayCarbs') || '0');
+let totalProtein = parseFloat(localStorage.getItem('ap_todayProtein') || '0');
+let totalFat = parseFloat(localStorage.getItem('ap_todayFat') || '0');
+
+async function handleCameraUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('scanOverlay').style.display = 'flex';
+  document.getElementById('scanStatus').textContent = '🧸 熊仔正在分析中...';
+
+  // Animate scan line on teddy
+  runScanAnimation();
+
+  try {
+    const result = await recognizeFood(file);
+    showResultPopup(result);
+  } catch (err) {
+    document.getElementById('scanOverlay').style.display = 'none';
+    alert('识别失败: ' + err.message + '\n请确保已配置 Gemini API Key');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⚠️  CEO 配置区 — 在下方填入你的 Gemini API Key
+// ═══════════════════════════════════════════════════════════════
+// 获取方式: https://aistudio.google.com/apikey
+// const GEMINI_API_KEY = 'YOUR_KEY_HERE';   // ← 取消注释并填入
+const GEMINI_API_KEY = localStorage.getItem('ap_geminiKey') || '';
+// ═══════════════════════════════════════════════════════════════
+// 如果没有 Key，系统会使用内置食物数据库作为回退演示
+
+const BUILTIN_FOODS = [
+  {name:'宫保鸡丁', weight:200, cal:550, carbs:35, protein:32, fat:28},
+  {name:'番茄炒蛋', weight:180, cal:320, carbs:18, protein:22, fat:18},
+  {name:'清蒸鲈鱼', weight:150, cal:210, carbs:0, protein:42, fat:6},
+  {name:'蒜蓉西兰花', weight:120, cal:55, carbs:8, protein:4, fat:0.5},
+  {name:'米饭', weight:150, cal:195, carbs:45, protein:4, fat:0.5},
+  {name:'红烧肉', weight:120, cal:380, carbs:8, protein:22, fat:30},
+  {name:'凉拌黄瓜', weight:100, cal:35, carbs:5, protein:1, fat:0},
+  {name:'鸡汤面', weight:300, cal:280, carbs:40, protein:15, fat:8},
+  {name:'糖醋里脊', weight:150, cal:420, carbs:42, protein:25, fat:18},
+  {name:'麻婆豆腐', weight:150, cal:310, carbs:12, protein:18, fat:22},
+  {name:'蒸饺', weight:120, cal:290, carbs:38, protein:14, fat:10},
+  {name:'蛋炒饭', weight:200, cal:380, carbs:55, protein:14, fat:14},
+  {name:'可乐鸡翅', weight:100, cal:290, carbs:12, protein:22, fat:18},
+  {name:'酸辣土豆丝', weight:120, cal:145, carbs:28, protein:3, fat:3},
+  {name:'水煮牛肉', weight:150, cal:240, carbs:2, protein:45, fat:6},
+  {name:'蛋花汤', weight:200, cal:75, carbs:5, protein:8, fat:3},
+  {name:'干煸四季豆', weight:120, cal:165, carbs:18, protein:8, fat:8},
+  {name:'红烧排骨', weight:100, cal:280, carbs:6, protein:22, fat:20},
+  {name:'西兰花炒虾', weight:150, cal:180, carbs:6, protein:32, fat:4},
+  {name:'紫菜蛋花汤', weight:180, cal:65, carbs:4, protein:7, fat:3},
+];
+
+async function recognizeFood(file) {
+  // --- Gemini Vision ---
+  if (GEMINI_API_KEY) {
+    const base64 = await toBase64(file);
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            {text: '你是一个专业的中文营养师。请分析这张食物图片，返回严格JSON格式（不要任何其他文字）：{"food":"食物名称","weight":整数克数,"cal":整数千卡,"carbs":整数克,"protein":整数克,"fat":整数克}。只返回JSON。'},
+            {inline_data: {mime_type: file.type, data: base64}}
+          ]
+        }],
+        generationConfig: {responseMimeType: 'application/json', maxOutputTokens: 512}
+      })
+    });
+    if (!res.ok) throw new Error('API错误 ' + res.status);
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('无识别结果');
+    return JSON.parse(text);
+  }
+
+  // --- 回退演示模式 ---
+  await new Promise(r => setTimeout(r, 2200));
+  const food = BUILTIN_FOODS[Math.floor(Math.random() * BUILTIN_FOODS.length)];
+  const factor = 0.6 + Math.random() * 0.9;
+  return {
+    food: food.name,
+    weight: Math.round(food.weight * factor),
+    cal: Math.round(food.cal * factor),
+    carbs: Math.round(food.carbs * factor),
+    protein: Math.round(food.protein * factor),
+    fat: Math.round(food.fat * factor),
+  };
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result.split(',')[1]);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+// Scan animation on P31 teddy canvas
+function runScanAnimation() {
+  const c = document.getElementById('t31');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const teddy = new Teddy(c, 'sci');
+  let frame = 0;
+  const animId = setInterval(() => {
+    frame++;
+    if (frame > 90) { clearInterval(animId); return; }
+    ctx.clearRect(0, 0, W, H);
+    teddy.draw();
+    const gogY = H * 0.47;
+    const gogH = H * 0.22;
+    const gogW = W * 0.52;
+    const scanY = gogY - gogH / 2 + (gogH * ((frame * 0.04) % 1));
+    ctx.save();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00E5FF';
+    ctx.strokeStyle = 'rgba(0,229,255,0.95)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - gogW / 2 + 8, scanY);
+    ctx.lineTo(W / 2 + gogW / 2 - 8, scanY);
+    ctx.stroke();
+    ctx.restore();
+  }, 40);
+}
+
+function showResultPopup(result) {
+  document.getElementById('scanOverlay').style.display = 'none';
+  pendingFoodData = result;
+  document.getElementById('resFood').textContent = result.food || '--';
+  document.getElementById('resWeight').textContent = (result.weight || '--') + 'g';
+  document.getElementById('resCal').textContent = (result.cal || '--') + ' kcal';
+  document.getElementById('resCarbs').textContent = (result.carbs || '--') + 'g';
+  document.getElementById('resProtein').textContent = (result.protein || '--') + 'g';
+  document.getElementById('resFat').textContent = (result.fat || '--') + 'g';
+  document.getElementById('resultPopup').style.display = 'flex';
+
+  // Teddy praise
+  const praises = [
+    '熊仔说：吃得真健康！&#x1F43B;',
+    '这只小熊对你竖起了大拇指！&#x1F44D;',
+    '熊仔眼睛亮了：这就是均衡饮食！',
+    '小熊吸了口气：好香啊，营养也很棒！',
+    '熊仔欣慰地笑了，你真的很懂吃！&#x1F60A;',
+    '哇！小熊说这道菜蛋白质爆棚！&#x1F4AA;',
+    '熊仔记录下了这一刻：完美一餐！&#x1F4DD;',
+  ];
+  const praise = praises[Math.floor(Math.random() * praises.length)];
+  document.getElementById('bubbleText').innerHTML = praise;
+  document.getElementById('bubbleCat').textContent = 'ai_vision';
+  document.getElementById('bubble').classList.add('show');
+  setTimeout(() => document.getElementById('bubble').classList.remove('show'), 5000);
+}
+
+function closeResultPopup() {
+  document.getElementById('resultPopup').style.display = 'none';
+  pendingFoodData = null;
+}
+
+function confirmFood() {
+  if (!pendingFoodData) return;
+  const d = pendingFoodData;
+  const entry = {
+    food: d.food, weight: d.weight, cal: d.cal,
+    carbs: d.carbs, protein: d.protein, fat: d.fat,
+    time: Date.now(), meal: 'lunch'
+  };
+  foodLog.push(entry);
+  localStorage.setItem('ap_foodLog', JSON.stringify(foodLog));
+
+  totalCalories += d.cal;
+  totalCarbs += d.carbs;
+  totalProtein += d.protein;
+  totalFat += d.fat;
+  localStorage.setItem('ap_todayCalories', totalCalories);
+  localStorage.setItem('ap_todayCarbs', totalCarbs);
+  localStorage.setItem('ap_todayProtein', totalProtein);
+  localStorage.setItem('ap_todayFat', totalFat);
+
+  document.getElementById('resultPopup').style.display = 'none';
+  pendingFoodData = null;
+
+  // Update P27 home display
+  updateHomeFood();
+
+  // Auto-return to P27
+  setTimeout(() => goPage(27), 400);
+}
+
+function updateHomeFood() {
+  const budget = U.budget || 1800;
+  const pct = Math.min(100, Math.round(totalCalories / budget * 100));
+  const ring = document.getElementById('calorieRing');
+  if (ring) ring.style.strokeDashoffset = 408 * (1 - pct / 100);
+  const disp = document.getElementById('calorieDisplay');
+  if (disp) disp.textContent = Math.round(totalCalories);
+  const m = U.macros;
+  const macroDisp = document.getElementById('macroDisplay');
+  if (macroDisp) macroDisp.innerHTML =
+    '<div class="ticker-item">碳水 ' + Math.round(totalCarbs) + 'g</div>' +
+    '<div class="ticker-item pink">蛋白质 ' + Math.round(totalProtein) + 'g</div>' +
+    '<div class="ticker-item">脂肪 ' + Math.round(totalFat) + 'g</div>';
+  const mealL = document.getElementById('mealL');
+  if (mealL) mealL.textContent = Math.round(totalCalories) + ' kcal';
+  const tickerMsg = document.getElementById('tickerMsg');
+  if (tickerMsg) tickerMsg.textContent = '已摄入: ' + Math.round(totalCalories) + ' / ' + budget + ' kcal';
+}
+
+// P31 TEDDY_MAP update
+const TEDDY_MAP_SCI = [
+  {id:'t31', m:'sci'}
+];
 
 // Init
 document.addEventListener('DOMContentLoaded',()=>{initTeddies();syncSliders();U.compute();drawCurve();drawHabit();updateHome();updateNutrients();updateProfile();updatePlanInfo();setTimeout(()=>{if(curPage===1)nextPage()},2500)});
