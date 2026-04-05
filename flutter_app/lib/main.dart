@@ -6,36 +6,25 @@ import 'providers/pet_provider.dart';
 import 'providers/nutrition_provider.dart';
 import 'providers/shop_provider.dart';
 import 'providers/achievement_provider.dart';
+import 'screens/main_navigation.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
-import 'screens/home/home_screen.dart';
-import 'screens/meal/meal_capture_screen.dart';
-import 'screens/meal/meal_result_screen.dart';
-import 'screens/meal/meal_history_screen.dart';
-import 'screens/fasting/fasting_screen.dart';
-import 'screens/water/water_screen.dart';
-import 'screens/weight/weight_screen.dart';
-import 'screens/bmi/bmi_screen.dart';
-import 'screens/progress/progress_screen.dart';
-import 'screens/achievements/achievements_screen.dart';
-import 'screens/shop/shop_screen.dart';
-import 'screens/profile/profile_screen.dart';
-import 'screens/settings/settings_screen.dart';
-import 'screens/subscription/subscription_screen.dart';
-import 'screens/pet/pet_detail_screen.dart';
-import 'screens/meal/meal_detail_screen.dart';
 import 'utils/theme.dart';
-import 'utils/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Lock orientation to portrait
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  
+  // Set status bar style
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
   ));
+  
   runApp(const AuraPetApp());
 }
 
@@ -46,18 +35,60 @@ class AuraPetApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // App state - user session, loading states
         ChangeNotifierProvider(create: (_) => AppState()),
+        
+        // Pet state - mood, XP, level, accessories
         ChangeNotifierProvider(create: (_) => PetProvider()),
+        
+        // Nutrition tracking - calories, macros, water
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
+        
+        // Shop system - items, purchases
         ChangeNotifierProvider(create: (_) => ShopProvider()),
+        
+        // Achievements - progress, unlocks
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
       ],
       child: MaterialApp(
         title: 'Aura-Pet',
         debugShowCheckedModeBanner: false,
         theme: AuraPetTheme.lightTheme,
-        initialRoute: AppRoutes.splash,
-        onGenerateRoute: AppRouter.generateRoute,
+        
+        // Initial route based on onboarding status
+        initialRoute: '/',
+        
+        // Route generator
+        onGenerateRoute: (settings) {
+          switch (settings.name) {
+            case '/':
+              return MaterialPageRoute(
+                builder: (_) => const SplashScreen(),
+                settings: settings,
+              );
+            case '/onboarding':
+              return MaterialPageRoute(
+                builder: (_) => const OnboardingScreen(),
+                settings: settings,
+              );
+            case '/auth/login':
+              return MaterialPageRoute(
+                builder: (_) => const LoginScreen(),
+                settings: settings,
+              );
+            case '/main':
+            case '/home':
+              return MaterialPageRoute(
+                builder: (_) => const MainNavigation(),
+                settings: settings,
+              );
+            default:
+              return MaterialPageRoute(
+                builder: (_) => const MainNavigation(),
+                settings: settings,
+              );
+          }
+        },
       ),
     );
   }
