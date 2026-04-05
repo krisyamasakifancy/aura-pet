@@ -108,6 +108,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return ActivityScreen(onComplete: _nextPage);
                 case 16:
                   return AnalyzingScreen(onComplete: _nextPage);
+                case 17:
+                  return PlanReadyScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -6519,6 +6521,429 @@ class _AnalyzingBearPainter extends CustomPainter {
     path.moveTo(center.dx - radius, center.dy);
     path.quadraticBezierTo(center.dx, center.dy - radius * 0.5, center.dx + radius, center.dy);
     canvas.drawPath(path, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P18: Plan Ready Screen
+/// ============================================
+class PlanReadyScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const PlanReadyScreen({super.key, required this.onComplete});
+
+  @override
+  State<PlanReadyScreen> createState() => _PlanReadyScreenState();
+}
+
+class _PlanReadyScreenState extends State<PlanReadyScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _confettiController;
+  late AnimationController _bearController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  // 计算预计达成日期 (3个月后)
+  String get _targetDate {
+    final now = DateTime.now();
+    final target = now.add(const Duration(days: 90));
+    final months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${months[target.month - 1]} ${target.day}, ${target.year}';
+  }
+
+  // 根据用户数据计算每日卡路里
+  int get _dailyCalories {
+    final weight = UserMetrics.weight ?? 65.0;
+    final height = UserMetrics.height ?? 170.0;
+    final age = UserMetrics.age ?? 25;
+    final isMale = UserMetrics.gender == 'male';
+    
+    // BMR计算 ( Mifflin-St Jeor Equation )
+    double bmr;
+    if (isMale) {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+    
+    // 活动系数
+    final activityMultipliers = {
+      'sedentary': 1.2,
+      'lightly': 1.375,
+      'moderately': 1.55,
+      'very': 1.725,
+    };
+    final activity = UserMetrics.activityLevel ?? 'moderately';
+    final tdee = bmr * (activityMultipliers[activity] ?? 1.55);
+    
+    // 目标：减重 = TDEE - 500
+    return (tdee - 500).round();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 撒花背景
+            AnimatedBuilder(
+              animation: _confettiController,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: Size.infinite,
+                  painter: _ConfettiPainter(progress: _confettiController.value),
+                );
+              },
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+
+                  // 标题
+                  const Text(
+                    'Your personalized\nplan is ready!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      height: 1.2,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas撒花小熊
+                  AnimatedBuilder(
+                    animation: _bearController,
+                    builder: (context, child) {
+                      final bounce = math.sin(_bearController.value * math.pi * 2) * 8;
+                      return Transform.translate(
+                        offset: Offset(0, bounce),
+                        child: child,
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(150, 150),
+                      painter: _CelebratingBearPainter(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 计划卡片
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // 预计达成日期
+                        _PlanItem(
+                          icon: '📅',
+                          label: 'Target date',
+                          value: _targetDate,
+                          color: const Color(0xFF4ECDC4),
+                        ),
+                        
+                        const Divider(height: 32),
+
+                        // 每日卡路里
+                        _PlanItem(
+                          icon: '🔥',
+                          label: 'Daily calories',
+                          value: '${_dailyCalories.toString()} kcal',
+                          color: const Color(0xFFFF6B6B),
+                        ),
+                        
+                        const Divider(height: 32),
+
+                        // 每日饮水
+                        _PlanItem(
+                          icon: '💧',
+                          label: 'Daily water',
+                          value: '2.5 L',
+                          color: const Color(0xFF64B5F6),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Continue胶囊按钮
+                  GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 计划项组件
+class _PlanItem extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _PlanItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // 图标
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(icon, style: const TextStyle(fontSize: 24)),
+          ),
+        ),
+
+        const SizedBox(width: 16),
+
+        // 标签和值
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Canvas: 撒花粒子
+class _ConfettiPainter extends CustomPainter {
+  final double progress;
+
+  _ConfettiPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFFFF6B6B),
+      const Color(0xFF4ECDC4),
+      const Color(0xFFFFE66D),
+      const Color(0xFFA8E6CF),
+      const Color(0xFFFF8A65),
+      const Color(0xFF64B5F6),
+    ];
+
+    final random = math.Random(42);
+    for (int i = 0; i < 40; i++) {
+      final baseX = random.nextDouble() * size.width;
+      final baseY = (progress + i * 0.02) % 1.0 * size.height;
+      final particleSize = 4.0 + random.nextDouble() * 6;
+      final color = colors[i % colors.length];
+
+      final paint = Paint()
+        ..color = color.withOpacity(0.6)
+        ..style = PaintingStyle.fill;
+
+      // 撒花形状
+      if (i % 3 == 0) {
+        // 圆形
+        canvas.drawCircle(Offset(baseX, baseY), particleSize, paint);
+      } else if (i % 3 == 1) {
+        // 方形
+        canvas.drawRect(Rect.fromCenter(center: Offset(baseX, baseY), width: particleSize * 1.5, height: particleSize * 1.5), paint);
+      } else {
+        // 三角形
+        final path = Path();
+        path.moveTo(baseX, baseY - particleSize);
+        path.lineTo(baseX - particleSize, baseY + particleSize);
+        path.lineTo(baseX + particleSize, baseY + particleSize);
+        path.close();
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// Canvas: 撒花比心小熊
+class _CelebratingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.9), width: r * 1.6, height: r * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 开心眼睛 (弯弯的笑眼)
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.15);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.3, c.dy - r * 0.1), r * 0.15);
+
+    // 开心嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.2, c.dy + r * 0.35);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.55, c.dx + r * 0.2, c.dy + r * 0.35);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.3, height: r * 0.15), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.7));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.3, height: r * 0.15), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.7));
+
+    // 举起的双手 (撒花姿势)
+    _drawCelebratingArm(canvas, Offset(c.dx - r * 1.1, c.dy), r * 0.5, -0.8);
+    _drawCelebratingArm(canvas, Offset(c.dx + r * 1.1, c.dy), r * 0.5, 0.8);
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    // 弯弯的笑眼
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size, center.dx + size, center.dy);
+    canvas.drawPath(path, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+  }
+
+  void _drawCelebratingArm(Canvas canvas, Offset center, double size, double angle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    
+    // 手臂
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(0, -size * 0.5), width: size * 0.4, height: size * 0.6),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+    
+    // 小手
+    canvas.drawCircle(Offset(0, -size * 0.9), size * 0.2, Paint()..color = const Color(0xFFD4A574));
+    
+    canvas.restore();
   }
 
   @override
