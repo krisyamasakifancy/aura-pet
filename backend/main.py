@@ -779,6 +779,111 @@ async def get_meal_history(user_id: str, limit: int = 20):
     meals = await redis_client.lrange(f"meals:{user_id}", 0, limit - 1)
     return [json.loads(m) for m in meals]
 
+# ========== Quad-Agent 食物识别 API ==========
+
+from agents.meal_quad_agent import (
+    MealQuadAgent, MealLogResult, FoodData, NutritionAnalysis,
+    PetStateUpdate, MealType, AnimationType, PetMood
+)
+from dataclasses import asdict
+
+quad_agent = MealQuadAgent()
+
+
+class QuadMealRequest(BaseModel):
+    user_id: str
+    meal_type: str = "snack"
+    user_profile: Optional[Dict] = None
+    current_pet_state: Optional[Dict] = None
+
+
+@app.post("/v1/quad/meal")
+async def quad_meal_log(request: QuadMealRequest):
+    """
+    Quad-Agent 餐食记录
+    并行执行：Vision → Logic → Animator + Persona
+    """
+    # 默认用户资料
+    if not request.user_profile:
+        request.user_profile = {
+            "daily_calorie_goal": 2000,
+            "daily_protein_goal_g": 60,
+            "daily_carbs_goal_g": 250,
+            "daily_fat_goal_g": 65,
+        }
+    
+    if not request.current_pet_state:
+        request.current_pet_state = {
+            "current_xp": 0,
+            "xp_to_next_level": 100,
+            "level": 1,
+            "mood": "happy",
+        }
+    
+    try:
+        # 模拟图片数据
+        dummy_image = b"dummy"
+        
+        result: MealLogResult = await quad_agent.process_meal(
+            image_bytes=dummy_image,
+            user_id=request.user_id,
+            user_profile=request.user_profile,
+            current_pet_state=request.current_pet_state,
+            meal_type=MealType(request.meal_type)
+        )
+        
+        return {
+            "success": True,
+            "meal_id": result.meal_id,
+            "food": asdict(result.food),
+            "nutrition": asdict(result.nutrition),
+            "pet_state": asdict(result.pet_state),
+            "timestamp": result.timestamp
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/quad/meal-debug")
+async def quad_meal_debug(request: QuadMealRequest):
+    """Quad-Agent 调试模式（顺序执行+日志）"""
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    
+    if not request.user_profile:
+        request.user_profile = {
+            "daily_calorie_goal": 2000,
+            "daily_protein_goal_g": 60,
+            "daily_carbs_goal_g": 250,
+            "daily_fat_goal_g": 65,
+        }
+    
+    if not request.current_pet_state:
+        request.current_pet_state = {
+            "current_xp": 0,
+            "xp_to_next_level": 100,
+            "level": 1,
+            "mood": "happy",
+        }
+    
+    result = await quad_agent.process_meal_sequential(
+        image_bytes=b"dummy",
+        user_id=request.user_id,
+        user_profile=request.user_profile,
+        current_pet_state=request.current_pet_state
+    )
+    
+    return {
+        "success": True,
+        "meal_id": result.meal_id,
+        "food": asdict(result.food),
+        "nutrition": asdict(result.nutrition),
+        "pet_state": asdict(result.pet_state),
+        "timestamp": result.timestamp
+    }
+
+
 # ========== WebSocket 实时推送 ==========
 
 class ConnectionManager:
