@@ -138,6 +138,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return FoodSearchScreen(onComplete: _nextPage);
                 case 31:
                   return FoodListScreen(onComplete: _nextPage);
+                case 32:
+                  return CalorieCalculatorScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -13351,6 +13353,353 @@ class _FoodBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P33: Calorie Calculator Screen
+/// ============================================
+class CalorieCalculatorScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const CalorieCalculatorScreen({super.key, required this.onComplete});
+
+  @override
+  State<CalorieCalculatorScreen> createState() => _CalorieCalculatorScreenState();
+}
+
+class _CalorieCalculatorScreenState extends State<CalorieCalculatorScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _scaleAnim;
+
+  // 选定食物 (默认Sweet Potato)
+  final String _foodName = 'Sweet Potato';
+  final String _foodEmoji = '🍠';
+  final double _caloriesPerGram = 1.2; // kcal per gram
+
+  double _weight = 100.0; // grams
+  late double _totalCalories;
+
+  @override
+  void initState() {
+    super.initState();
+    _totalCalories = _weight * _caloriesPerGram;
+
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.1), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutBack));
+
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _updateWeight(double value) {
+    setState(() {
+      _weight = value;
+      _totalCalories = _weight * _caloriesPerGram;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Calculator',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              // 食物卡片
+              AnimatedBuilder(
+                animation: _scaleAnim,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _scaleAnim.value,
+                    child: child,
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFE066), Color(0xFFFFD700)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFE066).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Emoji
+                      Text(
+                        _foodEmoji,
+                        style: const TextStyle(fontSize: 64),
+                      ),
+                      const SizedBox(height: 12),
+                      // 食物名称
+                      Text(
+                        _foodName,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // 动态热量数值
+                      Text(
+                        '${_totalCalories.toStringAsFixed(0)} kcal',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 48,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'per ${_weight.toStringAsFixed(0)}g',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: const Color(0xFF2D3748).withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // 克数滑动条
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Adjust weight',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // 克数显示
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '${_weight.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 48,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'g',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 20,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 滑动条
+                    SliderTheme(
+                      data: SliderThemeData(
+                        activeTrackColor: const Color(0xFF4CAF50),
+                        inactiveTrackColor: Colors.grey.shade200,
+                        thumbColor: const Color(0xFF4CAF50),
+                        overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
+                        trackHeight: 8,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
+                      ),
+                      child: Slider(
+                        value: _weight,
+                        min: 0,
+                        max: 500,
+                        divisions: 100,
+                        onChanged: _updateWeight,
+                      ),
+                    ),
+
+                    // 刻度标签
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('0g', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey.shade500)),
+                        Text('250g', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey.shade500)),
+                        Text('500g', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey.shade500)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 快捷按钮
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _QuickWeightButton(label: '50g', onTap: () => _updateWeight(50)),
+                        _QuickWeightButton(label: '100g', onTap: () => _updateWeight(100)),
+                        _QuickWeightButton(label: '200g', onTap: () => _updateWeight(200)),
+                        _QuickWeightButton(label: '250g', onTap: () => _updateWeight(250)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Add to diary按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Add to diary',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 快捷重量按钮
+class _QuickWeightButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickWeightButton({
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4CAF50).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF4CAF50),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// 占位页
