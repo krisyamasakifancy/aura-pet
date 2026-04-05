@@ -13,7 +13,7 @@ import 'screens/auth/login_screen.dart';
 import 'services/quote_engine.dart';
 import 'services/monet_clock.dart';
 import 'services/haptic_audio.dart';
-import 'utils/theme.dart';
+import 'utils/aura_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,7 +97,7 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         
         // Time-aware Monet theme
-        theme: MonetThemeBuilder.build(_currentColors),
+        theme: AuraPetTheme.lightTheme,
         darkTheme: MonetThemeBuilder.build(MonetColors.night),
         themeMode: ThemeMode.system,
         
