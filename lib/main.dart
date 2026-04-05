@@ -142,6 +142,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return CalorieCalculatorScreen(onComplete: _nextPage);
                 case 33:
                   return FastingPlanScreen(onComplete: _nextPage);
+                case 34:
+                  return FastingTimerScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -14084,6 +14086,456 @@ class _MinimalClockPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MinimalClockPainter oldDelegate) =>
       oldDelegate.hours != hours || oldDelegate.color != color;
+}
+
+
+/// ============================================
+/// P35: Fasting Timer Screen
+/// ============================================
+class FastingTimerScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const FastingTimerScreen({super.key, required this.onComplete});
+
+  @override
+  State<FastingTimerScreen> createState() => _FastingTimerScreenState();
+}
+
+class _FastingTimerScreenState extends State<FastingTimerScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _waveController;
+  late AnimationController _pulseController;
+  late AnimationController _bearController;
+  late Animation<double> _waveAnim;
+  late Animation<double> _pulseAnim;
+
+  bool _isStarted = false;
+  int _remainingSeconds = 16 * 60 * 60; // 16小时
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    _waveAnim = Tween<double>(begin: 0, end: 1).animate(_waveController);
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    _pulseController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _startFasting() {
+    setState(() {
+      _isStarted = true;
+    });
+    _waveController.repeat();
+
+    // 开始倒计时
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted && _remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+        return true;
+      }
+      return false;
+    });
+  }
+
+  String get _formattedTime {
+    final hours = _remainingSeconds ~/ 3600;
+    final minutes = (_remainingSeconds % 3600) ~/ 60;
+    final seconds = _remainingSeconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _isStarted ? const Color(0xFF1a2a3a) : const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 顶部
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_ios,
+                      color: _isStarted ? Colors.white : const Color(0xFF2D3748),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _isStarted ? 'Fasting in progress' : 'Start fasting',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: _isStarted ? Colors.white70 : const Color(0xFF2D3748),
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+
+            // 主计时器
+            Expanded(
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_waveAnim, _pulseAnim]),
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _isStarted ? _pulseAnim.value : 1.0,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 波纹背景
+                          if (_isStarted)
+                            CustomPaint(
+                              size: const Size(320, 320),
+                              painter: _WaveRipplePainter(
+                                progress: _waveAnim.value,
+                                color: const Color(0xFF4CAF50),
+                              ),
+                            ),
+
+                          // 圆环
+                          CustomPaint(
+                            size: const Size(280, 280),
+                            painter: _FastingRingPainter(
+                              progress: _isStarted
+                                  ? 1 - (_remainingSeconds / (16 * 60 * 60))
+                                  : 0,
+                              isStarted: _isStarted,
+                            ),
+                          ),
+
+                          // 中心内容
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!_isStarted) ...[
+                                // Canvas睡帽小熊
+                                AnimatedBuilder(
+                                  animation: _bearController,
+                                  builder: (context, child) {
+                                    return Transform.translate(
+                                      offset: Offset(
+                                        math.sin(_bearController.value * math.pi * 2) * 3,
+                                        0,
+                                      ),
+                                      child: child,
+                                    );
+                                  },
+                                  child: CustomPaint(
+                                    size: const Size(80, 80),
+                                    painter: _SleepingBearPainter(),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'START FASTING',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Color(0xFF2D3748),
+                                  ),
+                                ),
+                              ] else ...[
+                                // 倒计时显示
+                                Text(
+                                  _formattedTime,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 42,
+                                    color: Colors.white,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'hours remaining',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+
+                          // 点击区域
+                          if (!_isStarted)
+                            Positioned.fill(
+                              child: GestureDetector(
+                                onTap: _startFasting,
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // 底部提示
+            if (!_isStarted)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Tap the circle to begin your fasting journey',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4CAF50),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Fasting mode active',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 睡帽小熊
+class _SleepingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 5;
+
+    // 睡帽
+    final hatPath = Path();
+    hatPath.moveTo(c.dx - r * 0.6, c.dy - r * 0.6);
+    hatPath.quadraticBezierTo(c.dx - r * 0.3, c.dy - r * 1.3, c.dx, c.dy - r * 1.0);
+    hatPath.quadraticBezierTo(c.dx + r * 0.3, c.dy - r * 1.3, c.dx + r * 0.6, c.dy - r * 0.6);
+    hatPath.close();
+    canvas.drawPath(hatPath, Paint()..color = const Color(0xFF4ECDC4));
+    // 帽子绒球
+    canvas.drawCircle(Offset(c.dx, c.dy - r * 1.15), r * 0.12, Paint()..color = const Color(0xFFFFE066));
+
+    // 头
+    canvas.drawCircle(c, r * 0.8, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.65, c.dy - r * 0.5), r * 0.2, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.65, c.dy - r * 0.5), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 0.5), r * 0.2, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 0.5), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.75),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 睡眠眼睛 (闭着)
+    canvas.drawLine(
+      Offset(c.dx - r * 0.35, c.dy - r * 0.05),
+      Offset(c.dx - r * 0.15, c.dy - r * 0.05),
+      Paint()..color = const Color(0xFF5D4037)..strokeWidth = 2..strokeCap = StrokeCap.round,
+    );
+    canvas.drawLine(
+      Offset(c.dx + r * 0.15, c.dy - r * 0.05),
+      Offset(c.dx + r * 0.35, c.dy - r * 0.05),
+      Paint()..color = const Color(0xFF5D4037)..strokeWidth = 2..strokeCap = StrokeCap.round,
+    );
+
+    // 睡眠Z动画
+    _drawSleepZ(canvas, Offset(c.dx + r * 0.7, c.dy - r * 0.3), r * 0.15);
+    _drawSleepZ(canvas, Offset(c.dx + r * 0.85, c.dy - r * 0.6), r * 0.1);
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.12, c.dy + r * 0.25);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.38, c.dx + r * 0.12, c.dy + r * 0.25);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.35, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.35, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+  }
+
+  void _drawSleepZ(Canvas canvas, Offset center, double size) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'z',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: size * 2,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFF4ECDC4).withOpacity(0.7),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Canvas: 禁食圆环
+class _FastingRingPainter extends CustomPainter {
+  final double progress;
+  final bool isStarted;
+
+  _FastingRingPainter({required this.progress, required this.isStarted});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+
+    // 背景环
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = isStarted ? Colors.white.withOpacity(0.1) : Colors.grey.shade200
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 12,
+    );
+
+    // 进度环
+    if (progress > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi / 2,
+        progress * math.pi * 2,
+        false,
+        Paint()
+          ..color = const Color(0xFF4CAF50)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    // 开始环 (虚线)
+    if (!isStarted) {
+      canvas.drawCircle(
+        center,
+        radius + 20,
+        Paint()
+          ..color = const Color(0xFF4CAF50).withOpacity(0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FastingRingPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.isStarted != isStarted;
+}
+
+/// Canvas: 波纹扩散
+class _WaveRipplePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _WaveRipplePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // 绘制多层波纹
+    for (int i = 0; i < 3; i++) {
+      final waveProgress = (progress + i * 0.33) % 1.0;
+      final radius = waveProgress * size.width / 2;
+      final opacity = (1 - waveProgress) * 0.3;
+
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = color.withOpacity(opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaveRipplePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// 占位页
