@@ -1,282 +1,282 @@
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
-import '../models/pet_state.dart';
 
-/// ============================================
-// AURA-PET: Quad-Agent API 服务
-// WebSocket 实时通信
-/// ============================================
+class ApiService {
+  static const String baseUrl = 'https://api.aura-pet.com/v1';
+  static const Duration timeout = Duration(seconds: 30);
 
-class AuraPetApiService {
-  static const String baseUrl = 'http://localhost:8000';
-  static const String wsUrl = 'ws://localhost:8000/ws';
-  
-  WebSocket? _ws;
-  final _messageController = StreamController<Map<String, dynamic>>.broadcast();
-  bool _isConnected = false;
+  // Singleton
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
 
-  Stream<Map<String, dynamic>> get messages => _messageController.stream;
-  bool get isConnected => _isConnected;
+  String? _token;
 
-  /// 连接 WebSocket
-  Future<void> connect() async {
-    try {
-      _ws = await WebSocket.connect(wsUrl);
-      _isConnected = true;
-      
-      _ws!.listen(
-        (data) {
-          final message = jsonDecode(data);
-          _messageController.add(message);
-        },
-        onError: (error) {
-          debugPrint('WebSocket Error: $error');
-          _isConnected = false;
-          _reconnect();
-        },
-        onDone: () {
-          _isConnected = false;
-          _reconnect();
-        },
-      );
-      
-      debugPrint('WebSocket Connected');
-    } catch (e) {
-      debugPrint('Connection Error: $e');
-      _isConnected = false;
-    }
+  void setToken(String token) {
+    _token = token;
   }
 
-  void _reconnect() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!_isConnected) {
-        connect();
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_token != null) 'Authorization': 'Bearer $_token',
+  };
+
+  // ===== Auth =====
+  Future<ApiResponse> login(String email, String password) async {
+    // Simulated API call
+    await Future.delayed(const Duration(milliseconds: 800));
+    return ApiResponse.success({
+      'token': 'mock_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
+      'user': {
+        'id': 'user_${DateTime.now().millisecondsSinceEpoch}',
+        'email': email,
+        'name': email.split('@').first,
+        'level': 1,
+        'coins': 100,
       }
     });
   }
 
-  /// 断开连接
-  void disconnect() {
-    _ws?.close();
-    _isConnected = false;
+  Future<ApiResponse> register(String name, String email, String password) async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+    return ApiResponse.success({
+      'token': 'mock_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
+      'user': {
+        'id': 'user_${DateTime.now().millisecondsSinceEpoch}',
+        'email': email,
+        'name': name,
+        'level': 1,
+        'coins': 200, // Welcome bonus
+      }
+    });
   }
 
-  /// ============================================
-  /// Quad-Agent: 拍照分析食物
-  /// ============================================
-  Future<MealAnalysisResult> analyzeMeal(String imageBase64) async {
-    try {
-      final response = await post('/api/v1/meal/analyze', {
-        'image': imageBase64,
-      });
-      return MealAnalysisResult.fromJson(response);
-    } catch (e) {
-      debugPrint('Meal Analysis Error: $e');
-      // 离线模式：返回随机结果
-      return _generateOfflineMealResult();
-    }
-  }
-
-  /// ============================================
-  /// 记录餐食
-  /// ============================================
-  Future<PetState> recordMeal(MealRecord meal) async {
-    try {
-      final response = await post('/api/v1/pet/feed', meal.toJson());
-      return PetState.fromJson(response);
-    } catch (e) {
-      debugPrint('Record Meal Error: $e');
-      throw e;
-    }
-  }
-
-  /// ============================================
-  /// 获取宠物状态
-  /// ============================================
-  Future<PetState> getPetState() async {
-    try {
-      final response = await get('/api/v1/pet/state');
-      return PetState.fromJson(response);
-    } catch (e) {
-      debugPrint('Get Pet State Error: $e');
-      // 返回默认状态
-      return PetState();
-    }
-  }
-
-  /// ============================================
-  /// 添加金币
-  /// ============================================
-  Future<int> addCoins(int amount) async {
-    try {
-      final response = await post('/api/v1/pet/coins', {'amount': amount});
-      return response['coins'];
-    } catch (e) {
-      debugPrint('Add Coins Error: $e');
-      throw e;
-    }
-  }
-
-  /// ============================================
-  /// 喝水记录
-  /// ============================================
-  Future<PetState> addWater(int amount) async {
-    try {
-      final response = await post('/api/v1/pet/water', {'amount': amount});
-      return PetState.fromJson(response);
-    } catch (e) {
-      debugPrint('Add Water Error: $e');
-      throw e;
-    }
-  }
-
-  /// ============================================
-  /// 获取商店物品
-  /// ============================================
-  Future<List<ShopItem>> getShopItems() async {
-    try {
-      final response = await get('/api/v1/shop/items');
-      return (response['items'] as List)
-          .map((item) => ShopItem(
-                id: item['id'],
-                name: item['name'],
-                emoji: item['emoji'],
-                category: item['category'],
-                price: item['price'],
-                description: item['description'],
-                isOwned: item['isOwned'] ?? false,
-                isEquipped: item['isEquipped'] ?? false,
-              ))
-          .toList();
-    } catch (e) {
-      debugPrint('Get Shop Items Error: $e');
-      return _getOfflineShopItems();
-    }
-  }
-
-  /// ============================================
-  /// 购买物品
-  /// ============================================
-  Future<bool> purchaseItem(String itemId) async {
-    try {
-      await post('/api/v1/shop/purchase', {'itemId': itemId});
-      return true;
-    } catch (e) {
-      debugPrint('Purchase Item Error: $e');
-      return false;
-    }
-  }
-
-  /// ============================================
-  /// 装备物品
-  /// ============================================
-  Future<bool> equipItem(String itemId) async {
-    try {
-      await post('/api/v1/shop/equip', {'itemId': itemId});
-      return true;
-    } catch (e) {
-      debugPrint('Equip Item Error: $e');
-      return false;
-    }
-  }
-
-  // ========== HTTP 助手 ==========
-
-  Future<Map<String, dynamic>> get(String path) async {
-    final response = await httpGet('$baseUrl$path');
-    return jsonDecode(response);
-  }
-
-  Future<Map<String, dynamic>> post(String path, Map<String, dynamic> body) async {
-    final response = await httpPost('$baseUrl$path', body);
-    return jsonDecode(response);
-  }
-
-  Future<String> httpGet(String url) async {
-    // 简化实现，实际使用 http 包
-    throw UnimplementedError('Use http package');
-  }
-
-  Future<String> httpPost(String url, Map<String, dynamic> body) async {
-    // 简化实现，实际使用 http 包
-    throw UnimplementedError('Use http package');
-  }
-
-  // ========== 离线模式 ==========
-
-  MealAnalysisResult _generateOfflineMealResult() {
+  // ===== Meal =====
+  Future<ApiResponse> analyzeFood(String imageBase64) async {
+    await Future.delayed(const Duration(seconds: 2));
+    // Simulated AI analysis
     final foods = [
-      {'emoji': '🍰', 'name': '芝士蛋糕', 'cal': 420, 'label': '灵魂充电时间 ⚡'},
-      {'emoji': '🍕', 'name': '披萨', 'cal': 680, 'label': '尊享犒劳时刻 👑'},
-      {'emoji': '🥗', 'name': '蔬菜沙拉', 'cal': 180, 'label': '绿色能量满格 🌿'},
-      {'emoji': '🍗', 'name': '炸鸡', 'cal': 620, 'label': '快乐炸裂 ✨'},
-      {'emoji': '🧋', 'name': '奶茶', 'cal': 350, 'label': '快乐肥宅水 🥤'},
+      {'name': '鸡胸肉沙拉', 'emoji': '🍗', 'cal': 285, 'protein': 31.0, 'carbs': 12.0, 'fat': 8.0},
+      {'name': '三文鱼便当', 'emoji': '🍣', 'cal': 420, 'protein': 35.0, 'carbs': 25.0, 'fat': 18.0},
+      {'name': '蔬菜沙拉', 'emoji': '🥗', 'cal': 120, 'protein': 5.0, 'carbs': 20.0, 'fat': 3.0},
+      {'name': '牛肉汉堡', 'emoji': '🍔', 'cal': 550, 'protein': 28.0, 'carbs': 45.0, 'fat': 28.0},
     ];
-    
-    final food = foods[DateTime.now().millisecond % foods.length];
-    
-    return MealAnalysisResult(
-      foodName: food['name'],
-      emoji: food['emoji'],
-      calories: food['cal'],
-      anxietyLabel: food['label'],
-      phrases: [
-        '哇！是你最爱的${food['name']}诶！！',
-        '生活已经这么苦了当然要对自己好一点呀～',
-        '吃吧吃吧，小浣熊批准了！👑✨',
-      ],
-      coinsEarned: 10 + (food['cal'] ~/ 50),
-      xpEarned: food['cal'] ~/ 30,
-      nutritionBalance: food['cal'] > 400 ? 0.3 : -0.2,
+    final food = foods[DateTime.now().second % foods.length];
+    return ApiResponse.success(food);
+  }
+
+  Future<ApiResponse> saveMeal(Map<String, dynamic> mealData) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResponse.success({
+      'id': 'meal_${DateTime.now().millisecondsSinceEpoch}',
+      ...mealData,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<ApiResponse> getMealHistory({int limit = 20, int offset = 0}) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    final meals = List.generate(
+      limit,
+      (i) => {
+        'id': 'meal_${i}_${DateTime.now().millisecondsSinceEpoch}',
+        'name': ['鸡胸肉沙拉', '三文鱼便当', '蔬菜沙拉'][i % 3],
+        'emoji': ['🍗', '🍣', '🥗'][i % 3],
+        'cal': [285, 420, 120][i % 3],
+        'timestamp': DateTime.now().subtract(Duration(hours: i * 3)).toIso8601String(),
+      },
     );
+    return ApiResponse.success({
+      'meals': meals,
+      'total': 100,
+      'hasMore': offset + limit < 100,
+    });
   }
 
-  List<ShopItem> _getOfflineShopItems() {
-    return [
-      ShopItem(id: 'glasses_1', name: '圆框眼镜', emoji: '👓', category: 'accessories', price: 100, description: '文艺小清新'),
-      ShopItem(id: 'glasses_2', name: '墨镜', emoji: '🕶️', category: 'accessories', price: 200, description: '酷酷的'),
-      ShopItem(id: 'bow_1', name: '粉色蝴蝶结', emoji: '🎀', category: 'accessories', price: 150, description: '可爱满分'),
-      ShopItem(id: 'bg_1', name: '莫奈花园', emoji: '🌸', category: 'backgrounds', price: 300, description: '睡莲池畔'),
-      ShopItem(id: 'bg_2', name: '星空', emoji: '✨', category: 'backgrounds', price: 250, description: '银河璀璨'),
-    ];
+  // ===== Pet =====
+  Future<ApiResponse> getPetState() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return ApiResponse.success({
+      'level': 3,
+      'xp': 65,
+      'xpToNext': 100,
+      'mood': 'happy',
+      'accessories': ['scarf'],
+      'hearts': 3,
+      'coins': 280,
+    });
   }
 
-  void dispose() {
-    disconnect();
-    _messageController.close();
+  Future<ApiResponse> buyAccessory(String accessoryId, int price) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResponse.success({
+      'success': true,
+      'newAccessories': ['scarf', accessoryId],
+      'remainingCoins': 280 - price,
+    });
+  }
+
+  // ===== Nutrition =====
+  Future<ApiResponse> getDailySummary() async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    return ApiResponse.success({
+      'calories': 1245,
+      'calorieGoal': 2000,
+      'protein': 65,
+      'proteinGoal': 60,
+      'carbs': 180,
+      'carbsGoal': 200,
+      'fat': 45,
+      'fatGoal': 65,
+      'water': 5,
+      'waterGoal': 8,
+    });
+  }
+
+  Future<ApiResponse> addWaterLog(int glasses) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return ApiResponse.success({
+      'success': true,
+      'totalGlasses': 5 + glasses,
+      'goalMet': 5 + glasses >= 8,
+    });
+  }
+
+  // ===== Fasting =====
+  Future<ApiResponse> startFasting(int hours) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    return ApiResponse.success({
+      'id': 'fasting_${DateTime.now().millisecondsSinceEpoch}',
+      'startTime': DateTime.now().toIso8601String(),
+      'targetHours': hours,
+      'status': 'active',
+    });
+  }
+
+  Future<ApiResponse> endFasting(String fastingId) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    return ApiResponse.success({
+      'id': fastingId,
+      'endTime': DateTime.now().toIso8601String(),
+      'status': 'completed',
+      'xpEarned': 50,
+      'coinsEarned': 10,
+    });
+  }
+
+  // ===== Achievements =====
+  Future<ApiResponse> getAchievements() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResponse.success({
+      'achievements': [
+        {'id': 'streak_7', 'name': '连续7天', 'progress': 5, 'target': 7, 'unlocked': false},
+        {'id': 'water_8', 'name': '喝水达人', 'progress': 8, 'target': 8, 'unlocked': true},
+        {'id': 'balance_3', 'name': '营养均衡', 'progress': 3, 'target': 3, 'unlocked': true},
+      ]
+    });
+  }
+
+  // ===== Subscription =====
+  Future<ApiResponse> checkSubscription() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return ApiResponse.success({
+      'isSubscribed': false,
+      'plan': null,
+      'expiresAt': null,
+    });
+  }
+
+  Future<ApiResponse> subscribe(String planId) async {
+    await Future.delayed(const Duration(seconds: 2));
+    return ApiResponse.success({
+      'success': true,
+      'plan': planId,
+      'expiresAt': DateTime.now().add(const Duration(days: 365)).toIso8601String(),
+    });
+  }
+
+  // ===== Profile =====
+  Future<ApiResponse> updateProfile(Map<String, dynamic> data) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResponse.success({'success': true, ...data});
+  }
+
+  Future<ApiResponse> getProfile() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return ApiResponse.success({
+      'name': 'Colvin',
+      'email': 'colvin@example.com',
+      'height': 175,
+      'weight': 70,
+      'goal': 'lose',
+      'createdAt': '2024-01-01T00:00:00Z',
+    });
   }
 }
 
-class MealAnalysisResult {
-  final String foodName;
-  final String emoji;
-  final int calories;
-  final String anxietyLabel;
-  final List<String> phrases;
-  final int coinsEarned;
-  final int xpEarned;
-  final double nutritionBalance;
+class ApiResponse {
+  final bool success;
+  final dynamic data;
+  final String? error;
+  final int? statusCode;
 
-  MealAnalysisResult({
-    required this.foodName,
-    required this.emoji,
-    required this.calories,
-    required this.anxietyLabel,
-    required this.phrases,
-    required this.coinsEarned,
-    required this.xpEarned,
-    required this.nutritionBalance,
+  const ApiResponse._({
+    required this.success,
+    this.data,
+    this.error,
+    this.statusCode,
   });
 
-  factory MealAnalysisResult.fromJson(Map<String, dynamic> json) => MealAnalysisResult(
-        foodName: json['foodName'],
-        emoji: json['emoji'],
-        calories: json['calories'],
-        anxietyLabel: json['anxietyLabel'],
-        phrases: List<String>.from(json['phrases']),
-        coinsEarned: json['coinsEarned'],
-        xpEarned: json['xpEarned'],
-        nutritionBalance: (json['nutritionBalance'] ?? 0).toDouble(),
-      );
+  factory ApiResponse.success(dynamic data) {
+    return ApiResponse._(success: true, data: data);
+  }
+
+  factory ApiResponse.error(String message, {int? statusCode}) {
+    return ApiResponse._(
+      success: false,
+      error: message,
+      statusCode: statusCode,
+    );
+  }
+
+  T? getData<T>() {
+    if (success && data is T) {
+      return data as T;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? getDataAsMap() {
+    if (success && data is Map<String, dynamic>) {
+      return data as Map<String, dynamic>;
+    }
+    if (success && data is Map) {
+      return Map<String, dynamic>.from(data as Map);
+    }
+    return null;
+  }
+}
+
+// API Error types
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const ApiException(this.message, {this.statusCode});
+
+  @override
+  String toString() => 'ApiException: $message (code: $statusCode)';
+}
+
+class NetworkException extends ApiException {
+  const NetworkException() : super('Network error. Please check your connection.');
+}
+
+class UnauthorizedException extends ApiException {
+  const UnauthorizedException() : super('Unauthorized. Please login again.', statusCode: 401);
+}
+
+class ServerException extends ApiException {
+  const ServerException() : super('Server error. Please try again later.', statusCode: 500);
 }
