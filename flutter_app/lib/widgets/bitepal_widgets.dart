@@ -1,203 +1,197 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// BitePal style capsule button
-class CapsuleButton extends StatefulWidget {
+/// CapsuleButton - Primary CTA button for BitePal
+class CapsuleButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
-  final bool isPrimary;
-  final IconData? icon;
   final Color? backgroundColor;
   final Color? textColor;
+  final bool isLoading;
+  final IconData? icon;
   
   const CapsuleButton({
     super.key,
     required this.text,
     this.onPressed,
-    this.isPrimary = true,
-    this.icon,
     this.backgroundColor,
     this.textColor,
+    this.isLoading = false,
+    this.icon,
   });
-  
-  @override
-  State<CapsuleButton> createState() => _CapsuleButtonState();
-}
 
-class _CapsuleButtonState extends State<CapsuleButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  
-  void _onTapDown(TapDownDetails details) {
-    _controller.forward();
-  }
-  
-  void _onTapUp(TapUpDetails details) {
-    _controller.reverse();
-  }
-  
-  void _onTapCancel() {
-    _controller.reverse();
-  }
-  
   @override
   Widget build(BuildContext context) {
-    final isEnabled = widget.onPressed != null;
-    
-    return GestureDetector(
-      onTapDown: isEnabled ? _onTapDown : null,
-      onTapUp: isEnabled ? _onTapUp : null,
-      onTapCancel: isEnabled ? _onTapCancel : null,
-      onTap: () {
-        if (isEnabled) {
-          HapticFeedback.lightImpact();
-          widget.onPressed!();
-        }
-      },
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-        },
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: isEnabled
-                ? (widget.backgroundColor ?? Colors.black)
-                : Colors.grey.shade300,
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor ?? const Color(0xFF4CAF50),
+          foregroundColor: textColor ?? Colors.white,
+          disabledBackgroundColor: Colors.grey.shade300,
+          disabledForegroundColor: Colors.grey.shade500,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
-            boxShadow: widget.isPrimary && isEnabled
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    text,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (widget.icon != null) ...[
-                Icon(
-                  widget.icon,
-                  color: widget.textColor ?? Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                widget.text,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: widget.textColor ?? Colors.white,
-                ),
-              ),
-              if (widget.icon == null && widget.text.contains('>'))
-                const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white,
-                    size: 18,
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// SkipButton - Skip/Cancel text button
+class SkipButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final String text;
+  
+  const SkipButton({
+    super.key,
+    this.onPressed,
+    this.text = 'Skip',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14,
+          color: Colors.grey.shade600,
         ),
       ),
     );
   }
 }
 
-/// Selectable card with checkmark
-class SelectableCard extends StatefulWidget {
+/// PageIndicator - Dots indicator for onboarding
+class PageIndicator extends StatelessWidget {
+  final int currentPage;
+  final int totalPages;
+  final Color? activeColor;
+  final Color? inactiveColor;
+  
+  const PageIndicator({
+    super.key,
+    required this.currentPage,
+    required this.totalPages,
+    this.activeColor,
+    this.inactiveColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(totalPages, (index) {
+        final isActive = index == currentPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 24 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isActive 
+                ? (activeColor ?? const Color(0xFF4CAF50))
+                : (inactiveColor ?? Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+/// CardSelector - Selectable card for surveys
+class CardSelector extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
-  final bool selected;
-  final VoidCallback onTap;
-  final Color? iconColor;
+  final bool isSelected;
+  final VoidCallback? onTap;
+  final Color? selectedColor;
   
-  const SelectableCard({
+  const CardSelector({
     super.key,
     required this.title,
     this.subtitle,
     this.icon,
-    required this.selected,
-    required this.onTap,
-    this.iconColor,
+    this.isSelected = false,
+    this.onTap,
+    this.selectedColor,
   });
-  
-  @override
-  State<SelectableCard> createState() => _SelectableCardState();
-}
 
-class _SelectableCardState extends State<SelectableCard> {
   @override
   Widget build(BuildContext context) {
+    final color = selectedColor ?? const Color(0xFF4CAF50);
+    
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        widget.onTap();
-      },
+      onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: widget.selected ? const Color(0xFFE8F5E9) : Colors.white,
+          color: isSelected ? color.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: widget.selected ? const Color(0xFF4CAF50) : Colors.grey.shade200,
-            width: widget.selected ? 2 : 1,
+            color: isSelected ? color : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
-            if (widget.icon != null) ...[
+            if (icon != null) ...[
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: (widget.iconColor ?? Colors.grey).withOpacity(0.1),
+                  color: isSelected ? color.withOpacity(0.2) : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  widget.icon,
-                  color: widget.iconColor ?? Colors.grey,
+                  icon,
+                  color: isSelected ? color : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
@@ -208,42 +202,40 @@ class _SelectableCardState extends State<SelectableCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.title,
+                    title,
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.black87,
+                      fontSize: 15,
+                      color: isSelected ? color : Colors.black,
                     ),
                   ),
-                  if (widget.subtitle != null)
+                  if (subtitle != null)
                     Text(
-                      widget.subtitle!,
+                      subtitle!,
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
                 ],
               ),
             ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: widget.selected ? const Color(0xFF4CAF50) : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: widget.selected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
-                  width: 2,
+            if (isSelected)
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
-              child: widget.selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 18)
-                  : null,
-            ),
           ],
         ),
       ),
@@ -251,258 +243,39 @@ class _SelectableCardState extends State<SelectableCard> {
   }
 }
 
-/// Multi-select card with checkbox
-class MultiSelectCard extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final IconData? icon;
-  final bool selected;
-  final VoidCallback onTap;
-  
-  const MultiSelectCard({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE8F5E9) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade200,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: selected ? const Color(0xFF4CAF50) : Colors.grey),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 15,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: selected ? const Color(0xFF4CAF50) : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
-                  width: 2,
-                ),
-              ),
-              child: selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Chat bubble for character dialogue
-class CharacterBubble extends StatelessWidget {
-  final String text;
-  final Widget? avatar;
-  
-  const CharacterBubble({
-    super.key,
-    required this.text,
-    this.avatar,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (avatar != null)
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2196F3).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: avatar,
-          ),
-        if (avatar != null) const SizedBox(width: 8),
-        Flexible(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Circular progress indicator
-class CircularProgress extends StatelessWidget {
-  final double progress;
-  final double size;
-  final double strokeWidth;
-  final Color? backgroundColor;
-  final Color? progressColor;
-  final Widget? child;
-  
-  const CircularProgress({
-    super.key,
-    required this.progress,
-    this.size = 100,
-    this.strokeWidth = 8,
-    this.backgroundColor,
-    this.progressColor,
-    this.child,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CustomPaint(
-            size: Size(size, size),
-            painter: _CircularProgressPainter(
-              progress: progress,
-              strokeWidth: strokeWidth,
-              backgroundColor: backgroundColor ?? Colors.grey.shade200,
-              progressColor: progressColor ?? const Color(0xFF4CAF50),
-            ),
-          ),
-          if (child != null) child!,
-        ],
-      ),
-    );
-  }
-}
-
-class _CircularProgressPainter extends CustomPainter {
-  final double progress;
-  final double strokeWidth;
-  final Color backgroundColor;
-  final Color progressColor;
-  
-  _CircularProgressPainter({
-    required this.progress,
-    required this.strokeWidth,
-    required this.backgroundColor,
-    required this.progressColor,
-  });
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-    
-    // Background circle
-    final bgPaint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawCircle(center, radius, bgPaint);
-    
-    // Progress arc
-    final progressPaint = Paint()
-      ..color = progressColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    
-    final sweepAngle = 2 * 3.14159 * progress;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -3.14159 / 2,
-      sweepAngle,
-      false,
-      progressPaint,
-    );
-  }
-  
-  @override
-  bool shouldRepaint(_CircularProgressPainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}
-
-/// Number picker wheel
+/// NumberPickerWheel - Vertical scrolling number picker
 class NumberPickerWheel extends StatefulWidget {
   final int minValue;
   final int maxValue;
-  final int value;
-  final ValueChanged<int> onChanged;
-  final String? suffix;
+  final int initialValue;
+  final ValueChanged<int>? onChanged;
+  final double itemHeight;
+  final TextStyle? textStyle;
   
   const NumberPickerWheel({
     super.key,
     required this.minValue,
     required this.maxValue,
-    required this.value,
-    required this.onChanged,
-    this.suffix,
+    this.initialValue = 0,
+    this.onChanged,
+    this.itemHeight = 50,
+    this.textStyle,
   });
-  
+
   @override
   State<NumberPickerWheel> createState() => _NumberPickerWheelState();
 }
 
 class _NumberPickerWheelState extends State<NumberPickerWheel> {
   late FixedExtentScrollController _controller;
+  late int _currentValue;
   
   @override
   void initState() {
     super.initState();
+    _currentValue = widget.initialValue;
     _controller = FixedExtentScrollController(
-      initialItem: widget.value - widget.minValue,
+      initialItem: widget.initialValue - widget.minValue,
     );
   }
   
@@ -511,50 +284,60 @@ class _NumberPickerWheelState extends State<NumberPickerWheel> {
     _controller.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    final itemCount = widget.maxValue - widget.minValue + 1;
-    
     return SizedBox(
-      height: 150,
+      height: widget.itemHeight * 5,
       child: Stack(
         children: [
-          // Selection indicator
-          Center(
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+          // Selection highlight
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                height: widget.itemHeight,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
           // Wheel
           ListWheelScrollView.useDelegate(
             controller: _controller,
-            itemExtent: 50,
+            itemExtent: widget.itemHeight,
             physics: const FixedExtentScrollPhysics(),
+            perspective: 0.003,
+            diameterRatio: 1.5,
             onSelectedItemChanged: (index) {
-              HapticFeedback.selectionClick();
-              widget.onChanged(widget.minValue + index);
+              setState(() {
+                _currentValue = widget.minValue + index;
+              });
+              widget.onChanged?.call(_currentValue);
             },
             childDelegate: ListWheelChildBuilderDelegate(
-              childCount: itemCount,
+              childCount: widget.maxValue - widget.minValue + 1,
               builder: (context, index) {
                 final value = widget.minValue + index;
-                final isSelected = value == widget.value;
+                final isSelected = value == _currentValue;
+                
                 return Center(
-                  child: Text(
-                    widget.suffix != null 
-                        ? '$value${widget.suffix}' 
-                        : '$value',
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: isSelected ? 32 : 24,
-                      color: isSelected ? Colors.black : Colors.grey.shade400,
+                      color: isSelected 
+                          ? const Color(0xFF4CAF50)
+                          : Colors.grey.shade400,
                     ),
+                    child: Text(value.toString()),
                   ),
                 );
               },
@@ -566,124 +349,273 @@ class _NumberPickerWheelState extends State<NumberPickerWheel> {
   }
 }
 
-/// Ruler picker for precise measurements
-class RulerPicker extends StatefulWidget {
+/// HorizontalRulerPicker - Horizontal ruler for age selection
+class HorizontalRulerPicker extends StatefulWidget {
   final double minValue;
   final double maxValue;
-  final double value;
+  final double initialValue;
   final double step;
-  final ValueChanged<double> onChanged;
-  final String unit;
+  final ValueChanged<double>? onChanged;
+  final String? unit;
   
-  const RulerPicker({
+  const HorizontalRulerPicker({
     super.key,
     required this.minValue,
     required this.maxValue,
-    required this.value,
+    this.initialValue = 0,
     this.step = 1,
-    required this.onChanged,
-    required this.unit,
+    this.onChanged,
+    this.unit,
   });
-  
+
   @override
-  State<RulerPicker> createState() => _RulerPickerState();
+  State<HorizontalRulerPicker> createState() => _HorizontalRulerPickerState();
 }
 
-class _RulerPickerState extends State<RulerPicker> {
-  late FixedExtentScrollController _controller;
+class _HorizontalRulerPickerState extends State<HorizontalRulerPicker> {
+  late double _currentValue;
   
   @override
   void initState() {
     super.initState();
-    final initialIndex = ((widget.value - widget.minValue) / widget.step).round();
-    _controller = FixedExtentScrollController(initialItem: initialIndex);
+    _currentValue = widget.initialValue;
   }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  
+
   @override
   Widget build(BuildContext context) {
-    final itemCount = ((widget.maxValue - widget.minValue) / widget.step).round() + 1;
+    return Column(
+      children: [
+        // Current value display
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              _currentValue.round().toString(),
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 64,
+                color: Color(0xFF4CAF50),
+              ),
+            ),
+            if (widget.unit != null)
+              Text(
+                ' ${widget.unit}',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Ruler
+        SizedBox(
+          height: 80,
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 4,
+              activeTrackColor: const Color(0xFF4CAF50),
+              inactiveTrackColor: Colors.grey.shade200,
+              thumbColor: const Color(0xFF4CAF50),
+              overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 12,
+              ),
+              overlayShape: const RoundSliderOverlayShape(
+                overlayRadius: 24,
+              ),
+            ),
+            child: Slider(
+              value: _currentValue,
+              min: widget.minValue,
+              max: widget.maxValue,
+              divisions: ((widget.maxValue - widget.minValue) / widget.step).round(),
+              onChanged: (value) {
+                setState(() {
+                  _currentValue = value;
+                });
+                widget.onChanged?.call(value);
+              },
+            ),
+          ),
+        ),
+        // Min/Max labels
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${widget.minValue.round()} ${widget.unit ?? ''}',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              Text(
+                '${widget.maxValue.round()} ${widget.unit ?? ''}',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// CalorieRing - Circular progress for calories
+class CalorieRing extends StatelessWidget {
+  final int current;
+  final int goal;
+  final double size;
+  final Color? color;
+  
+  const CalorieRing({
+    super.key,
+    required this.current,
+    required this.goal,
+    this.size = 200,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (current / goal).clamp(0.0, 1.0);
+    final ringColor = color ?? const Color(0xFF4CAF50);
     
     return SizedBox(
-      height: 120,
+      width: size,
+      height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Center indicator
-          Container(
-            width: 80,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
-              borderRadius: BorderRadius.circular(8),
+          // Background ring
+          CustomPaint(
+            size: Size(size, size),
+            painter: _RingPainter(
+              progress: 1.0,
+              color: Colors.grey.shade200,
+              strokeWidth: 16,
             ),
           ),
-          // Ruler
-          RotatedBox(
-            quarterTurns: -1,
-            child: ListWheelScrollView.useDelegate(
-              controller: _controller,
-              itemExtent: 40,
-              physics: const FixedExtentScrollPhysics(),
-              onSelectedItemChanged: (index) {
-                HapticFeedback.selectionClick();
-                final value = widget.minValue + index * widget.step;
-                widget.onChanged(value);
-              },
-              childDelegate: ListWheelChildBuilderDelegate(
-                childCount: itemCount,
-                builder: (context, index) {
-                  final value = widget.minValue + index * widget.step;
-                  final isSelected = (value - widget.value).abs() < 0.1;
-                  return RotatedBox(
-                    quarterTurns: 1,
-                    child: Container(
-                      width: 100,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: isSelected 
-                                ? const Color(0xFF4CAF50) 
-                                : Colors.grey.shade300,
-                            width: isSelected ? 3 : 1,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        '${value.toInt()}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: isSelected ? 20 : 14,
-                          color: isSelected ? Colors.black : Colors.grey.shade500,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+          // Progress ring
+          CustomPaint(
+            size: Size(size, size),
+            painter: _RingPainter(
+              progress: progress,
+              color: ringColor,
+              strokeWidth: 16,
             ),
           ),
-          // Unit label
-          Positioned(
-            bottom: 0,
-            child: Text(
-              widget.unit,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: Colors.grey.shade600,
+          // Center text
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                current.toString(),
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 36,
+                ),
               ),
-            ),
+              Text(
+                'of $goal kcal',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+  
+  _RingPainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // Start from top
+      progress * 2 * 3.14159,
+      false,
+      paint,
+    );
+  }
+  
+  @override
+  bool shouldRepaint(covariant _RingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+/// GlassmorphicCard - Frosted glass effect card
+class GlassmorphicCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets? padding;
+  final double borderRadius;
+  
+  const GlassmorphicCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.borderRadius = 20,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ColorFilter.mode(
+          Colors.white.withOpacity(0.8),
+          BlendMode.srcOver,
+        ),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.5),
+              width: 1,
+            ),
+          ),
+          child: child,
+        ),
       ),
     );
   }

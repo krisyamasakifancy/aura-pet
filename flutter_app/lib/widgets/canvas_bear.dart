@@ -1,32 +1,46 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-/// Bear mood states for Canvas animation
+/// Canvas Bear - 6 Mood States for BitePal
+/// P01: Rolling eyes (splash)
+/// P02: HeartEyes (welcome)
+/// P03: Excited/HandsTogether (calories)
+/// P04: Sleeping (fasting)
+/// P05: HeartEyes (results)
+/// P06: Diving (water)
+/// P07: HeartEyes (nutrition)
+/// P17-P21: Various loading states
+/// P35: Nightcap sleeping (fasting)
 enum BearMood {
-  defaultMood,    // Default friendly
-  heartEyes,      // 😍 Excited
-  sleeping,       // 😴 Sleeping
-  diving,         // 🤿 Diving with goggles
-  heartHand,      // 🤗 Heart hand gesture
-  sunglasses,      // 😎 Cool with sunglasses
-  curious,        // 🤔 Curious
-  celebrating,    // 🎉 Celebrating
- 潜水,           // Diving
+  rollingEyes,  // P01 Splash
+  heartEyes,   // P02,P05,P07 Welcome/Results/Nutrition
+  excited,     // P03 Calories feature
+  sleeping,    // P04,P35 Fasting
+  celebrating, // P18,P41 Goal celebration
+  diving,      // P06 Water
+  curious,     // P12,P13 Age/Height
+  expecting,   // P15 Goal weight
+  thinking,    // P21 Plan loading
+  heartHand,  // P46 About/Goodbye
+  sunglasses,  // P22 Weight prediction
+  defaultMood, // Generic
 }
 
-/// Canvas-drawn bear mascot for BitePal
+/// Canvas-drawn Bear mascot with 6 mood states
 class CanvasBear extends StatefulWidget {
   final BearMood mood;
   final double size;
-  final bool animated;
+  final bool animate;
+  final Color? accentColor;
   
   const CanvasBear({
     super.key,
     this.mood = BearMood.defaultMood,
-    this.size = 200,
-    this.animated = true,
+    this.size = 120,
+    this.animate = true,
+    this.accentColor,
   });
-  
+
   @override
   State<CanvasBear> createState() => _CanvasBearState();
 }
@@ -36,43 +50,45 @@ class _CanvasBearState extends State<CanvasBear>
   late AnimationController _bounceController;
   late AnimationController _breathController;
   late AnimationController _heartController;
-  late Animation<double> _bounceAnimation;
-  late Animation<double> _breathAnimation;
-  late Animation<double> _heartAnimation;
-  
+  late Animation<double> _bounce;
+  late Animation<double> _breath;
+  late Animation<double> _heart;
+
   @override
   void initState() {
     super.initState();
     
+    // Bounce animation for idle movement
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    );
-    _bounceAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
-    );
+    )..repeat(reverse: true);
     
+    _bounce = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    );
+
+    // Breathing animation
     _breathController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     )..repeat(reverse: true);
-    _breathAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+    
+    _breath = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
     );
-    
+
+    // Heart floating animation
     _heartController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
-    _heartAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+    
+    _heart = Tween<double>(begin: 0.8, end: 1.2).animate(
       CurvedAnimation(parent: _heartController, curve: Curves.easeInOut),
     );
-    
-    if (widget.animated) {
-      _bounceController.forward();
-    }
   }
-  
+
   @override
   void dispose() {
     _bounceController.dispose();
@@ -80,24 +96,20 @@ class _CanvasBearState extends State<CanvasBear>
     _heartController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([
-        _bounceAnimation,
-        _breathAnimation,
-        _heartAnimation,
-      ]),
+      animation: Listenable.merge([_bounce, _breath, _heart]),
       builder: (context, child) {
-        return Transform.scale(
-          scale: _bounceAnimation.value * _breathAnimation.value,
-          child: CustomPaint(
-            size: Size(widget.size, widget.size),
-            painter: _BearPainter(
-              mood: widget.mood,
-              heartScale: _heartAnimation.value,
-            ),
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _BearPainter(
+            mood: widget.mood,
+            bounceOffset: widget.animate ? _bounce.value : 0,
+            breathScale: widget.animate ? _breath.value : 1.0,
+            heartScale: widget.animate ? _heart.value : 1.0,
+            accentColor: widget.accentColor,
           ),
         );
       },
@@ -107,344 +119,545 @@ class _CanvasBearState extends State<CanvasBear>
 
 class _BearPainter extends CustomPainter {
   final BearMood mood;
+  final double bounceOffset;
+  final double breathScale;
   final double heartScale;
-  
-  _BearPainter({required this.mood, this.heartScale = 1.0});
-  
+  final Color? accentColor;
+
+  _BearPainter({
+    required this.mood,
+    required this.bounceOffset,
+    required this.breathScale,
+    required this.heartScale,
+    this.accentColor,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final scale = size.width / 200; // Base scale factor
+    final bearSize = size.width * 0.35;
     
-    // Bear colors
-    final bearColor = const Color(0xFF9E9E9E); // Gray
-    final darkColor = const Color(0xFF424242); // Dark gray for ears/tail
-    final pinkColor = const Color(0xFFFFCDD2); // Pink blush
-    final whiteColor = Colors.white;
+    // Apply breathing scale
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(breathScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    // Body
+    final bodyPaint = Paint()
+      ..color = const Color(0xFF8B7355) // Bear brown
+      ..style = PaintingStyle.fill;
     
-    // Draw based on mood
+    // Draw body (oval)
+    final bodyRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy + bearSize * 0.3 + bounceOffset),
+      width: bearSize * 1.8,
+      height: bearSize * 1.4,
+    );
+    canvas.drawOval(bodyRect, bodyPaint);
+
+    // Head
+    final headRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy - bearSize * 0.1 + bounceOffset),
+      width: bearSize * 1.6,
+      height: bearSize * 1.5,
+    );
+    canvas.drawOval(headRect, bodyPaint);
+
+    // Ears
+    final earPaint = Paint()..color = const Color(0xFF8B7355)..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.6, center.dy - bearSize * 0.65 + bounceOffset),
+      bearSize * 0.25, earPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.6, center.dy - bearSize * 0.65 + bounceOffset),
+      bearSize * 0.25, earPaint,
+    );
+
+    // Inner ears (lighter)
+    final innerEarPaint = Paint()..color = const Color(0xFFD4A574)..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.6, center.dy - bearSize * 0.65 + bounceOffset),
+      bearSize * 0.12, innerEarPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.6, center.dy - bearSize * 0.65 + bounceOffset),
+      bearSize * 0.12, innerEarPaint,
+    );
+
+    // Muzzle
+    final muzzlePaint = Paint()..color = const Color(0xFFD4A574)..style = PaintingStyle.fill;
+    final muzzleRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy + bearSize * 0.15 + bounceOffset),
+      width: bearSize * 0.6,
+      height: bearSize * 0.5,
+    );
+    canvas.drawOval(muzzleRect, muzzlePaint);
+
+    // Draw mood-specific features
+    _drawMoodFeatures(canvas, size, center, bearSize);
+
+    canvas.restore();
+
+    // Draw mood-specific decorations (hearts, bubbles, etc.)
+    _drawMoodDecorations(canvas, size, center, bearSize);
+  }
+
+  void _drawMoodFeatures(Canvas canvas, Size size, Offset center, double bearSize) {
     switch (mood) {
+      case BearMood.rollingEyes:
+        _drawRollingEyes(canvas, center, bearSize);
+        break;
       case BearMood.heartEyes:
-        _drawHeartEyesBear(canvas, center, scale, bearColor, darkColor, pinkColor);
+        _drawHeartEyes(canvas, center, bearSize);
+        break;
+      case BearMood.excited:
+        _drawExcitedFace(canvas, center, bearSize);
         break;
       case BearMood.sleeping:
-        _drawSleepingBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-        break;
-      case BearMood.diving:
-      case BearMood.潜水:
-        _drawDivingBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-        break;
-      case BearMood.heartHand:
-        _drawHeartHandBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-        break;
-      case BearMood.sunglasses:
-        _drawSunglassesBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-        break;
-      case BearMood.curious:
-        _drawCuriousBear(canvas, center, scale, bearColor, darkColor, pinkColor);
+        _drawSleepingFace(canvas, center, bearSize);
         break;
       case BearMood.celebrating:
-        _drawCelebratingBear(canvas, center, scale, bearColor, darkColor, pinkColor);
+        _drawCelebratingFace(canvas, center, bearSize);
+        break;
+      case BearMood.diving:
+        _drawDivingFace(canvas, center, bearSize);
+        break;
+      case BearMood.curious:
+        _drawCuriousFace(canvas, center, bearSize);
+        break;
+      case BearMood.expecting:
+        _drawExpectingFace(canvas, center, bearSize);
+        break;
+      case BearMood.thinking:
+        _drawThinkingFace(canvas, center, bearSize);
+        break;
+      case BearMood.heartHand:
+        _drawHeartHandFace(canvas, center, bearSize);
+        break;
+      case BearMood.sunglasses:
+        _drawSunglassesFace(canvas, center, bearSize);
         break;
       default:
-        _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
+        _drawDefaultFace(canvas, center, bearSize);
     }
   }
-  
-  void _drawDefaultBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    
-    // Ears
-    paint.color = bearColor;
-    canvas.drawCircle(Offset(center.dx - 55 * scale, center.dy - 55 * scale), 30 * scale, paint);
-    canvas.drawCircle(Offset(center.dx + 55 * scale, center.dy - 55 * scale), 30 * scale, paint);
-    
-    // Inner ears
-    paint.color = pinkColor;
-    canvas.drawCircle(Offset(center.dx - 55 * scale, center.dy - 55 * scale), 15 * scale, paint);
-    canvas.drawCircle(Offset(center.dx + 55 * scale, center.dy - 55 * scale), 15 * scale, paint);
-    
-    // Head
-    paint.color = bearColor;
-    canvas.drawCircle(center, 70 * scale, paint);
-    
-    // Face mask (raccoon style)
-    paint.color = darkColor;
+
+  void _drawRollingEyes(Canvas canvas, Offset center, double bearSize) {
+    // Rolling eyes (white part)
+    final eyeWhitePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx, center.dy - 5 * scale), 
-          width: 80 * scale, height: 40 * scale),
-      paint,
-    );
-    
-    // Eyes
-    paint.color = whiteColor;
-    canvas.drawCircle(Offset(center.dx - 25 * scale, center.dy - 15 * scale), 12 * scale, paint);
-    canvas.drawCircle(Offset(center.dx + 25 * scale, center.dy - 15 * scale), 12 * scale, paint);
-    
-    // Pupils
-    paint.color = darkColor;
-    canvas.drawCircle(Offset(center.dx - 25 * scale, center.dy - 15 * scale), 6 * scale, paint);
-    canvas.drawCircle(Offset(center.dx + 25 * scale, center.dy - 15 * scale), 6 * scale, paint);
-    
-    // Nose
-    paint.color = darkColor;
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx, center.dy + 10 * scale), 
-          width: 20 * scale, height: 12 * scale),
-      paint,
-    );
-    
-    // Mouth (smile)
-    final mouthPaint = Paint()
-      ..color = darkColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3 * scale;
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(center.dx, center.dy + 25 * scale), 
-          width: 30 * scale, height: 20 * scale),
-      0.2, 2.7, false, mouthPaint,
-    );
-    
-    // Blush
-    paint.color = pinkColor;
-    paint.style = PaintingStyle.fill;
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx - 50 * scale, center.dy + 5 * scale), 
-          width: 25 * scale, height: 15 * scale),
-      paint,
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.35,
+      ),
+      eyeWhitePaint,
     );
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx + 50 * scale, center.dy + 5 * scale), 
-          width: 25 * scale, height: 15 * scale),
-      paint,
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.35,
+      ),
+      eyeWhitePaint,
     );
-    
-    // Heart on chest
-    _drawHeart(canvas, Offset(center.dx, center.dy + 70 * scale), 15 * scale, 
-        const Color(0xFFE91E63));
-  }
-  
-  void _drawHeartEyesBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Replace eyes with heart eyes
-    _drawHeart(canvas, Offset(center.dx - 25 * scale, center.dy - 15 * scale), 
-        14 * scale * heartScale, const Color(0xFFE91E63));
-    _drawHeart(canvas, Offset(center.dx + 25 * scale, center.dy - 15 * scale), 
-        14 * scale * heartScale, const Color(0xFFE91E63));
-  }
-  
-  void _drawSleepingBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Sleep cap
-    final capPaint = Paint()..color = const Color(0xFFE1BEE7);
-    final capPath = Path()
-      ..moveTo(center.dx - 60 * scale, center.dy - 50 * scale)
-      ..lineTo(center.dx, center.dy - 120 * scale)
-      ..lineTo(center.dx + 60 * scale, center.dy - 50 * scale)
-      ..close();
-    canvas.drawPath(capPath, capPaint);
-    
-    // Sleep cap ball
-    canvas.drawCircle(Offset(center.dx, center.dy - 120 * scale), 12 * scale, capPaint);
-    
-    // Closed eyes (sleeping)
-    final eyePaint = Paint()
-      ..color = darkColor
+
+    // Pupils looking up (rolling effect)
+    final pupilPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.25 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.25 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+
+    // Big smile
+    final smilePaint = Paint()
+      ..color = const Color(0xFF5D4037)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3 * scale;
-    
-    // Left eye (closed)
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(center.dx - 25 * scale, center.dy - 15 * scale),
-          width: 20 * scale, height: 5 * scale),
-      0, 3.14, false, eyePaint,
-    );
-    
-    // Right eye (closed)
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(center.dx + 25 * scale, center.dy - 15 * scale),
-          width: 20 * scale, height: 5 * scale),
-      0, 3.14, false, eyePaint,
-    );
-    
-    // Zzz
-    final zPaint = Paint()
-      ..color = darkColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * scale;
-    
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          Rect.fromLTWH(center.dx + 50 * scale, center.dy - 100 * scale, 
-              20 * scale, 25 * scale), 
-          Radius.circular(3 * scale)),
-      zPaint,
-    );
-  }
-  
-  void _drawDivingBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    // Swimming goggles
-    final gogglePaint = Paint()..color = const Color(0xFF2196F3);
-    
-    // Left goggle
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx - 25 * scale, center.dy - 15 * scale),
-          width: 35 * scale, height: 25 * scale),
-      gogglePaint,
-    );
-    
-    // Right goggle
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(center.dx + 25 * scale, center.dy - 15 * scale),
-          width: 35 * scale, height: 25 * scale),
-      gogglePaint,
-    );
-    
-    // Goggle straps
-    final strapPaint = Paint()
-      ..color = darkColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3 * scale;
-    canvas.drawLine(
-      Offset(center.dx - 55 * scale, center.dy - 15 * scale),
-      Offset(center.dx + 55 * scale, center.dy - 15 * scale),
-      strapPaint,
-    );
-    
-    // Bubble hearts
-    _drawHeart(canvas, Offset(center.dx - 60 * scale, center.dy + 40 * scale), 
-        10 * scale, const Color(0xFF2196F3).withOpacity(0.6));
-    _drawHeart(canvas, Offset(center.dx + 50 * scale, center.dy + 30 * scale), 
-        8 * scale, const Color(0xFF2196F3).withOpacity(0.6));
-  }
-  
-  void _drawHeartHandBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Draw heart hand gesture
-    _drawHeart(canvas, Offset(center.dx, center.dy - 50 * scale), 
-        30 * scale * heartScale, const Color(0xFFE91E63));
-  }
-  
-  void _drawSunglassesBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Star sunglasses
-    final glassPaint = Paint()..color = const Color(0xFFFFEB3B);
-    
-    // Left glass
-    _drawStar(canvas, Offset(center.dx - 25 * scale, center.dy - 15 * scale), 
-        20 * scale, glassPaint);
-    
-    // Right glass
-    _drawStar(canvas, Offset(center.dx + 25 * scale, center.dy - 15 * scale), 
-        20 * scale, glassPaint);
-    
-    // Bridge
-    final bridgePaint = Paint()
-      ..color = darkColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3 * scale;
-    canvas.drawLine(
-      Offset(center.dx - 8 * scale, center.dy - 15 * scale),
-      Offset(center.dx + 8 * scale, center.dy - 15 * scale),
-      bridgePaint,
-    );
-    
-    // Celebration elements
-    _drawStar(canvas, Offset(center.dx - 50 * scale, center.dy - 80 * scale), 
-        10 * scale, const Color(0xFFFFEB3B));
-    _drawStar(canvas, Offset(center.dx + 50 * scale, center.dy - 70 * scale), 
-        12 * scale, const Color(0xFFE91E63));
-  }
-  
-  void _drawCuriousBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Question mark above head
-    final qPaint = Paint()
-      ..color = const Color(0xFF2196F3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4 * scale;
-    
-    final qPath = Path()
-      ..moveTo(center.dx + 40 * scale, center.dy - 100 * scale)
-      ..quadraticBezierTo(center.dx + 60 * scale, center.dy - 90 * scale, 
-          center.dx + 50 * scale, center.dy - 70 * scale)
-      ..quadraticBezierTo(center.dx + 45 * scale, center.dy - 55 * scale, 
-          center.dx + 55 * scale, center.dy - 45 * scale);
-    canvas.drawPath(qPath, qPaint);
-  }
-  
-  void _drawCelebratingBear(Canvas canvas, Offset center, double scale,
-      Color bearColor, Color darkColor, Color pinkColor) {
-    _drawDefaultBear(canvas, center, scale, bearColor, darkColor, pinkColor);
-    
-    // Raised arms celebration
-    final armPaint = Paint()
-      ..color = bearColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 15 * scale
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
     
-    // Left arm up
-    canvas.drawLine(
-      Offset(center.dx - 70 * scale, center.dy),
-      Offset(center.dx - 90 * scale, center.dy - 50 * scale),
-      armPaint,
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - bearSize * 0.3, center.dy + bearSize * 0.2 + bounceOffset);
+    smilePath.quadraticBezierTo(
+      center.dx, center.dy + bearSize * 0.4 + bounceOffset,
+      center.dx + bearSize * 0.3, center.dy + bearSize * 0.2 + bounceOffset,
     );
-    
-    // Right arm up
-    canvas.drawLine(
-      Offset(center.dx + 70 * scale, center.dy),
-      Offset(center.dx + 90 * scale, center.dy - 50 * scale),
-      armPaint,
+    canvas.drawPath(smilePath, smilePaint);
+
+    // Tongue sticking out
+    final tonguePaint = Paint()..color = Colors.pink..style = PaintingStyle.fill;
+    final tongueRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy + bearSize * 0.35 + bounceOffset),
+      width: bearSize * 0.2,
+      height: bearSize * 0.15,
     );
-    
-    // Confetti/stars around
-    _drawStar(canvas, Offset(center.dx - 60 * scale, center.dy - 60 * scale), 
-        12 * scale, const Color(0xFFFFEB3B));
-    _drawStar(canvas, Offset(center.dx + 60 * scale, center.dy - 70 * scale), 
-        10 * scale, const Color(0xFFE91E63));
-    _drawStar(canvas, Offset(center.dx, center.dy - 100 * scale), 
-        15 * scale, const Color(0xFF4CAF50));
+    canvas.drawOval(tongueRect, tonguePaint);
   }
-  
-  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+
+  void _drawHeartEyes(Canvas canvas, Offset center, double bearSize) {
+    // Heart-shaped eyes
+    final heartPaint = Paint()..color = Colors.pink.shade400..style = PaintingStyle.fill;
     
-    final path = Path()
-      ..moveTo(center.dx, center.dy + size * 0.3)
-      ..cubicTo(
-        center.dx - size, center.dy - size * 0.5,
-        center.dx - size, center.dy - size,
-        center.dx, center.dy - size * 0.5,
-      )
-      ..cubicTo(
-        center.dx + size, center.dy - size,
-        center.dx + size, center.dy - size * 0.5,
-        center.dx, center.dy + size * 0.3,
-      );
+    // Left heart eye
+    _drawHeart(canvas, 
+      Offset(center.dx - bearSize * 0.28, center.dy - bearSize * 0.15 + bounceOffset),
+      bearSize * 0.18, heartPaint);
     
+    // Right heart eye
+    _drawHeart(canvas,
+      Offset(center.dx + bearSize * 0.28, center.dy - bearSize * 0.15 + bounceOffset),
+      bearSize * 0.18, heartPaint);
+
+    // Blush
+    final blushPaint = Paint()..color = Colors.pink.shade100..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.5, center.dy + bounceOffset),
+        width: bearSize * 0.25,
+        height: bearSize * 0.15,
+      ),
+      blushPaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.5, center.dy + bounceOffset),
+        width: bearSize * 0.25,
+        height: bearSize * 0.15,
+      ),
+      blushPaint,
+    );
+
+    // Happy smile
+    _drawHappyMouth(canvas, center, bearSize);
+  }
+
+  void _drawExcitedFace(Canvas canvas, Offset center, double bearSize) {
+    // Wide excited eyes
+    final eyeWhitePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.4,
+        height: bearSize * 0.45,
+      ),
+      eyeWhitePaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.4,
+        height: bearSize * 0.45,
+      ),
+      eyeWhitePaint,
+    );
+
+    // Pupils looking at food
+    final pupilPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.25, center.dy - bearSize * 0.1 + bounceOffset),
+      bearSize * 0.12, pupilPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.35, center.dy - bearSize * 0.1 + bounceOffset),
+      bearSize * 0.12, pupilPaint,
+    );
+
+    // Hands together (praying gesture)
+    _drawHandsTogether(canvas, center, bearSize);
+
+    // Open happy mouth
+    final mouthPaint = Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.fill;
+    final mouthRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy + bearSize * 0.25 + bounceOffset),
+      width: bearSize * 0.35,
+      height: bearSize * 0.25,
+    );
+    canvas.drawOval(mouthRect, mouthPaint);
+  }
+
+  void _drawSleepingFace(Canvas canvas, Offset center, double bearSize) {
+    // Closed eyes (sleeping)
+    final eyePaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    // Left closed eye
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.4, center.dy - bearSize * 0.1 + bounceOffset),
+      Offset(center.dx - bearSize * 0.15, center.dy - bearSize * 0.1 + bounceOffset),
+      eyePaint,
+    );
+    // Right closed eye
+    canvas.drawLine(
+      Offset(center.dx + bearSize * 0.15, center.dy - bearSize * 0.1 + bounceOffset),
+      Offset(center.dx + bearSize * 0.4, center.dy - bearSize * 0.1 + bounceOffset),
+      eyePaint,
+    );
+
+    // Peaceful smile
+    _drawHappyMouth(canvas, center, bearSize);
+
+    // ZZZ floating
+    _drawZZZ(canvas, center, bearSize);
+
+    // Nightcap
+    _drawNightcap(canvas, center, bearSize);
+  }
+
+  void _drawCelebratingFace(Canvas canvas, Offset center, double bearSize) {
+    // Star eyes
+    _drawStarEyes(canvas, center, bearSize);
+
+    // Big open smile
+    final mouthPaint = Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.fill;
+    final mouthPath = Path();
+    mouthPath.moveTo(center.dx - bearSize * 0.3, center.dy + bearSize * 0.15 + bounceOffset);
+    mouthPath.quadraticBezierTo(
+      center.dx, center.dy + bearSize * 0.4 + bounceOffset,
+      center.dx + bearSize * 0.3, center.dy + bearSize * 0.15 + bounceOffset,
+    );
+    mouthPath.close();
+    canvas.drawPath(mouthPath, mouthPaint);
+
+    // Raised arms (celebrating)
+    _drawRaisedArms(canvas, center, bearSize);
+  }
+
+  void _drawDivingFace(Canvas canvas, Offset center, double bearSize) {
+    // Goggles
+    _drawDivingGoggles(canvas, center, bearSize);
+
+    // Tube in mouth
+    _drawBreathingTube(canvas, center, bearSize);
+
+    // Flippers at bottom
+    _drawFlippers(canvas, center, bearSize);
+  }
+
+  void _drawCuriousFace(Canvas canvas, Offset center, double bearSize) {
+    // Curious eyes (one bigger)
+    final eyeWhitePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.38,
+        height: bearSize * 0.42,
+      ),
+      eyeWhitePaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.38,
+      ),
+      eyeWhitePaint,
+    );
+
+    // Curious pupils
+    final pupilPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.25, center.dy - bearSize * 0.12 + bounceOffset),
+      bearSize * 0.12, pupilPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+
+    // Small 'o' mouth
+    final mouthPaint = Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx, center.dy + bearSize * 0.25 + bounceOffset),
+      bearSize * 0.08, mouthPaint,
+    );
+  }
+
+  void _drawExpectingFace(Canvas canvas, Offset center, double bearSize) {
+    // Hopeful eyes
+    _drawHeartEyes(canvas, center, bearSize);
+
+    // Small smile
+    final smilePaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - bearSize * 0.2, center.dy + bearSize * 0.2 + bounceOffset);
+    smilePath.quadraticBezierTo(
+      center.dx, center.dy + bearSize * 0.3 + bounceOffset,
+      center.dx + bearSize * 0.2, center.dy + bearSize * 0.2 + bounceOffset,
+    );
+    canvas.drawPath(smilePath, smilePaint);
+  }
+
+  void _drawThinkingFace(Canvas canvas, Offset center, double bearSize) {
+    // One eye closed, one open
+    final eyePaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    // Left eye closed
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.4, center.dy - bearSize * 0.1 + bounceOffset),
+      Offset(center.dx - bearSize * 0.15, center.dy - bearSize * 0.1 + bounceOffset),
+      eyePaint,
+    );
+    
+    // Right eye open
+    final eyeWhitePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.38,
+      ),
+      eyeWhitePaint,
+    );
+    final pupilPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.12 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+
+    // Thinking mouth
+    final mouthPaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.15, center.dy + bearSize * 0.25 + bounceOffset),
+      Offset(center.dx + bearSize * 0.15, center.dy + bearSize * 0.25 + bounceOffset),
+      mouthPaint,
+    );
+
+    // Thought bubbles
+    _drawThoughtBubbles(canvas, center, bearSize);
+  }
+
+  void _drawHeartHandFace(Canvas canvas, Offset center, double bearSize) {
+    // Heart eyes
+    _drawHeartEyes(canvas, center, bearSize);
+
+    // Waving hand
+    _drawWavingHand(canvas, center, bearSize);
+
+    // Gentle smile
+    _drawHappyMouth(canvas, center, bearSize);
+  }
+
+  void _drawSunglassesFace(Canvas canvas, Offset center, double bearSize) {
+    // Cool sunglasses
+    _drawSunglasses(canvas, center, bearSize);
+
+    // Cool smile
+    final smilePaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - bearSize * 0.25, center.dy + bearSize * 0.2 + bounceOffset);
+    smilePath.quadraticBezierTo(
+      center.dx, center.dy + bearSize * 0.35 + bounceOffset,
+      center.dx + bearSize * 0.25, center.dy + bearSize * 0.2 + bounceOffset,
+    );
+    canvas.drawPath(smilePath, smilePaint);
+  }
+
+  void _drawDefaultFace(Canvas canvas, Offset center, double bearSize) {
+    // Normal eyes
+    final eyeWhitePaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.38,
+      ),
+      eyeWhitePaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.15 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.38,
+      ),
+      eyeWhitePaint,
+    );
+
+    final pupilPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    canvas.drawCircle(
+      Offset(center.dx - bearSize * 0.3, center.dy - bearSize * 0.12 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.3, center.dy - bearSize * 0.12 + bounceOffset),
+      bearSize * 0.1, pupilPaint,
+    );
+
+    _drawHappyMouth(canvas, center, bearSize);
+  }
+
+  // === Helper Drawing Methods ===
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Paint paint) {
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx - size, center.dy - size * 0.3,
+      center.dx - size, center.dy - size,
+      center.dx, center.dy - size * 0.3,
+    );
+    path.cubicTo(
+      center.dx + size, center.dy - size,
+      center.dx + size, center.dy - size * 0.3,
+      center.dx, center.dy + size * 0.3,
+    );
     canvas.drawPath(path, paint);
   }
-  
-  void _drawStar(Canvas canvas, Offset center, double size, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+
+  void _drawHappyMouth(Canvas canvas, Offset center, double bearSize) {
+    final smilePaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
     
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - bearSize * 0.2, center.dy + bearSize * 0.2 + bounceOffset);
+    smilePath.quadraticBezierTo(
+      center.dx, center.dy + bearSize * 0.35 + bounceOffset,
+      center.dx + bearSize * 0.2, center.dy + bearSize * 0.2 + bounceOffset,
+    );
+    canvas.drawPath(smilePath, smilePaint);
+  }
+
+  void _drawStarEyes(Canvas canvas, Offset center, double bearSize) {
+    final starPaint = Paint()..color = Colors.amber..style = PaintingStyle.fill;
+    
+    _drawStar(canvas, 
+      Offset(center.dx - bearSize * 0.28, center.dy - bearSize * 0.15 + bounceOffset),
+      bearSize * 0.15, starPaint);
+    _drawStar(canvas,
+      Offset(center.dx + bearSize * 0.28, center.dy - bearSize * 0.15 + bounceOffset),
+      bearSize * 0.15, starPaint);
+  }
+
+  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     for (int i = 0; i < 5; i++) {
       final angle = (i * 4 * math.pi / 5) - math.pi / 2;
@@ -461,8 +674,285 @@ class _BearPainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, paint);
   }
-  
+
+  void _drawZZZ(Canvas canvas, Offset center, double bearSize) {
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: 'Zzz',
+        style: TextStyle(
+          color: Color(0xFF5D4037),
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, 
+      Offset(center.dx + bearSize * 0.6, center.dy - bearSize * 0.8 + bounceOffset));
+  }
+
+  void _drawNightcap(Canvas canvas, Offset center, double bearSize) {
+    final capPaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    final capPath = Path();
+    capPath.moveTo(center.dx - bearSize * 0.5, center.dy - bearSize * 0.5 + bounceOffset);
+    capPath.lineTo(center.dx, center.dy - bearSize * 1.2 + bounceOffset);
+    capPath.lineTo(center.dx + bearSize * 0.5, center.dy - bearSize * 0.5 + bounceOffset);
+    capPath.close();
+    canvas.drawPath(capPath, capPaint);
+
+    // Cap pom-pom
+    canvas.drawCircle(
+      Offset(center.dx, center.dy - bearSize * 1.25 + bounceOffset),
+      bearSize * 0.1, capPaint,
+    );
+  }
+
+  void _drawHandsTogether(Canvas canvas, Offset center, double bearSize) {
+    final handPaint = Paint()..color = const Color(0xFFD4A574)..style = PaintingStyle.fill;
+    
+    // Two paws together
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.1, center.dy + bearSize * 0.35 + bounceOffset),
+        width: bearSize * 0.25,
+        height: bearSize * 0.2,
+      ),
+      handPaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.1, center.dy + bearSize * 0.35 + bounceOffset),
+        width: bearSize * 0.25,
+        height: bearSize * 0.2,
+      ),
+      handPaint,
+    );
+  }
+
+  void _drawRaisedArms(Canvas canvas, Offset center, double bearSize) {
+    final armPaint = Paint()
+      ..color = const Color(0xFF8B7355)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = bearSize * 0.15
+      ..strokeCap = StrokeCap.round;
+
+    // Left arm raised
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.7, center.dy + bounceOffset),
+      Offset(center.dx - bearSize * 1.0, center.dy - bearSize * 0.5 + bounceOffset),
+      armPaint,
+    );
+    // Right arm raised
+    canvas.drawLine(
+      Offset(center.dx + bearSize * 0.7, center.dy + bounceOffset),
+      Offset(center.dx + bearSize * 1.0, center.dy - bearSize * 0.5 + bounceOffset),
+      armPaint,
+    );
+  }
+
+  void _drawDivingGoggles(Canvas canvas, Offset center, double bearSize) {
+    final gogglePaint = Paint()..color = Colors.blue.shade800..style = PaintingStyle.fill;
+    final strapPaint = Paint()..color = Colors.black..style = PaintingStyle.stroke..strokeWidth = 2;
+
+    // Left goggle
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.25,
+      ),
+      gogglePaint,
+    );
+    // Right goggle
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+        width: bearSize * 0.35,
+        height: bearSize * 0.25,
+      ),
+      gogglePaint,
+    );
+    // Strap
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.45, center.dy - bearSize * 0.1 + bounceOffset),
+      Offset(center.dx + bearSize * 0.45, center.dy - bearSize * 0.1 + bounceOffset),
+      strapPaint,
+    );
+  }
+
+  void _drawBreathingTube(Canvas canvas, Offset center, double bearSize) {
+    final tubePaint = Paint()..color = Colors.grey..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy + bearSize * 0.25 + bounceOffset),
+        width: bearSize * 0.15,
+        height: bearSize * 0.3,
+      ),
+      tubePaint,
+    );
+  }
+
+  void _drawFlippers(Canvas canvas, Offset center, double bearSize) {
+    final flipperPaint = Paint()..color = Colors.green..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx - bearSize * 0.3, center.dy + bearSize * 0.9 + bounceOffset),
+        width: bearSize * 0.4,
+        height: bearSize * 0.2,
+      ),
+      flipperPaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx + bearSize * 0.3, center.dy + bearSize * 0.9 + bounceOffset),
+        width: bearSize * 0.4,
+        height: bearSize * 0.2,
+      ),
+      flipperPaint,
+    );
+  }
+
+  void _drawSunglasses(Canvas canvas, Offset center, double bearSize) {
+    final glassPaint = Paint()..color = Colors.black..style = PaintingStyle.fill;
+    final lensPaint = Paint()..color = Colors.grey.shade800..style = PaintingStyle.fill;
+
+    // Frames
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx - bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+          width: bearSize * 0.4,
+          height: bearSize * 0.3,
+        ),
+        const Radius.circular(4),
+      ),
+      glassPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx + bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+          width: bearSize * 0.4,
+          height: bearSize * 0.3,
+        ),
+        const Radius.circular(4),
+      ),
+      glassPaint,
+    );
+
+    // Lenses
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx - bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+          width: bearSize * 0.35,
+          height: bearSize * 0.25,
+        ),
+        const Radius.circular(3),
+      ),
+      lensPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx + bearSize * 0.28, center.dy - bearSize * 0.1 + bounceOffset),
+          width: bearSize * 0.35,
+          height: bearSize * 0.25,
+        ),
+        const Radius.circular(3),
+      ),
+      lensPaint,
+    );
+
+    // Bridge
+    canvas.drawLine(
+      Offset(center.dx - bearSize * 0.08, center.dy - bearSize * 0.1 + bounceOffset),
+      Offset(center.dx + bearSize * 0.08, center.dy - bearSize * 0.1 + bounceOffset),
+      glassPaint..strokeWidth = 4,
+    );
+  }
+
+  void _drawWavingHand(Canvas canvas, Offset center, double bearSize) {
+    final handPaint = Paint()..color = const Color(0xFFD4A574)..style = PaintingStyle.fill;
+    
+    // Waving arm
+    final armPaint = Paint()
+      ..color = const Color(0xFF8B7355)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = bearSize * 0.12
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(
+      Offset(center.dx + bearSize * 0.8, center.dy + bounceOffset),
+      Offset(center.dx + bearSize * 1.2, center.dy - bearSize * 0.3 + bounceOffset),
+      armPaint,
+    );
+
+    // Hand
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 1.2, center.dy - bearSize * 0.4 + bounceOffset),
+      bearSize * 0.15, handPaint,
+    );
+
+    // Fingers
+    for (int i = 0; i < 3; i++) {
+      canvas.drawLine(
+        Offset(center.dx + bearSize * 1.15, center.dy - bearSize * 0.5 + bounceOffset + i * bearSize * 0.05),
+        Offset(center.dx + bearSize * 1.3, center.dy - bearSize * 0.6 + bounceOffset + i * bearSize * 0.05),
+        handPaint..strokeWidth = 4,
+      );
+    }
+  }
+
+  void _drawThoughtBubbles(Canvas canvas, Offset center, double bearSize) {
+    final bubblePaint = Paint()..color = Colors.grey.shade300..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.5, center.dy - bearSize * 0.5 + bounceOffset),
+      bearSize * 0.08, bubblePaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.65, center.dy - bearSize * 0.7 + bounceOffset),
+      bearSize * 0.12, bubblePaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + bearSize * 0.85, center.dy - bearSize * 0.9 + bounceOffset),
+      bearSize * 0.18, bubblePaint,
+    );
+  }
+
+  void _drawMoodDecorations(Canvas canvas, Size size, Offset center, double bearSize) {
+    // Draw floating hearts for heartEyes mood
+    if (mood == BearMood.heartEyes || mood == BearMood.heartHand) {
+      final heartPaint = Paint()..color = Colors.pink.withOpacity(0.6)..style = PaintingStyle.fill;
+      _drawHeart(canvas, 
+        Offset(center.dx - bearSize * 0.8, center.dy - bearSize * 0.5 + math.sin(DateTime.now().millisecond / 500.0) * 10),
+        bearSize * 0.1 * heartScale, heartPaint);
+      _drawHeart(canvas,
+        Offset(center.dx + bearSize * 0.9, center.dy - bearSize * 0.3 + math.cos(DateTime.now().millisecond / 600.0) * 10),
+        bearSize * 0.08 * heartScale, heartPaint);
+    }
+
+    // Draw bubbles for diving mood
+    if (mood == BearMood.diving) {
+      final bubblePaint = Paint()
+        ..color = Colors.lightBlue.withOpacity(0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      
+      for (int i = 0; i < 5; i++) {
+        final x = center.dx + bearSize * 0.3 + i * bearSize * 0.1;
+        final y = center.dy - bearSize * 0.5 - (DateTime.now().millisecond / 50.0 + i * 20) % 60;
+        canvas.drawCircle(Offset(x, y), bearSize * 0.05 * (i % 3 + 1), bubblePaint);
+      }
+    }
+  }
+
   @override
-  bool shouldRepaint(_BearPainter oldDelegate) => 
-      oldDelegate.mood != mood || oldDelegate.heartScale != heartScale;
+  bool shouldRepaint(covariant _BearPainter oldDelegate) {
+    return oldDelegate.mood != mood ||
+        oldDelegate.bounceOffset != bounceOffset ||
+        oldDelegate.breathScale != breathScale;
+  }
 }

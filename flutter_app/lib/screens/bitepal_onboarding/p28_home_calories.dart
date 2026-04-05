@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/onboarding_state.dart';
-import '../../widgets/canvas_bear.dart';
 import '../../widgets/bitepal_widgets.dart';
 
-/// P28: Home - Calories Tab
-/// Main home screen with calorie tracking
 class P28HomeCalories extends StatelessWidget {
   final VoidCallback onNext;
   
   const P28HomeCalories({super.key, required this.onNext});
-  
+
   @override
   Widget build(BuildContext context) {
-    final onboarding = context.watch<OnboardingState>();
-    final remaining = onboarding.remainingCalories;
-    final consumed = onboarding.totalCaloriesConsumed;
-    final goal = onboarding.dailyCalorieGoal;
+    final state = Provider.of<OnboardingState>(context);
     
     return SafeArea(
       child: Padding(
@@ -27,159 +21,40 @@ class P28HomeCalories extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Today',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.local_fire_department, 
-                          size: 16, color: Colors.orange.shade400),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${onboarding.currentStreak ?? 5} day streak',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const Text('Today', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 24)),
+                TextButton(onPressed: onNext, child: const Text('Next >', style: TextStyle(fontFamily: 'Inter', color: Color(0xFF4CAF50)))),
               ],
             ),
             const SizedBox(height: 24),
             // Calorie ring
             Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgress(
-                    progress: consumed / goal,
-                    size: 200,
-                    strokeWidth: 16,
-                    progressColor: remaining > 0 
-                        ? const Color(0xFF4CAF50) 
-                        : Colors.red,
-                    backgroundColor: Colors.grey.shade200,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$remaining',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 48,
-                          ),
-                        ),
-                        Text(
-                          'remaining',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: 20,
-                    right: 20,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.blue,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ],
+              child: CalorieRing(
+                current: state.todayCalories,
+                goal: state.dailyCalorieGoal,
+                size: 200,
+                color: const Color(0xFF4CAF50),
               ),
             ),
-            const SizedBox(height: 24),
-            // Quick add buttons
+            const SizedBox(height: 32),
+            // Meal buttons
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Expanded(
-                  child: _QuickAddButton(
-                    icon: Icons.breakfast_dining,
-                    label: 'Breakfast',
-                    color: Colors.orange,
-                    onTap: onNext,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickAddButton(
-                    icon: Icons.lunch_dining,
-                    label: 'Lunch',
-                    color: Colors.green,
-                    onTap: onNext,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickAddButton(
-                    icon: Icons.dinner_dining,
-                    label: 'Dinner',
-                    color: Colors.blue,
-                    onTap: onNext,
-                  ),
-                ),
+                _MealButton(label: 'Breakfast', icon: Icons.wb_sunny, onTap: onNext),
+                _MealButton(label: 'Lunch', icon: Icons.wb_cloudy, onTap: onNext),
+                _MealButton(label: 'Dinner', icon: Icons.nights_stay, onTap: onNext),
               ],
             ),
-            const SizedBox(height: 24),
-            // Bear
+            const Spacer(),
+            // Navigation dots
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CanvasBear(
-                  mood: BearMood.heartEyes,
-                  size: 60,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      remaining > 0
-                          ? "You're doing great! Keep it up! 💪"
-                          : "You've reached your goal! 🎉",
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                ),
+                Container(width: 24, height: 8, decoration: BoxDecoration(color: const Color(0xFF4CAF50), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(width: 8),
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4))),
+                const SizedBox(width: 8),
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4))),
               ],
             ),
           ],
@@ -189,49 +64,28 @@ class P28HomeCalories extends StatelessWidget {
   }
 }
 
-class _QuickAddButton extends StatelessWidget {
-  final IconData icon;
+class _MealButton extends StatelessWidget {
   final String label;
-  final Color color;
+  final IconData icon;
   final VoidCallback onTap;
   
-  const _QuickAddButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-  
+  const _MealButton({required this.label, required this.icon, required this.onTap});
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(20)),
+            child: Icon(icon, color: Colors.orange, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 12)),
+        ],
       ),
     );
   }
-}
-
-extension on OnboardingState {
-  int? get currentStreak => 5;
 }

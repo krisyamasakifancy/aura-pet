@@ -5,58 +5,84 @@ import '../../widgets/bitepal_widgets.dart';
 import '../../widgets/canvas_bear.dart';
 
 /// P12: Age Input
-/// "How old are you?"
-class P12AgeInput extends StatefulWidget {
+/// Horizontal ruler picker for age
+class P12AgeInput extends StatelessWidget {
   final VoidCallback onNext;
   
   const P12AgeInput({super.key, required this.onNext});
-  
-  @override
-  State<P12AgeInput> createState() => _P12AgeInputState();
-}
 
-class _P12AgeInputState extends State<P12AgeInput> {
-  int _age = 25;
-  
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<OnboardingState>(context);
+    
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             const Text(
-              'How old are you?',
+              "How old are\nyou?",
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
-                fontSize: 28,
-                color: Colors.black,
+                fontSize: 32,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            Text(
+              'Slide to select your age',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const Spacer(),
             // Curious bear
-            const CanvasBear(
-              mood: BearMood.curious,
-              size: 120,
+            Center(
+              child: CanvasBear(
+                mood: BearMood.curious,
+                size: 120,
+                animate: true,
+              ),
             ),
             const Spacer(),
             // Age picker
-            NumberPickerWheel(
-              minValue: 16,
+            HorizontalRulerPicker(
+              minValue: 13,
               maxValue: 100,
-              value: _age,
-              onChanged: (value) {
-                setState(() => _age = value);
-                context.read<OnboardingState>().setAge(value);
-              },
+              initialValue: state.age.toDouble(),
+              unit: 'years',
+              onChanged: (value) => state.setAge(value.round()),
             ),
             const Spacer(),
-            CapsuleButton(
-              text: 'Next >',
-              onPressed: widget.onNext,
+            Row(
+              children: [
+                const SizedBox(width: 62),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "Age ${state.age} - Good for calculating your BMR! 📊",
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+            CapsuleButton(text: 'Next', onPressed: onNext),
           ],
         ),
       ),

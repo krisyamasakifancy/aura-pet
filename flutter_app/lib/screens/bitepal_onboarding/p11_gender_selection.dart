@@ -2,108 +2,101 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/onboarding_state.dart';
 import '../../widgets/bitepal_widgets.dart';
+import '../../widgets/canvas_bear.dart';
 
 /// P11: Gender Selection
 /// "What's your gender?"
-class P11GenderSelection extends StatefulWidget {
+class P11GenderSelection extends StatelessWidget {
   final VoidCallback onNext;
   
   const P11GenderSelection({super.key, required this.onNext});
-  
-  @override
-  State<P11GenderSelection> createState() => _P11GenderSelectionState();
-}
 
-class _P11GenderSelectionState extends State<P11GenderSelection> {
-  String? _selectedGender;
-  
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<OnboardingState>(context);
+    
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             const Text(
               "What's your\ngender?",
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
-                fontSize: 28,
-                color: Colors.black,
+                fontSize: 32,
                 height: 1.2,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 8),
+            Text(
+              'For accurate calorie calculations',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 40),
+            // Gender options
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _GenderCard(
+                      label: 'Female',
+                      icon: Icons.female,
+                      isSelected: state.gender == 'female',
+                      onTap: () => state.setGender('female'),
+                      color: Colors.pink,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _GenderCard(
+                      label: 'Male',
+                      icon: Icons.male,
+                      isSelected: state.gender == 'male',
+                      onTap: () => state.setGender('male'),
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _GenderCard(
-                    gender: 'Female',
-                    icon: Icons.female,
-                    color: Colors.pink.shade300,
-                    selected: _selectedGender == 'female',
-                    onTap: () {
-                      setState(() => _selectedGender = 'female');
-                      context.read<OnboardingState>().setGender('female');
-                    },
-                  ),
+                const CanvasBear(
+                  mood: BearMood.curious,
+                  size: 50,
+                  animate: false,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: _GenderCard(
-                    gender: 'Male',
-                    icon: Icons.male,
-                    color: Colors.blue.shade300,
-                    selected: _selectedGender == 'male',
-                    onTap: () {
-                      setState(() => _selectedGender = 'male');
-                      context.read<OnboardingState>().setGender('male');
-                    },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.pink.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      "No worries! Your data stays private 🔒",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        color: Colors.pink,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () {
-                setState(() => _selectedGender = 'other');
-                context.read<OnboardingState>().setGender('other');
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: _selectedGender == 'other' 
-                      ? const Color(0xFFEDE7F6) 
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _selectedGender == 'other' 
-                        ? const Color(0xFF9575CD) 
-                        : Colors.grey.shade200,
-                    width: _selectedGender == 'other' ? 2 : 1,
-                  ),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Non-binary',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const Spacer(),
-            CapsuleButton(
-              text: 'Next >',
-              onPressed: _selectedGender != null ? widget.onNext : null,
-            ),
+            CapsuleButton(text: 'Next', onPressed: onNext),
           ],
         ),
       ),
@@ -112,20 +105,20 @@ class _P11GenderSelectionState extends State<P11GenderSelection> {
 }
 
 class _GenderCard extends StatelessWidget {
-  final String gender;
+  final String label;
   final IconData icon;
-  final Color color;
-  final bool selected;
+  final bool isSelected;
   final VoidCallback onTap;
+  final Color color;
   
   const _GenderCard({
-    required this.gender,
+    required this.label,
     required this.icon,
-    required this.color,
-    required this.selected,
+    required this.isSelected,
     required this.onTap,
+    required this.color,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -134,24 +127,44 @@ class _GenderCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? color.withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: selected ? color : Colors.grey.shade200,
-            width: selected ? 3 : 1,
+            color: isSelected ? color : Colors.grey.shade200,
+            width: isSelected ? 3 : 1,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ] : null,
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 60, color: selected ? color : Colors.grey.shade400),
-            const SizedBox(height: 12),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: isSelected ? color.withOpacity(0.2) : Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 48,
+                color: isSelected ? color : Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
-              gender,
+              label,
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                fontSize: 16,
-                color: selected ? Colors.black : Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: isSelected ? color : Colors.black,
               ),
             ),
           ],

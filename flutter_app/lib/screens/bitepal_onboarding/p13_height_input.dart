@@ -5,169 +5,272 @@ import '../../widgets/bitepal_widgets.dart';
 import '../../widgets/canvas_bear.dart';
 
 /// P13: Height Input
-/// "How tall are you?"
+/// Vertical ruler for height with unit toggle
 class P13HeightInput extends StatefulWidget {
   final VoidCallback onNext;
   
   const P13HeightInput({super.key, required this.onNext});
-  
+
   @override
   State<P13HeightInput> createState() => _P13HeightInputState();
 }
 
 class _P13HeightInputState extends State<P13HeightInput> {
-  double _height = 170;
-  bool _isCm = true;
+  bool _useMetric = true;
   
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<OnboardingState>(context);
+    
+    // Convert cm to feet/inches for display
+    final heightInCm = state.heightCm;
+    final feet = (heightInCm / 30.48).floor();
+    final inches = ((heightInCm % 30.48) / 2.54).round();
+    
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             const Text(
-              'How tall are you?',
+              "How tall are\nyou?",
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
-                fontSize: 28,
-                color: Colors.black,
+                fontSize: 32,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 20),
-            // Bear with measurement indicator
-            Stack(
-              alignment: Alignment.centerRight,
-              children: [
-                const CanvasBear(
-                  mood: BearMood.curious,
-                  size: 140,
-                ),
-                // Height indicator line
-                Positioned(
-                  right: 30,
-                  child: Container(
-                    width: 40,
-                    height: 3,
-                    color: const Color(0xFF4CAF50),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              'Slide to measure your height',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
             ),
             const SizedBox(height: 24),
             // Unit toggle
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => setState(() => _useMetric = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _useMetric ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'cm',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            color: _useMetric ? Colors.black : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => setState(() => _useMetric = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: !_useMetric ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'ft/in',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            color: !_useMetric ? Colors.black : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+            ),
+            const Spacer(),
+            // Height display
+            Center(
+              child: Column(
                 children: [
-                  _UnitButton(
-                    label: 'CM',
-                    selected: _isCm,
-                    onTap: () => setState(() => _isCm = true),
-                  ),
-                  _UnitButton(
-                    label: 'FT',
-                    selected: !_isCm,
-                    onTap: () => setState(() => _isCm = false),
+                  if (_useMetric)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          heightInCm.round().toString(),
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 72,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                        const Text(
+                          ' cm',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 24,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$feet',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 72,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                        const Text(
+                          ' ft ',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 24,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          '$inches',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 48,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                        const Text(
+                          ' in',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 32),
+                  // Vertical ruler
+                  SizedBox(
+                    height: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Left marks
+                        SizedBox(
+                          width: 30,
+                          child: ListView.builder(
+                            reverse: true,
+                            itemCount: 30,
+                            itemBuilder: (context, index) {
+                              final cm = (heightInCm - 100 + index * 5).clamp(100, 220).toInt();
+                              final showLabel = cm % 10 == 0;
+                              return SizedBox(
+                                height: 200 / 30,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: showLabel ? 15 : 8,
+                                      height: 1,
+                                      color: showLabel ? Colors.grey : Colors.grey.shade300,
+                                    ),
+                                    if (showLabel)
+                                      Text(
+                                        '${cm}cm',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 10,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        // Slider track
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderThemeData(
+                              trackHeight: 4,
+                              activeTrackColor: const Color(0xFF4CAF50),
+                              inactiveTrackColor: Colors.grey.shade200,
+                              thumbColor: const Color(0xFF4CAF50),
+                              overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
+                            ),
+                            child: Slider(
+                              value: state.heightCm,
+                              min: 100,
+                              max: 220,
+                              onChanged: (value) => state.setHeight(value),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // Height ruler
-            SizedBox(
-              height: 150,
-              child: _isCm
-                  ? NumberPickerWheel(
-                      minValue: 100,
-                      maxValue: 220,
-                      value: _height.round(),
-                      suffix: ' cm',
-                      onChanged: (value) {
-                        setState(() => _height = value.toDouble());
-                        context.read<OnboardingState>().setHeight(value.toDouble());
-                      },
-                    )
-                  : NumberPickerWheel(
-                      minValue: 3,
-                      maxValue: 8,
-                      value: 5,
-                      suffix: ' ft',
-                      onChanged: (value) {
-                        // Convert ft to cm approximation
-                        final cm = value * 30.48;
-                        setState(() => _height = cm);
-                        context.read<OnboardingState>().setHeight(cm);
-                      },
+            const Spacer(),
+            Row(
+              children: [
+                const CanvasBear(
+                  mood: BearMood.curious,
+                  size: 50,
+                  animate: false,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    child: const Text(
+                      "Standing tall! 📏 Great height!",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            Text(
-              '${_isCm ? _height.round() : (_height / 30.48).toStringAsFixed(1)} ${_isCm ? 'cm' : 'ft'}',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 32,
-                color: Color(0xFF4CAF50),
-              ),
-            ),
-            const Spacer(),
-            CapsuleButton(
-              text: 'Next >',
-              onPressed: widget.onNext,
-            ),
+            CapsuleButton(text: 'Next', onPressed: widget.onNext),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UnitButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  
-  const _UnitButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: selected ? Colors.black : Colors.grey.shade600,
-          ),
         ),
       ),
     );

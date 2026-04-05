@@ -3,124 +3,179 @@ import '../../widgets/canvas_bear.dart';
 import '../../widgets/monet_background.dart';
 
 /// P17: Analyzing Profile
-/// "Analyzing your profile..."
+/// Animated loading with particles
 class P17Analyzing extends StatefulWidget {
-  final VoidCallback onComplete;
+  final VoidCallback onNext;
   
-  const P17Analyzing({super.key, required this.onComplete});
-  
+  const P17Analyzing({super.key, required this.onNext});
+
   @override
   State<P17Analyzing> createState() => _P17AnalyzingState();
 }
 
 class _P17AnalyzingState extends State<P17Analyzing>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  double _progress = 0;
+    with TickerProviderStateMixin {
+  late AnimationController _loadingController;
+  late AnimationController _bounceController;
+  late Animation<double> _loading;
+  late Animation<double> _bounce;
   
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _loadingController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
-    )..addListener(() {
-      setState(() => _progress = _controller.value);
-    });
-    _controller.forward();
+    )..forward();
     
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) widget.onComplete();
+    _loading = Tween<double>(begin: 0, end: 1).animate(_loadingController);
+    
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _bounce = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    );
+    
+    // Auto advance
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) widget.onNext();
     });
   }
-  
+
   @override
   void dispose() {
-    _controller.dispose();
+    _loadingController.dispose();
+    _bounceController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        children: [
+          const Spacer(),
+          // Particles background
+          SizedBox(
+            height: 300,
+            child: AnimatedBuilder(
+              animation: _loading,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: const Size(double.infinity, 300),
+                  painter: _ParticlePainter(progress: _loading.value),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Bear with bounce
+          AnimatedBuilder(
+            animation: _bounce,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, -_bounce.value),
+                child: const CanvasBear(
+                  mood: BearMood.thinking,
+                  size: 120,
+                  animate: true,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Analyzing your profile...',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Progress bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 48),
+            child: AnimatedBuilder(
+              animation: _loading,
+              builder: (context, child) {
+                return Column(
+                  children: [
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: _loading.value,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '${(_loading.value * 100).round()}%',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ParticlePainter extends CustomPainter {
+  final double progress;
+  final int particleCount = 20;
+  
+  _ParticlePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFFE1BEE7),
+      const Color(0xFFFCE4EC),
+      const Color(0xFFE3F2FD),
+      const Color(0xFFB3E5FC),
+    ];
+    
+    for (int i = 0; i < particleCount; i++) {
+      final angle = (i / particleCount) * 2 * 3.14159;
+      final radius = 50 + progress * 100;
+      final x = size.width / 2 + radius * (1 - progress) * 0.5 * (i % 2 == 0 ? 1 : -1) * (0.5 + (i * 17 % 100) / 200);
+      final y = size.height / 2 + radius * (1 - progress) * 0.5 * (i % 3 == 0 ? 1 : -1) * (0.5 + (i * 31 % 100) / 200);
+      
+      final paint = Paint()
+        ..color = colors[i % colors.length].withOpacity(1 - progress * 0.5)
+        ..style = PaintingStyle.fill;
+      
+      final particleSize = 4 + (i % 5) * 2.0;
+      canvas.drawCircle(Offset(x, y), particleSize, paint);
+    }
   }
   
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFE8F5E9), // Mint green
-      child: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Bear thinking
-              const CanvasBear(
-                mood: BearMood.curious,
-                size: 180,
-              ),
-              const SizedBox(height: 40),
-              // Analyzing particles
-              Stack(
-                alignment: Alignment.center,
-                children: List.generate(8, (index) {
-                  final angle = index * 45.0 * 3.14159 / 180;
-                  final radius = 120 * _progress;
-                  return Positioned(
-                    left: 180 + radius * _progress * (index % 2 == 0 ? 1 : -0.5) + 
-                        20 * (index % 3) * _progress,
-                    top: 200 + radius * _progress * 
-                        (index < 4 ? -0.5 : 0.5) + 10 * (index % 2) * _progress,
-                    child: Container(
-                      width: 8 + (index % 3) * 4.0,
-                      height: 8 + (index % 3) * 4.0,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: MonetColors.monetGradient[index % 5]
-                            .withOpacity(1 - _progress),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 40),
-              const Text(
-                'Analyzing your profile...',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Progress bar
-              Container(
-                width: 200,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: _progress,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '${(_progress * 100).toInt()}%',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }

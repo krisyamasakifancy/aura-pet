@@ -4,138 +4,171 @@ import '../../providers/onboarding_state.dart';
 import '../../widgets/bitepal_widgets.dart';
 import '../../widgets/canvas_bear.dart';
 
-/// P15: Goal Weight Input
-/// "What's your goal weight?"
-class P15GoalWeight extends StatefulWidget {
+/// P15: Goal Weight
+/// Same as P14 but with goal weight difference shown
+class P15GoalWeight extends StatelessWidget {
   final VoidCallback onNext;
   
   const P15GoalWeight({super.key, required this.onNext});
-  
-  @override
-  State<P15GoalWeight> createState() => _P15GoalWeightState();
-}
 
-class _P15GoalWeightState extends State<P15GoalWeight> {
-  double _goalWeight = 65;
-  bool _isKg = true;
-  
   @override
   Widget build(BuildContext context) {
-    final onboarding = context.watch<OnboardingState>();
-    final currentWeight = onboarding.currentWeight;
-    final difference = currentWeight - _goalWeight;
+    final state = Provider.of<OnboardingState>(context);
+    final diff = state.currentWeightKg - state.goalWeightKg;
     
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             const Text(
               "What's your\ngoal weight?",
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
                 fontSize: 28,
-                color: Colors.black,
                 height: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
-            // Expecting bear
-            const CanvasBear(
-              mood: BearMood.heartEyes,
-              size: 120,
-            ),
-            const Spacer(),
-            // Weight display
-            Text(
-              '${_isKg ? _goalWeight.toStringAsFixed(1) : (_goalWeight * 2.205).toStringAsFixed(1)} ${_isKg ? 'kg' : 'lbs'}',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 48,
-                color: Color(0xFF4CAF50),
-              ),
-            ),
-            // Difference indicator
-            if (difference > 0)
+            const SizedBox(height: 8),
+            if (diff > 0)
               Text(
-                'You want to lose ${difference.toStringAsFixed(1)} kg',
+                'You want to lose ${diff.toStringAsFixed(1)} kg',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  color: Colors.red.shade400,
+                  color: Colors.green.shade600,
                 ),
               )
-            else if (difference < 0)
+            else if (diff < 0)
               Text(
-                'You want to gain ${(-difference).toStringAsFixed(1)} kg',
+                'You want to gain ${(-diff).toStringAsFixed(1)} kg',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  color: Colors.green.shade400,
+                  color: Colors.orange.shade600,
                 ),
               )
             else
               Text(
-                'You want to maintain',
+                'You want to maintain your weight',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  color: Colors.blue.shade400,
+                  color: Colors.blue.shade600,
                 ),
               ),
-            const SizedBox(height: 24),
-            // Unit toggle
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+            const Spacer(),
+            // Goal weight dial
+            Center(
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  _UnitButton(
-                    label: 'KG',
-                    selected: _isKg,
-                    onTap: () => setState(() => _isKg = true),
+                  Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade200, width: 20),
+                    ),
                   ),
-                  _UnitButton(
-                    label: 'LBS',
-                    selected: !_isKg,
-                    onTap: () => setState(() => _isKg = false),
+                  SizedBox(
+                    width: 280,
+                    height: 280,
+                    child: CustomPaint(
+                      painter: _WeightRingPainter(
+                        progress: (state.goalWeightKg - 30) / 120,
+                      ),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        state.goalWeightKg.round().toString(),
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 72,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                      const Text(
+                        'kg',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 20,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // Weight slider
+            const SizedBox(height: 32),
             SliderTheme(
               data: SliderThemeData(
+                trackHeight: 8,
                 activeTrackColor: const Color(0xFF4CAF50),
                 inactiveTrackColor: Colors.grey.shade200,
                 thumbColor: const Color(0xFF4CAF50),
                 overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
-                trackHeight: 8,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 16),
               ),
               child: Slider(
-                value: _goalWeight,
+                value: state.goalWeightKg,
                 min: 30,
-                max: 200,
-                onChanged: (value) {
-                  setState(() => _goalWeight = value);
-                  context.read<OnboardingState>().setGoalWeight(value);
-                },
+                max: 150,
+                onChanged: (value) => state.setGoalWeight(value),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('30 kg', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey)),
+                  Text('150 kg', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey)),
+                ],
               ),
             ),
             const Spacer(),
-            CapsuleButton(
-              text: 'Next >',
-              onPressed: widget.onNext,
+            Row(
+              children: [
+                const CanvasBear(
+                  mood: BearMood.expecting,
+                  size: 50,
+                  animate: false,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      diff > 0
+                          ? "Goal: ${state.goalWeightKg.round()} kg - You'll get there! 🎯"
+                          : diff < 0
+                              ? "Goal: ${state.goalWeightKg.round()} kg - Let's build muscle! 💪"
+                              : "Goal: ${state.goalWeightKg.round()} kg - Balance is key! ⚖️",
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+            CapsuleButton(text: 'Next', onPressed: onNext),
           ],
         ),
       ),
@@ -143,38 +176,33 @@ class _P15GoalWeightState extends State<P15GoalWeight> {
   }
 }
 
-class _UnitButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+class _WeightRingPainter extends CustomPainter {
+  final double progress;
   
-  const _UnitButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  _WeightRingPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - 20) / 2;
+    
+    final paint = Paint()
+      ..color = const Color(0xFF4CAF50)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 20
+      ..strokeCap = StrokeCap.round;
+    
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708,
+      progress * 2 * 3.14159,
+      false,
+      paint,
+    );
+  }
   
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: selected ? Colors.black : Colors.grey.shade600,
-          ),
-        ),
-      ),
-    );
+  bool shouldRepaint(covariant _WeightRingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }

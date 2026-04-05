@@ -1,40 +1,36 @@
 import 'package:flutter/material.dart';
-import '../../widgets/canvas_bear.dart';
+import 'package:provider/provider.dart';
+import '../../providers/onboarding_state.dart';
 import '../../widgets/bitepal_widgets.dart';
+import '../../widgets/canvas_bear.dart';
 
 /// P18: Personalized Plan Ready
-/// "Your personalized plan is ready!"
 class P18PersonalizedPlan extends StatelessWidget {
   final VoidCallback onNext;
   
   const P18PersonalizedPlan({super.key, required this.onNext});
-  
+
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<OnboardingState>(context);
+    
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            const Spacer(),
             const Text(
-              'Your personalized\nplan is ready!',
+              "Your personalized\nplan is ready!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
                 fontSize: 28,
-                color: Colors.black,
                 height: 1.2,
               ),
             ),
-            const Spacer(),
-            // Celebrating bear
-            const CanvasBear(
-              mood: BearMood.celebrating,
-              size: 180,
-            ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             // Plan summary card
             Container(
               padding: const EdgeInsets.all(24),
@@ -43,7 +39,7 @@ class P18PersonalizedPlan extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -51,33 +47,27 @@ class P18PersonalizedPlan extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _PlanItem(
-                    icon: Icons.calendar_today,
-                    label: 'Estimated goal date',
-                    value: 'March 15, 2026',
-                    color: Colors.purple,
-                  ),
+                  _PlanRow(label: 'Daily calories', value: '${state.dailyCalorieGoal} kcal'),
                   const Divider(height: 24),
-                  _PlanItem(
-                    icon: Icons.local_fire_department,
-                    label: 'Daily calorie goal',
-                    value: '2,150 kcal',
-                    color: Colors.orange,
-                  ),
+                  _PlanRow(label: 'Expected goal date', value: '${state.weeksToGoal} weeks'),
                   const Divider(height: 24),
-                  _PlanItem(
-                    icon: Icons.water_drop,
-                    label: 'Daily water goal',
-                    value: '2.5 L',
-                    color: Colors.blue,
-                  ),
+                  _PlanRow(label: 'Water goal', value: '${(state.waterGoalMl / 1000).toStringAsFixed(1)} L'),
+                  const Divider(height: 24),
+                  _PlanRow(label: 'Fasting plan', value: '16:8'),
                 ],
               ),
             ),
+            const SizedBox(height: 32),
+            const CanvasBear(
+              mood: BearMood.celebrating,
+              size: 100,
+              animate: true,
+            ),
             const Spacer(),
             CapsuleButton(
-              text: 'Next >',
+              text: 'Continue',
               onPressed: onNext,
+              backgroundColor: const Color(0xFF4CAF50),
             ),
           ],
         ),
@@ -86,56 +76,19 @@ class P18PersonalizedPlan extends StatelessWidget {
   }
 }
 
-class _PlanItem extends StatelessWidget {
-  final IconData icon;
+class _PlanRow extends StatelessWidget {
   final String label;
   final String value;
-  final Color color;
   
-  const _PlanItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-  
+  const _PlanRow({required this.label, required this.value});
+
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: color),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
+        Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.grey.shade600)),
+        Text(value, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16)),
       ],
     );
   }
