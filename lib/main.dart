@@ -128,6 +128,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return PaymentCommitmentScreen(onComplete: _nextPage);
                 case 26:
                   return WelcomeScreen(onComplete: _nextPage);
+                case 27:
+                  return HomeScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -10372,6 +10374,731 @@ class _WelcomeConfettiPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _WelcomeConfettiPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+
+/// ============================================
+/// P28: Home Screen (Main Tab Interface)
+/// ============================================
+class HomeScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const HomeScreen({super.key, required this.onComplete});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late AnimationController _progressController;
+
+  // 模拟数据
+  int _dailyGoal = 2000;
+  int _consumed = 850;
+  int get _remaining => _dailyGoal - _consumed;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // 顶部问候语
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getGreeting(),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Today',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  // 设置图标
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      color: Color(0xFF2D3748),
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 分页指示器
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: const Color(0xFF4CAF50),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey.shade600,
+                labelStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+                tabs: const [
+                  Tab(text: 'Calories'),
+                  Tab(text: 'Water'),
+                  Tab(text: 'Fasting'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Tab内容
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Calories Tab
+                  _CaloriesTab(
+                    dailyGoal: _dailyGoal,
+                    consumed: _consumed,
+                    remaining: _remaining,
+                    progressController: _progressController,
+                    onAddMeal: (meal) {
+                      // 临时占位：切到P31饮食记录页
+                      _nextPage();
+                    },
+                  ),
+
+                  // Water Tab (占位)
+                  _PlaceholderTab(
+                    icon: '💧',
+                    title: 'Water Tracking',
+                    description: 'Track your daily water intake',
+                    color: const Color(0xFF64B5F6),
+                  ),
+
+                  // Fasting Tab (占位)
+                  _PlaceholderTab(
+                    icon: '⏰',
+                    title: 'Fasting Timer',
+                    description: 'Set your fasting schedule',
+                    color: const Color(0xFFFF6B6B),
+                  ),
+                ],
+              ),
+            ),
+
+            // 底部Tab栏
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _BottomNavItem(icon: Icons.home_filled, label: 'Home', isSelected: true),
+                  _BottomNavItem(icon: Icons.restaurant_menu_outlined, label: 'Diet', isSelected: false),
+                  _BottomNavItem(icon: Icons.bar_chart_rounded, label: 'Progress', isSelected: false),
+                  _BottomNavItem(icon: Icons.person_outline, label: 'Profile', isSelected: false),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning 🌅';
+    if (hour < 17) return 'Good afternoon ☀️';
+    return 'Good evening 🌙';
+  }
+
+  void _nextPage() {
+    final currentPage = HomeScreenStateMixin._currentPage;
+    if (currentPage < 46) {
+      HomeScreenStateMixin._controller?.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+}
+
+/// HomeScreen State Mixin
+mixin HomeScreenStateMixin on State<HomeScreen> {
+  static int _currentPage = 27;
+  static PageController? _controller;
+}
+
+/// Calories Tab内容
+class _CaloriesTab extends StatelessWidget {
+  final int dailyGoal;
+  final int consumed;
+  final int remaining;
+  final AnimationController progressController;
+  final Function(String) onAddMeal;
+
+  const _CaloriesTab({
+    required this.dailyGoal,
+    required this.consumed,
+    required this.remaining,
+    required this.progressController,
+    required this.onAddMeal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          // 环形进度条
+          AnimatedBuilder(
+            animation: progressController,
+            builder: (context, child) {
+              final progress = (consumed / dailyGoal) * progressController.value;
+              return _CalorieRing(
+                dailyGoal: dailyGoal,
+                consumed: consumed,
+                remaining: remaining,
+                progress: progress,
+                size: 220,
+              );
+            },
+          ),
+
+          const SizedBox(height: 32),
+
+          // 餐食添加按钮
+          Row(
+            children: [
+              Expanded(
+                child: _MealButton(
+                  icon: '🌅',
+                  label: 'Breakfast',
+                  calories: 350,
+                  color: const Color(0xFFFFE066),
+                  onTap: () => onAddMeal('breakfast'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MealButton(
+                  icon: '☀️',
+                  label: 'Lunch',
+                  calories: 600,
+                  color: const Color(0xFFFF6B6B),
+                  onTap: () => onAddMeal('lunch'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MealButton(
+                  icon: '🌙',
+                  label: 'Dinner',
+                  calories: 500,
+                  color: const Color(0xFF4ECDC4),
+                  onTap: () => onAddMeal('dinner'),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // 最近记录预览
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Recent',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'See all',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _MealRecordItem(
+                  icon: '🥗',
+                  name: 'Greek Salad',
+                  time: '12:30 PM',
+                  calories: 280,
+                ),
+                const Divider(height: 16),
+                _MealRecordItem(
+                  icon: '🍎',
+                  name: 'Apple',
+                  time: '10:15 AM',
+                  calories: 95,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 100), // 底部留空
+        ],
+      ),
+    );
+  }
+}
+
+/// 环形卡路里进度条
+class _CalorieRing extends StatelessWidget {
+  final int dailyGoal;
+  final int consumed;
+  final int remaining;
+  final double progress;
+  final double size;
+
+  const _CalorieRing({
+    required this.dailyGoal,
+    required this.consumed,
+    required this.remaining,
+    required this.progress,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 背景环
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 16,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade200),
+            ),
+          ),
+
+          // 进度环
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 16,
+              backgroundColor: Colors.transparent,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+
+          // 中心文字
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$remaining',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 48,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              Text(
+                'kcal remaining',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$consumed / $dailyGoal kcal',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF4CAF50),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 餐食添加按钮
+class _MealButton extends StatelessWidget {
+  final String icon;
+  final String label;
+  final int calories;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MealButton({
+    required this.icon,
+    required this.label,
+    required this.calories,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(icon, style: const TextStyle(fontSize: 24)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '~$calories kcal',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                '+ Add',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 餐食记录项
+class _MealRecordItem extends StatelessWidget {
+  final String icon;
+  final String name;
+  final String time;
+  final int calories;
+
+  const _MealRecordItem({
+    required this.icon,
+    required this.name,
+    required this.time,
+    required this.calories,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(child: Text(icon, style: const TextStyle(fontSize: 20))),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          '$calories kcal',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Color(0xFF4CAF50),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 占位Tab
+class _PlaceholderTab extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String description;
+  final Color color;
+
+  const _PlaceholderTab({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(icon, style: const TextStyle(fontSize: 48)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 底部导航项
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+          size: 24,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 10,
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// 占位页
