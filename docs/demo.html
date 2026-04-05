@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aura-Pet | 45屏视觉全家桶</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-start: #EDF6FA;
+      --bg-end: #C1DDF1;
+      --primary: #6B9EB8;
+      --accent: #FF8BA0;
+      --text: #2D3436;
+      --text-secondary: #636E72;
+      --surface: #FFFFFF;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* 页面指示器 */
+    .indicator {
+      position: fixed;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.9);
+      border-radius: 20px;
+      padding: 8px 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background: #B2BEC3;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .indicator-dot.active {
+      width: 8px;
+      height: 24px;
+      background: var(--primary);
+    }
+
+    /* 页码标签 */
+    .page-counter {
+      position: fixed;
+      left: 16px;
+      top: 20px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+
+    /* 主内容 */
+    .pages {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 80px 24px 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 背景光斑 */
+    .spot {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .spot-pink {
+      background: radial-gradient(circle, rgba(255,139,160,0.3) 0%, transparent 70%);
+    }
+
+    .spot-blue {
+      background: radial-gradient(circle, rgba(107,158,184,0.3) 0%, transparent 70%);
+    }
+
+    /* 卡片 */
+    .card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 8px 20px rgba(107,158,184,0.08);
+      margin-bottom: 20px;
+    }
+
+    /* 小熊 */
+    .pet-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(255,158,196,0.2) 0%, rgba(255,180,196,0.1) 100%);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .pet-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #B8C5D0 0%, #8E9EAB 50%, #6B7A8A 100%);
+      position: relative;
+      animation: breathe 2.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .pet-face {
+      position: absolute;
+      top: 22%;
+      left: 15%;
+      width: 70%;
+      height: 50%;
+      background: white;
+      border-radius: 40%;
+    }
+
+    .pet-eye {
+      position: absolute;
+      width: 12%;
+      height: 12%;
+      background: #2D3436;
+      border-radius: 50%;
+      top: 35%;
+    }
+
+    .pet-eye.left { left: 25%; }
+    .pet-eye.right { right: 25%; }
+
+    .pet-eye-shine {
+      position: absolute;
+      width: 40%;
+      height: 40%;
+      background: white;
+      border-radius: 50%;
+      top: 20%;
+      left: 20%;
+    }
+
+    .pet-nose {
+      position: absolute;
+      bottom: 30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 15%;
+      height: 10%;
+      background: #2D3436;
+      border-radius: 30%;
+    }
+
+    .pet-blush {
+      position: absolute;
+      bottom: 35%;
+      width: 15%;
+      height: 8%;
+      background: rgba(255,139,160,0.4);
+      border-radius: 50%;
+    }
+
+    .pet-blush.left { left: 8%; }
+    .pet-blush.right { right: 8%; }
+
+    .pet-mouth {
+      position: absolute;
+      bottom: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20%;
+      border-bottom: 2px solid #2D3436;
+      border-radius: 0 0 50% 50%;
+    }
+
+    .pet-heart {
+      position: absolute;
+      bottom: 55%;
+      right: 10%;
+      font-size: 24px;
+      animation: heart-float 2s ease-in-out infinite;
+    }
+
+    .aura-glow {
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,158,196,0.4) 0%, transparent 70%);
+      animation: glow-pulse 2s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    @keyframes heart-float {
+      0%, 100% { transform: translateY(0) rotate(-15deg); }
+      50% { transform: translateY(-10px) rotate(-15deg); }
+    }
+
+    /* 心形气泡 */
+    .heart-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FFB4C4, #FF6B8A);
+      opacity: 0;
+      animation: bubble-float 3s ease-out infinite;
+    }
+
+    @keyframes bubble-float {
+      0% { opacity: 0; transform: translateY(0) scale(0.5); }
+      20% { opacity: 0.8; }
+      100% { opacity: 0; transform: translateY(-80px) scale(1); }
+    }
+
+    /* 标题 */
+    .page-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.9);
+      padding: 12px 20px;
+      border-radius: 20px;
+      display: inline-block;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    /* 数据卡片 */
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .data-item {
+      background: #F5FAFC;
+      border-radius: 16px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .data-icon { font-size: 20px; }
+    .data-value { font-size: 16px; font-weight: 700; }
+    .data-label { font-size: 10px; color: var(--text-secondary); }
+
+    /* 操作按钮 */
+    .action-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .action-btn {
+      flex: 1;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-family: 'Poppins';
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.2s ease;
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 语料引用 */
+    .quote {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* 底部导航 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 386px;
+      width: calc(100% - 40px);
+      background: white;
+      border-radius: 30px;
+      padding: 8px;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 8px 20px rgba(107,158,184,0.08);
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #B2BEC3;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item.active {
+      background: rgba(107,158,184,0.1);
+      color: var(--primary);
+    }
+
+    .nav-item svg { width: 24px; height: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 页面指示器 -->
+    <div class="indicator" id="indicator"></div>
+    
+    <!-- 页码 -->
+    <div class="page-counter" id="counter">1 / 45</div>
+
+    <!-- 45页内容 -->
+    <div class="pages" id="pages"></div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>首页</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+        <span>记录</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>禁食</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_PAGES = 45;
+    const container = document.getElementById('pages');
+    const indicator = document.getElementById('indicator');
+    const counter = document.getElementById('counter');
+    
+    let currentPage = 0;
+    
+    const quotes = [
+      '这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨',
+      '咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊',
+      '好想钻出屏幕抱抱你呀，感受你掌心的温度，那一定比棉花糖还软。',
+      '叮！恭喜你获得"光之追随者"徽章。你的生命力已经溢出屏幕啦！✨',
+      '你是坠入凡间的星辰，偶尔需要一点奶茶的甜来补充星际燃料呀～',
+      '碳水是快乐的开关。听，你的大脑正在为你疯狂鼓掌呢！',
+      '别焦虑，身体只是想借这顿火锅的热气，给你一个暖洋洋的拥抱。',
+      '吃饱了才有力气去追逐落日，你是最棒的食光旅行者。',
+    ];
+
+    const pageTitles = [
+      '🏠 首页', '📸 拍照记录', '🍽️ 饮食历史', '⏰ 禁食计时', '💧 喝水追踪',
+      '⚖️ 体重记录', '📊 BMI计算', '📈 进度统计', '🏆 成就系统', '🛒 商店',
+      '💳 订阅', '🐻 宠物详情', '👤 个人中心', '⚙️ 设置', '🔔 通知',
+      '🎯 目标', '📱 拍照', '🍎 食物详情', '🎁 奖励', '🌟 每日任务',
+      '📅 日历', '📰 新闻', '🎮 互动', '💬 聊天', '🎨 装扮',
+      '🧬 健康', '🏃 运动', '😴 睡眠', '🧘 冥想', '📱 应用',
+      '🔐 登录', '📝 注册', '🎉 庆祝', '💝 感谢', '🌙 晚安',
+      '☀️ 早安', '🎊 新年', '❤️ 情人节', '🎂 生日', '🍀 幸运',
+      '🌈 彩虹', '⭐ 星星', '🔥 热门', '💫 特效', '✨ 完成'
+    ];
+
+    const backgrounds = [
+      ['#EDF6FA', '#C1DDF1'],
+      ['#FFF8E1', '#FFE0B2'],
+      ['#FCE4EC', '#F8BBD9'],
+      ['#E8F5E9', '#C8E6C9'],
+      ['#E3F2FD', '#BBDEFB'],
+    ];
+
+    // 创建45页
+    for (let i = 0; i < TOTAL_PAGES; i++) {
+      const bg = backgrounds[i % backgrounds.length];
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.style.background = `linear-gradient(180deg, ${bg[0]} 0%, ${bg[1]} 100%)`;
+      
+      // 光斑
+      page.innerHTML += `
+        <div class="spot spot-pink" style="width: 200px; height: 200px; top: ${i % 2 ? 50 : 200}; right: ${i % 2 ? -50 : 100};"></div>
+        <div class="spot spot-blue" style="width: 150px; height: 150px; bottom: ${i % 2 ? 100 : 50}; left: ${i % 2 ? -100 : 50};"></div>
+      `;
+      
+      // 标题
+      page.innerHTML += `<div class="page-title">${pageTitles[i]}</div>`;
+      
+      // 小熊区域
+      page.innerHTML += `
+        <div class="pet-section">
+          <div class="pet-avatar">
+            <div class="aura-glow"></div>
+            <div class="pet-face">
+              <div class="pet-eye left"><div class="pet-eye-shine"></div></div>
+              <div class="pet-eye right"><div class="pet-eye-shine"></div></div>
+              <div class="pet-blush left"></div>
+              <div class="pet-blush right"></div>
+              <div class="pet-nose"></div>
+              <div class="pet-mouth"></div>
+            </div>
+            <div class="pet-heart">💕</div>
+            <div class="heart-bubble" style="width: 10px; height: 10px; top: 0; left: 20%; animation-delay: ${i % 5 * 0.3}s;"></div>
+            <div class="heart-bubble" style="width: 8px; height: 8px; top: 10%; right: 25%; animation-delay: ${(i % 5 + 1) * 0.3}s;"></div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 18px; font-weight: 700;">小熊 · Lv.${5 + i % 10}</div>
+            <div style="font-size: 14px; color: var(--primary);">✨ ${70 + i % 30} Aura</div>
+            <div class="quote">"${quotes[i % quotes.length]}"</div>
+          </div>
+        </div>
+      `;
+      
+      // 数据卡片
+      page.innerHTML += `
+        <div class="card">
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">今日数据</div>
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-icon">🔥</div>
+              <div class="data-value">${1000 + i * 50}</div>
+              <div class="data-label">kcal</div>
+            </div>
+            <div class="data-item">
+              <div class="data-icon">💧</div>
+              <div class="data-value">${i % 10}</div>
+              <div class="data-label">cups</div>
+            </div>
+            <div class="data-item">
+              <div class="data-icon">⏰</div>
+              <div class="data-value">${i % 18}:00</div>
+              <div class="data-label">fast</div>
+            </div>
+            <div class="data-item">
+              <div class="data-icon">⚖️</div>
+              <div class="data-value">${60 + i % 20}</div>
+              <div class="data-label">kg</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // 操作按钮
+      page.innerHTML += `
+        <div class="action-row">
+          <button class="action-btn">📸 拍照</button>
+          <button class="action-btn">💧 喝水</button>
+          <button class="action-btn">💕 抚摸</button>
+        </div>
+      `;
+      
+      container.appendChild(page);
+      
+      // 添加指示器点
+      const dot = document.createElement('div');
+      dot.className = 'indicator-dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => scrollToPage(i);
+      indicator.appendChild(dot);
+    }
+
+    // 滚动到指定页
+    function scrollToPage(index) {
+      window.scrollTo({
+        top: index * window.innerHeight,
+        behavior: 'smooth'
+      });
+    }
+
+    // 滚动监听
+    window.addEventListener('scroll', () => {
+      const page = Math.round(window.scrollY / window.innerHeight);
+      if (page !== currentPage && page >= 0 && page < TOTAL_PAGES) {
+        currentPage = page;
+        counter.textContent = `${page + 1} / ${TOTAL_PAGES}`;
+        
+        // 更新指示器
+        document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
+          dot.classList.toggle('active', i === page);
+        });
+      }
+    });
+
+    // 触摸滑动支持
+    let touchStartY = 0;
+    document.addEventListener('touchstart', e => {
+      touchStartY = e.touches[0].clientY;
+    });
+
+    document.addEventListener('touchend', e => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const diff = touchStartY - touchEndY;
+      
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && currentPage < TOTAL_PAGES - 1) {
+          scrollToPage(currentPage + 1);
+        } else if (diff < 0 && currentPage > 0) {
+          scrollToPage(currentPage - 1);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ import 'screens/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/onboarding/aura_onboarding_screen.dart';
 import 'screens/aura_home_screen.dart';
+import 'screens/aura_demo_showcase.dart';
 import 'screens/fasting/aura_fasting_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'services/quote_engine.dart';
@@ -143,6 +144,11 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
               return _SilkPageRoute(
                 settings: settings,
                 pageBuilder: (_) => const AuraFastingScreen(),
+              );
+            case '/demo':
+              return _SilkPageRoute(
+                settings: settings,
+                pageBuilder: (_) => const AuraDemoShowcase(),
               );
             default:
               return _SilkPageRoute(
