@@ -118,6 +118,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return CreatingPlanScreen(onComplete: _nextPage);
                 case 21:
                   return WeightPredictionScreen(onComplete: _nextPage);
+                case 22:
+                  return HabitAnalysisScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -8476,6 +8478,333 @@ class _HeartBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P23: Habit Analysis Screen
+/// ============================================
+class HabitAnalysisScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const HabitAnalysisScreen({super.key, required this.onComplete});
+
+  @override
+  State<HabitAnalysisScreen> createState() => _HabitAnalysisScreenState();
+}
+
+class _HabitAnalysisScreenState extends State<HabitAnalysisScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _chartController;
+
+  // 用户数据 (基于UserMetrics模拟)
+  double get _userSteps => 5000.0;
+  double get _userSleep => 6.5;
+  double get _userWater => 1.8;
+
+  // 同龄人平均数据
+  double get _avgSteps => 7000.0;
+  double get _avgSleep => 7.5;
+  double get _avgWater => 2.2;
+
+  final List<_HabitData> _habits = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _habits.addAll([
+      _HabitData(label: 'Daily Steps', icon: '👟', userValue: _userSteps, avgValue: _avgSteps, unit: '', maxValue: 10000),
+      _HabitData(label: 'Sleep Duration', icon: '😴', userValue: _userSleep, avgValue: _avgSleep, unit: 'h', maxValue: 10),
+      _HabitData(label: 'Water Intake', icon: '💧', userValue: _userWater, avgValue: _avgWater, unit: 'L', maxValue: 3),
+    ]);
+
+    _chartController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _chartController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'Based on\nyour profile...',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'How you compare to peers your age',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 对比条形图
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _chartController,
+                  builder: (context, child) {
+                    return Column(
+                      children: _habits.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final habit = entry.value;
+                        final delay = index * 0.15;
+                        final itemProgress = (_chartController.value - delay).clamp(0.0, 1.0) / (1.0 - delay * 2);
+                        return _HabitBarItem(
+                          habit: habit,
+                          progress: itemProgress.clamp(0.0, 1.0),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+
+              // 图例
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _LegendItem(color: const Color(0xFF4ECDC4), label: 'You'),
+                  const SizedBox(width: 24),
+                  _LegendItem(color: const Color(0xFFDDA0DD), label: 'Avg for your age'),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 习惯数据
+class _HabitData {
+  final String label;
+  final String icon;
+  final double userValue;
+  final double avgValue;
+  final String unit;
+  final double maxValue;
+
+  _HabitData({
+    required this.label,
+    required this.icon,
+    required this.userValue,
+    required this.avgValue,
+    required this.unit,
+    required this.maxValue,
+  });
+}
+
+/// 单个习惯条形图
+class _HabitBarItem extends StatelessWidget {
+  final _HabitData habit;
+  final double progress;
+
+  const _HabitBarItem({
+    required this.habit,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final userPercent = (habit.userValue / habit.maxValue).clamp(0.0, 1.0);
+    final avgPercent = (habit.avgValue / habit.maxValue).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标签行
+          Row(
+            children: [
+              Text(habit.icon, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Text(
+                habit.label,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${habit.userValue}${habit.unit} / ${habit.avgValue}${habit.unit}',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // 条形图
+          SizedBox(
+            height: 32,
+            child: Stack(
+              children: [
+                // 背景
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+
+                // 同龄人平均条
+                FractionallySizedBox(
+                  widthFactor: avgPercent,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFDDA0DD).withOpacity(0.6),
+                          const Color(0xFFDDA0DD).withOpacity(0.3),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+
+                // 用户条 (带动画)
+                FractionallySizedBox(
+                  widthFactor: userPercent * progress,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4ECDC4), Color(0xFF6DD5C4)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4ECDC4).withOpacity(0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 图例项
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({
+    required this.color,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [color, color.withOpacity(0.6)]),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// 占位页
