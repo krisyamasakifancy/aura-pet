@@ -136,6 +136,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return MoodScreen(onComplete: _nextPage);
                 case 30:
                   return FoodSearchScreen(onComplete: _nextPage);
+                case 31:
+                  return FoodListScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -12807,6 +12809,548 @@ class _PeekingBearPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PeekingBearPainter oldDelegate) =>
       oldDelegate.eyeOpenness != eyeOpenness;
+}
+
+
+/// ============================================
+/// P32: Food List Screen
+/// ============================================
+class FoodListScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const FoodListScreen({super.key, required this.onComplete});
+
+  @override
+  State<FoodListScreen> createState() => _FoodListScreenState();
+}
+
+class _FoodListScreenState extends State<FoodListScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _bearController;
+
+  final Set<String> _selectedFoods = {};
+
+  final List<_FoodItem> _foods = [
+    _FoodItem(name: 'Sweet potato', calories: 120, emoji: '🍠'),
+    _FoodItem(name: 'Apple', calories: 95, emoji: '🍎'),
+    _FoodItem(name: 'Avocado', calories: 240, emoji: '🥑'),
+    _FoodItem(name: 'Banana', calories: 105, emoji: '🍌'),
+    _FoodItem(name: 'Grilled chicken', calories: 165, emoji: '🍗'),
+    _FoodItem(name: 'Brown rice', calories: 215, emoji: '🍚'),
+    _FoodItem(name: 'Salmon', calories: 208, emoji: '🐟'),
+    _FoodItem(name: 'Egg', calories: 78, emoji: '🥚'),
+  ];
+
+  String? _lastAddedFood;
+  int? _lastAddedCalories;
+
+  @override
+  void initState() {
+    super.initState();
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFood(String foodId, int calories) {
+    setState(() {
+      if (_selectedFoods.contains(foodId)) {
+        _selectedFoods.remove(foodId);
+      } else {
+        _selectedFoods.add(foodId);
+        _lastAddedFood = foodId;
+        _lastAddedCalories = calories;
+        _bearController.reset();
+        _bearController.forward();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Add to your meal',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {},
+            child: const Text(
+              'Clear',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Color(0xFFFF6B6B),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Canvas小熊 + 热量泡泡
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                children: [
+                  // Canvas小熊
+                  AnimatedBuilder(
+                    animation: _bearController,
+                    builder: (context, child) {
+                      final bounce = math.sin(_bearController.value * math.pi * 2) * 3;
+                      return Transform.translate(
+                        offset: Offset(0, bounce),
+                        child: child,
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(60, 60),
+                      painter: _FoodBearPainter(),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // 热量泡泡
+                  AnimatedBuilder(
+                    animation: _bearController,
+                    builder: (context, child) {
+                      final opacity = _bearController.value < 0.3
+                          ? _bearController.value / 0.3
+                          : _bearController.value > 0.7
+                              ? (1 - _bearController.value) / 0.3
+                              : 1.0;
+                      final scale = 0.5 + _bearController.value * 0.5;
+                      return Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: scale.clamp(0.5, 1.0),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _lastAddedCalories != null
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Good choice! +$_lastAddedCalories kcal',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+
+            // 标题
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  const Text(
+                    'Suggested foods',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_selectedFoods.length} selected',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 食物列表
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                itemCount: _foods.length,
+                itemBuilder: (context, index) {
+                  final food = _foods[index];
+                  final isSelected = _selectedFoods.contains(food.id);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _FoodListItem(
+                      food: food,
+                      isSelected: isSelected,
+                      onToggle: () => _toggleFood(food.id, food.calories),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // 已选摘要
+            if (_selectedFoods.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_selectedFoods.length} items',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${_getTotalCalories()} kcal',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Next胶囊按钮
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _getTotalCalories() {
+    return _foods
+        .where((f) => _selectedFoods.contains(f.id))
+        .fold(0, (sum, f) => sum + f.calories);
+  }
+}
+
+/// 食物数据
+class _FoodItem {
+  final String id;
+  final String name;
+  final int calories;
+  final String emoji;
+
+  _FoodItem({required this.name, required this.calories, required this.emoji})
+      : id = name.toLowerCase().replaceAll(' ', '_');
+}
+
+/// 食物列表项
+class _FoodListItem extends StatefulWidget {
+  final _FoodItem food;
+  final bool isSelected;
+  final VoidCallback onToggle;
+
+  const _FoodListItem({
+    required this.food,
+    required this.isSelected,
+    required this.onToggle,
+  });
+
+  @override
+  State<_FoodListItem> createState() => _FoodListItemState();
+}
+
+class _FoodListItemState extends State<_FoodListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _checkController;
+  late Animation<double> _checkAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _checkAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _checkController, curve: Curves.easeOutBack),
+    );
+
+    if (widget.isSelected) {
+      _checkController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_FoodListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected != oldWidget.isSelected) {
+      if (widget.isSelected) {
+        _checkController.forward();
+      } else {
+        _checkController.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _checkController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onToggle,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: widget.isSelected
+              ? const Color(0xFF4CAF50).withOpacity(0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.isSelected
+                ? const Color(0xFF4CAF50)
+                : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Emoji
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(widget.food.emoji, style: const TextStyle(fontSize: 24)),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 名称和热量
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.food.name,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: widget.isSelected
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFF2D3748),
+                    ),
+                  ),
+                  Text(
+                    '${widget.food.calories} kcal',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 加号/勾号按钮
+            AnimatedBuilder(
+              animation: _checkAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: widget.isSelected
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                    boxShadow: widget.isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: widget.isSelected
+                        ? Transform.scale(
+                            scale: _checkAnimation.value,
+                            child: const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          )
+                        : Icon(
+                            Icons.add,
+                            color: Colors.grey.shade600,
+                            size: 20,
+                          ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 食物小熊
+class _FoodBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 5;
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.0, height: r * 0.85),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 开心眯眼
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, c.dy), r * 0.12);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, c.dy), r * 0.12);
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.42, c.dx + r * 0.15, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 0.15), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 0.15), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.2), width: r * 1.4, height: r * 0.8),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.6, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
