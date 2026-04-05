@@ -144,6 +144,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return FastingPlanScreen(onComplete: _nextPage);
                 case 34:
                   return FastingTimerScreen(onComplete: _nextPage);
+                case 35:
+                  return WaterTrackerScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -14536,6 +14538,436 @@ class _WaveRipplePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _WaveRipplePainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+
+/// ============================================
+/// P36: Water Tracker Screen
+/// ============================================
+class WaterTrackerScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WaterTrackerScreen({super.key, required this.onComplete});
+
+  @override
+  State<WaterTrackerScreen> createState() => _WaterTrackerScreenState();
+}
+
+class _WaterTrackerScreenState extends State<WaterTrackerScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _waveController;
+  late Animation<double> _waveAnim;
+  late Animation<double> _waveOffsetAnim;
+
+  double _currentWater = 1.2; // L
+  final double _goalWater = 2.5; // L
+
+  final List<_WaterOption> _options = [
+    _WaterOption(amount: 0.25, label: '250ml', icon: '🥛'),
+    _WaterOption(amount: 0.5, label: '500ml', icon: '🥤'),
+    _WaterOption(amount: 1.0, label: '1L', icon: '🍶'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _waveAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _waveController, curve: Curves.easeOutBack),
+    );
+    _waveOffsetAnim = Tween<double>(begin: 0, end: 0.1).animate(
+      CurvedAnimation(parent: _waveController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  void _addWater(double amount) {
+    setState(() {
+      _currentWater = (_currentWater + amount).clamp(0.0, _goalWater * 1.5);
+    });
+    _waveController.reset();
+    _waveController.forward();
+  }
+
+  double get _progress => (_currentWater / _goalWater).clamp(0.0, 1.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Water',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // 水量显示
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  Text(
+                    '${_currentWater.toStringAsFixed(1)}L',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 48,
+                      color: Color(0xFF64B5F6),
+                    ),
+                  ),
+                  Text(
+                    '/ ${_goalWater.toStringAsFixed(1)}L today',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // 进度百分比
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF64B5F6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      '${(_progress * 100).toInt()}% of daily goal',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64B5F6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 水波纹Canvas
+            Expanded(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_waveAnim, _waveOffsetAnim]),
+                builder: (context, child) {
+                  return Stack(
+                    children: [
+                      // 水波纹背景
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _WaterWavePainter(
+                            progress: _progress + _waveOffsetAnim.value,
+                            wavePhase: _waveAnim.value,
+                          ),
+                        ),
+                      ),
+
+                      // 水滴图标
+                      Center(
+                        child: AnimatedBuilder(
+                          animation: _waveAnim,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: 1 + _waveAnim.value * 0.2,
+                              child: Opacity(
+                                opacity: 1 - _waveAnim.value * 0.3,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '💧',
+                                style: TextStyle(
+                                  fontSize: 64 * (0.5 + _progress * 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            // 快速添加选项
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Quick add',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: _options.map((option) {
+                      return _WaterButton(
+                        option: option,
+                        onTap: () => _addWater(option.amount),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Next胶囊按钮
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 饮水选项
+class _WaterOption {
+  final double amount;
+  final String label;
+  final String icon;
+
+  _WaterOption({required this.amount, required this.label, required this.icon});
+}
+
+/// 饮水按钮
+class _WaterButton extends StatefulWidget {
+  final _WaterOption option;
+  final VoidCallback onTap;
+
+  const _WaterButton({required this.option, required this.onTap});
+
+  @override
+  State<_WaterButton> createState() => _WaterButtonState();
+}
+
+class _WaterButtonState extends State<_WaterButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rippleController;
+  late Animation<double> _rippleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _rippleController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _rippleAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _rippleController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _rippleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        widget.onTap();
+        _rippleController.reset();
+        _rippleController.forward();
+      },
+      child: AnimatedBuilder(
+        animation: _rippleAnim,
+        builder: (context, child) {
+          return Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              color: const Color(0xFF64B5F6).withOpacity(0.1 + _rippleAnim.value * 0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF64B5F6).withOpacity(0.3 + _rippleAnim.value * 0.4),
+                width: 2,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  widget.option.icon,
+                  style: const TextStyle(fontSize: 32),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.option.label,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64B5F6),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Canvas: 水波纹
+class _WaterWavePainter extends CustomPainter {
+  final double progress;
+  final double wavePhase;
+
+  _WaterWavePainter({required this.progress, required this.wavePhase});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 水位高度 (从底部开始)
+    final waterHeight = size.height * progress;
+    final waterTop = size.height - waterHeight;
+
+    // 波浪路径
+    final wavePath = Path();
+    wavePath.moveTo(0, size.height);
+
+    // 第一层波浪
+    for (double x = 0; x <= size.width; x++) {
+      final y = waterTop + math.sin((x / size.width * 2 * math.pi) + wavePhase * math.pi * 2) * 8;
+      wavePath.lineTo(x, y);
+    }
+
+    wavePath.lineTo(size.width, size.height);
+    wavePath.close();
+
+    // 渐变
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFF64B5F6).withOpacity(0.3),
+        const Color(0xFF64B5F6).withOpacity(0.6),
+        const Color(0xFF64B5F6).withOpacity(0.8),
+      ],
+    );
+
+    final paint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, waterTop, size.width, waterHeight));
+
+    canvas.drawPath(wavePath, paint);
+
+    // 第二层波浪 (叠加)
+    final wavePath2 = Path();
+    wavePath2.moveTo(0, size.height);
+
+    for (double x = 0; x <= size.width; x++) {
+      final y = waterTop + math.sin((x / size.width * 3 * math.pi) - wavePhase * math.pi * 2) * 5 + 3;
+      wavePath2.lineTo(x, y);
+    }
+
+    wavePath2.lineTo(size.width, size.height);
+    wavePath2.close();
+
+    canvas.drawPath(
+      wavePath2,
+      Paint()
+        ..color = const Color(0xFF64B5F6).withOpacity(0.2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaterWavePainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.wavePhase != wavePhase;
 }
 
 /// 占位页
