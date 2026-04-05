@@ -6,114 +6,43 @@
   <title>Aura-Pet - 46屏健康伴侣</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root {--bg-start: #EDF6FA;--bg-end: #C1DDF1;--primary: #4ECDC4;--accent: #FF8BA0;--heart-pink: #FF6B8A;--text-primary: #2D3436;--surface: #FFFFFF;--gold: #FFD700;--dark-bg: #1A0033;}
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{font-family:'Inter',-apple-system,sans-serif;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));min-height:100vh;overflow:hidden;touch-action:pan-y}
-    .app-container{width:100vw;height:100vh;position:relative;overflow:hidden}
-    .page{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;padding-bottom:120px;opacity:0;transform:translateX(100%);transition:all 0.6s cubic-bezier(0.4,0,0.2,1);pointer-events:none;overflow-y:auto}
-    .page.active{opacity:1;transform:translateX(0);pointer-events:auto}
-    .page.exit-left{transform:translateX(-100%)}
-    .capsule-btn{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);padding:16px 48px;background:linear-gradient(135deg,#4CAF50,#8BC34A);color:white;font-family:'Poppins',sans-serif;font-weight:600;font-size:18px;border:none;border-radius:28px;cursor:pointer;box-shadow:0 8px 24px rgba(76,175,80,0.3);transition:all 0.3s ease;z-index:100;animation:btnPulse 2s ease-in-out infinite}
-    .capsule-btn:hover{transform:translateX(-50%) scale(1.05)}
-    .capsule-btn:active{transform:translateX(-50%) scale(0.95)}
-    @keyframes btnPulse{0%,100%{box-shadow:0 8px 24px rgba(76,175,80,0.3)}50%{box-shadow:0 8px 32px rgba(76,175,80,0.5)}}
-    .page-counter{position:fixed;top:20px;right:20px;padding:8px 16px;background:rgba(255,255,255,0.9);border-radius:20px;font-size:14px;font-weight:600;color:var(--text-primary);z-index:100;backdrop-filter:blur(10px)}
-    .content-card{background:var(--surface);border-radius:24px;padding:28px;margin:16px;max-width:360px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.08);animation:cardFloat 3s ease-in-out infinite}
-    @keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    .card-title{font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:12px;text-align:center;line-height:1.3}
-    .card-subtitle{font-size:14px;color:#666;text-align:center;line-height:1.6}
-    .survey-options{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
-    .survey-option{background:var(--surface);border:2px solid transparent;border-radius:14px;padding:14px 20px;text-align:center;cursor:pointer;transition:all 0.3s ease;font-size:15px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
-    .survey-option:hover{border-color:var(--primary);transform:scale(1.02)}
-    .survey-option.selected{border-color:var(--primary);background:rgba(78,205,196,0.2)}
-    .input-field{width:100%;max-width:180px;padding:14px 20px;border:2px solid #E0E0E0;border-radius:14px;font-size:22px;font-weight:600;text-align:center;outline:none;transition:border-color 0.3s ease}
-    .input-field:focus{border-color:var(--primary)}
-    .progress-ring{position:relative;width:160px;height:160px}
-    .progress-ring svg{transform:rotate(-90deg)}
-    .progress-ring circle{fill:none;stroke-width:10}
-    .progress-ring .bg{stroke:#E0E0E0}
-    .progress-ring .progress{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset 1s ease}
-    .progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-    .progress-value{font-family:'Poppins',sans-serif;font-size:36px;font-weight:700;color:var(--text-primary)}
-    .progress-label{font-size:12px;color:#666}
-    .timer-display{font-family:'Poppins',sans-serif;font-size:38px;font-weight:700;color:white;letter-spacing:2px}
-    .nutrient-bar{width:100%;height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;margin:6px 0}
-    .nutrient-fill{height:100%;border-radius:4px;transition:width 1s ease}
-    .nutrient-fill.carbs{background:linear-gradient(90deg,#FFB74D,#FF9800)}
-    .nutrient-fill.protein{background:linear-gradient(90deg,#4FC3F7,#29B6F6)}
-    .nutrient-fill.fat{background:linear-gradient(90deg,#BA68C8,#9C27B0)}
-    .mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px}
-    .mood-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:14px;cursor:pointer;transition:all 0.3s ease;background:var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
-    .mood-item:hover,.mood-item.selected{background:rgba(78,205,196,0.2);transform:scale(1.1)}
-    .mood-emoji{font-size:26px}
-    .mood-label{font-size:10px;color:#666}
-    .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}
-    .badge-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:var(--surface);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
-    .badge-icon{font-size:32px}
-    .badge-name{font-size:10px;font-weight:600;color:var(--text-primary)}
-    .water-wave{position:relative;width:90px;height:90px;background:linear-gradient(180deg,#64B5F6,#2196F3);border-radius:50%;overflow:hidden}
-    .wave{position:absolute;bottom:0;left:-50%;width:200%;height:100%;background:rgba(255,255,255,0.3);border-radius:40%;animation:wave 3s ease-in-out infinite}
-    .wave:nth-child(2){animation-delay:-1.5s;opacity:0.6}
-    @keyframes wave{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(180deg)}}
-    .tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -4px 16px rgba(0,0,0,0.08);z-index:50}
-    .tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:#999;font-size:10px;cursor:pointer;transition:color 0.3s ease}
-    .tab-item.active{color:var(--primary)}
-    .tab-icon{font-size:20px}
-    .quote-bubble{position:fixed;bottom:140px;left:50%;transform:translateX(-50%) scale(0.8);background:linear-gradient(135deg,#FFF8E7,#FFE4E1);padding:14px 18px;border-radius:16px;max-width:280px;width:90%;box-shadow:0 8px 32px rgba(255,107,107,0.2);opacity:0;transition:all 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);z-index:200}
-    .quote-bubble.show{opacity:1;transform:translateX(-50%) scale(1)}
-    .quote-text{font-size:13px;line-height:1.6;color:#2D3748;text-align:center}
-    .quote-category{display:inline-block;margin-top:8px;padding:3px 8px;background:rgba(255,107,107,0.2);border-radius:8px;font-size:9px;font-weight:600;color:#FF6B8A}
-    .bear-container{position:relative;width:120px;height:120px}
-    .bear-face{width:100%;height:100%;background:linear-gradient(180deg,#F5E6D3 0%,#E8D5C4 100%);border-radius:50% 50% 45% 45%;position:relative;animation:breathe 2s ease-in-out infinite}
-    .bear-face::before{content:'';position:absolute;width:26%;height:16%;background:#D4C4B0;border-radius:50%;top:32%;left:50%;transform:translateX(-50%)}
-    .bear-eye{position:absolute;width:11%;height:11%;background:#2D3436;border-radius:50%;top:26%;animation:blink 4s ease-in-out infinite}
-    .bear-eye.left{left:24%}
-    .bear-eye.right{right:24%}
-    .bear-eye::after{content:'';position:absolute;width:32%;height:32%;background:white;border-radius:50%;top:12%;left:12%}
-    @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-    @keyframes blink{0%,45%,55%,100%{transform:scaleY(1)}50%{transform:scaleY(0.1)}}
-    .bear-mouth{position:absolute;width:20%;height:10%;border:2px solid #8B7355;border-top:none;border-radius:0 0 50% 50%;bottom:22%;left:50%;transform:translateX(-50%)}
-    .bear-teeth{position:absolute;width:10%;height:5%;background:white;border-radius:0 0 30% 30%;bottom:29%;left:50%;transform:translateX(-50%);border:1px solid #DDD;border-top:none}
-    .bear-blush{position:absolute;width:12%;height:7%;background:rgba(255,139,160,0.4);border-radius:50%;bottom:24%}
-    .bear-blush.left{left:9%}
-    .bear-blush.right{right:9%}
-    .bear-ear{position:absolute;width:22%;height:22%;background:linear-gradient(180deg,#F5E6D3 0%,#E8D5C4 100%);border-radius:50%;top:-3%}
-    .bear-ear.left{left:3%}
-    .bear-ear.right{right:3%}
-    .bear-ear::after{content:'';position:absolute;width:52%;height:52%;background:#D4C4B0;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
-    .bear-hearts{position:absolute;top:-15px;right:-5px;font-size:16px;animation:heartsFloat 2s ease-in-out infinite}
-    @keyframes heartsFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.2)}}
-    .bear-water{position:absolute;top:-10px;right:0;font-size:14px;animation:waterDrop 1.5s ease-in-out infinite}
-    @keyframes waterDrop{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(15deg)}}
-    .bear-zzz{position:absolute;top:-12px;right:0;font-size:12px;color:#9C27B0;font-weight:bold;animation:zzzFloat 2s ease-in-out infinite}
-    @keyframes zzzFloat{0%,100%{transform:translateY(0) translateX(0);opacity:0.5}50%{transform:translateY(-12px) translateX(8px);opacity:1}}
-    .bear-star{position:absolute;top:-10px;left:0;font-size:14px;animation:starSpin 3s linear infinite}
-    @keyframes starSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-    .bear-confetti{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
-    .confetti-piece{position:absolute;width:6px;height:6px;animation:confettiFall 2s ease-out forwards}
-    @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(80px) rotate(360deg);opacity:0}}
-    .chart-container{width:100%;max-width:280px;height:140px;position:relative}
-    .fasting-phases{display:flex;gap:5px;margin-top:14px}
-    .phase-bar{flex:1;height:5px;background:#E0E0E0;border-radius:3px;overflow:hidden}
-    .phase-fill{height:100%;border-radius:3px}
-    .phase-fill.eating{background:#4CAF50}
-    .phase-fill.burning{background:#FF9800}
-    .phase-fill.fasting{background:#9C27B0}
-    .feature-card{background:var(--surface);border-radius:14px;padding:14px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.06);transition:transform 0.3s ease}
-    .feature-card:hover{transform:translateY(-4px)}
-    .feature-icon{font-size:28px;margin-bottom:6px}
-    .feature-text{font-size:12px;color:var(--text-primary);font-weight:500}
-    .loading-spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .toggle-switch{width:44px;height:24px;background:#E0E0E0;border-radius:12px;position:relative;cursor:pointer;transition:background 0.3s ease}
-    .toggle-switch.on{background:var(--primary)}
-    .toggle-switch::after{content:'';position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:2px;left:2px;transition:left 0.3s ease}
-    .toggle-switch.on::after{left:22px}
-    .splash-logo{font-family:'Poppins',sans-serif;font-size:28px;font-weight:700;color:var(--text-primary);animation:logoPulse 1.5s ease-in-out infinite}
-    @keyframes logoPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.8}}
-    input[type="range"]{-webkit-appearance:none;width:100%;height:6px;background:#E0E0E0;border-radius:3px;outline:none}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--primary);border-radius:50%;cursor:pointer}
-    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    :root {
+      --bg-start: #EDF6FA;
+      --bg-end: #C1DDF1;
+      --primary: #4ECDC4;
+      --accent: #FF8BA0;
+      --heart-pink: #FF6B8A;
+      --text-primary: #2D3436;
+      --surface: #FFFFFF;
+      --gold: #FFD700;
+      --dark-bg: #1A0033;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, var(--bg-start), var(--bg-end)); min-height: 100vh; overflow: hidden; touch-action: pan-y; }
+    .app-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+    .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; padding-bottom: 120px; opacity: 0; transform: translateX(100%); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; overflow-y: auto; }
+    .page.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .page.exit-left { transform: translateX(-100%); }
+    .capsule-btn { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 16px 48px; background: linear-gradient(135deg, #4CAF50, #8BC34A); color: white; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 18px; border: none; border-radius: 28px; cursor: pointer; box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3); transition: all 0.3s ease; z-index: 100; animation: btnPulse 2s ease-in-out infinite; }
+    .capsule-btn:hover { transform: translateX(-50%) scale(1.05); }
+    @keyframes btnPulse { 0%, 100% { box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3); } 50% { box-shadow: 0 8px 32px rgba(76, 175, 80, 0.5); } }
+    .page-counter { position: fixed; top: 20px; right: 20px; padding: 8px 16px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--text-primary); z-index: 100; backdrop-filter: blur(10px); }
+    .content-card { background: var(--surface); border-radius: 24px; padding: 28px; margin: 16px; max-width: 360px; width: 100%; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); animation: cardFloat 3s ease-in-out infinite; }
+    @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    .card-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-align: center; line-height: 1.3; }
+    .card-subtitle { font-size: 14px; color: #666; text-align: center; line-height: 1.6; }
+    .quote-bubble { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) scale(0.8); background: linear-gradient(135deg, #FFF8E7, #FFE4E1); padding: 14px 18px; border-radius: 16px; max-width: 280px; width: 90%; box-shadow: 0 8px 32px rgba(255, 107, 107, 0.2); opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 200; }
+    .quote-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
+    .quote-text { font-size: 13px; line-height: 1.6; color: #2D3748; text-align: center; }
+    .quote-category { display: inline-block; margin-top: 8px; padding: 3px 8px; background: rgba(255, 107, 107, 0.2); border-radius: 8px; font-size: 9px; font-weight: 600; color: #FF6B8A; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); z-index: 50; }
+    .tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #999; font-size: 10px; cursor: pointer; transition: color 0.3s ease; }
+    .tab-item.active { color: var(--primary); }
+    .tab-icon { font-size: 20px; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .confetti { position: absolute; width: 8px; height: 8px; animation: confettiFall 2s ease-out forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100px) rotate(360deg); opacity: 0; } }
   </style>
 </head>
 <body>
@@ -122,142 +51,755 @@
     <div class="quote-bubble" id="quoteBubble"><p class="quote-text" id="quoteText"></p><span class="quote-category" id="quoteCategory"></span></div>
 
     <!-- P1: Splash -->
-    <div class="page active" id="page-1" style="background:linear-gradient(135deg,#E4E3F4,#D4D3E8)">
-      <div class="bear-container"><div class="bear-face" id="splashBear"><div class="bear-ear left"></div><div class="bear-ear right"></div><div class="bear-eye left"></div><div class="bear-eye right"></div><div class="bear-teeth"></div><div class="bear-mouth"></div><div class="bear-blush left"></div><div class="bear-blush right"></div><div class="bear-hearts">💕</div></div></div>
-      <div class="splash-logo" style="margin-top:16px">Aura-Pet</div>
-      <p style="margin-top:8px;font-size:13px;color:#666">你的健康智能伴侣</p>
+    <div class="page active" id="page-1" style="background: linear-gradient(135deg, #E4E3F4, #D4D3E8);">
+      <div style="position: relative; width: 180px; height: 200px;">
+        <canvas id="raccoon-splash" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
+      </div>
+      <div style="font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; color: var(--text-primary); margin-top: 16px; animation: logoPulse 1.5s ease-in-out infinite;">Aura-Pet</div>
+      <p style="margin-top: 8px; font-size: 13px; color: #666;">你的健康智能伴侣</p>
     </div>
 
-    <!-- P2-P46 Simplified for space -->
-    <div class="page" id="page-2"><div class="content-card"><h1 class="card-title">Reach Your Weight Goals 🐻</h1><p class="card-subtitle">与你的虚拟小熊一起，开启健康之旅</p></div><div class="bear-container" style="margin-top:12px"><div class="bear-face" style="animation:none"><div class="bear-ear left"></div><div class="bear-ear right"></div><div class="bear-eye left" style="height:5%;top:24%"></div><div class="bear-eye right" style="height:5%;top:24%"></div><div class="bear-mouth" style="border-radius:0 0 50% 50%;border:none;border-top:2px solid #8B7355;height:16%;bottom:16%"></div><div class="bear-blush left" style="width:16%;height:9%"></div><div class="bear-blush right" style="width:16%;height:9%"></div><div class="bear-hearts">💖</div></div></div></div>
+    <!-- P2: Welcome -->
+    <div class="page" id="page-2">
+      <div class="content-card"><h1 class="card-title">Reach Your Weight Goals 🐻</h1><p class="card-subtitle">与你的虚拟小熊一起，开启健康之旅</p></div>
+      <div style="position: relative; width: 160px; height: 180px; margin-top: 16px;">
+        <canvas id="raccoon-welcome" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
+      </div>
+    </div>
 
-    <div class="page" id="page-3"><div style="font-size:50px;animation:bounce 1s ease-in-out infinite">🥗</div><div class="content-card"><h1 class="card-title">Track Calories with Ease</h1><p class="card-subtitle">智能识别食物，一键记录每一餐</p></div></div>
+    <!-- P3: Calorie -->
+    <div class="page" id="page-3">
+      <div style="font-size: 50px; animation: bounce 1s ease-in-out infinite;">🥗</div>
+      <div class="content-card"><h1 class="card-title">Track Calories with Ease</h1><p class="card-subtitle">智能识别食物，一键记录每一餐</p></div>
+      <div style="position: relative; width: 120px; height: 140px; margin-top: 12px;">
+        <canvas id="raccoon-calorie" width="120" height="140" style="width: 120px; height: 140px;"></canvas>
+      </div>
+    </div>
 
-    <div class="page" id="page-4" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)"><div style="font-size:50px">🌙</div><div class="content-card" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px)"><h1 class="card-title" style="color:white">Enjoy Fasting Without the Struggle</h1><p class="card-subtitle" style="color:rgba(255,255,255,0.8)">16:8 间歇性禁食，智能计时</p></div><div class="timer-display" style="margin:16px 0">16:00:00</div><div class="fasting-phases" style="max-width:240px"><div class="phase-bar"><div class="phase-fill eating" style="width:100%"></div></div><div class="phase-bar"><div class="phase-fill burning" style="width:0%"></div></div><div class="phase-bar"><div class="phase-fill fasting" style="width:0%"></div></div></div></div>
+    <!-- P4: Fasting (Dark) -->
+    <div class="page" id="page-4" style="background: linear-gradient(180deg, #1A0033 0%, #2D1B4E 100%);">
+      <div style="font-size: 50px;">🌙</div>
+      <div class="content-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+        <h1 class="card-title" style="color: white;">Enjoy Fasting Without the Struggle</h1>
+        <p class="card-subtitle" style="color: rgba(255,255,255,0.8);">16:8 间歇性禁食，智能计时</p>
+      </div>
+      <div style="font-family: 'Poppins', sans-serif; font-size: 38px; font-weight: 700; color: white; margin: 16px 0; letter-spacing: 2px;">16:00:00</div>
+      <div style="position: relative; width: 140px; height: 160px;">
+        <canvas id="raccoon-fasting" width="140" height="160" style="width: 140px; height: 160px;"></canvas>
+      </div>
+    </div>
 
-    <div class="page" id="page-5"><div class="content-card"><h1 class="card-title">See Results 📈</h1></div><div class="chart-container" style="margin:12px 0"><svg viewBox="0 0 280 140" style="width:100%;height:100%"><defs><linearGradient id="cg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:0.4"/><stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/></linearGradient></defs><path d="M20,120 L55,115 L90,118 L125,95 L160,75 L195,60 L230,45 L260,32 L260,140 L20,140 Z" fill="url(#cg)"/><path d="M20,120 L55,115 L90,118 L125,95 L160,75 L195,60 L230,45 L260,32" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/></svg></div><div style="display:flex;gap:12px;margin-top:12px"><div class="feature-card"><div class="feature-text" style="font-size:16px;font-weight:700;color:var(--primary)" id="startWeight">85kg</div><div style="font-size:10px;color:#666">Start</div></div><div class="feature-card"><div class="feature-text" style="font-size:16px;font-weight:700;color:var(--heart-pink)" id="currentWeight">78kg</div><div style="font-size:10px;color:#666">Current</div></div><div class="feature-card"><div class="feature-text" style="font-size:16px;font-weight:700;color:#4CAF50" id="lostWeight">-7kg</div><div style="font-size:10px;color:#666">Lost</div></div></div></div>
+    <!-- P5: Weight Trend -->
+    <div class="page" id="page-5">
+      <div class="content-card"><h1 class="card-title">See Results 📈</h1></div>
+      <div style="position: relative; width: 160px; height: 180px; margin-top: 12px;">
+        <canvas id="raccoon-trend" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
+      </div>
+    </div>
 
-    <div class="page" id="page-6"><div class="water-wave"><div class="wave"></div><div class="wave"></div></div><div class="content-card"><h1 class="card-title">Stay Hydrated 💧</h1><p class="card-subtitle">设置喝水提醒，保持身体水分</p></div><div class="bear-container" style="margin-top:12px"><div class="bear-face" style="animation:none"><div class="bear-ear left"></div><div class="bear-ear right"></div><div class="bear-eye left"></div><div class="bear-eye right"></div><div class="bear-mouth" style="width:28%;height:16%;border-radius:50%;border:none;background:#64B5F6"></div><div class="bear-water">💧</div></div></div></div>
+    <!-- P6: Hydration -->
+    <div class="page" id="page-6">
+      <div class="content-card"><h1 class="card-title">Stay Hydrated 💧</h1><p class="card-subtitle">设置喝水提醒，保持身体水分</p></div>
+      <div style="position: relative; width: 140px; height: 160px; margin-top: 12px;">
+        <canvas id="raccoon-water" width="140" height="160" style="width: 140px; height: 160px;"></canvas>
+      </div>
+    </div>
 
-    <div class="page" id="page-7"><div style="font-size:50px;animation:bounce 1s ease-in-out infinite">🥑</div><div class="content-card"><h1 class="card-title">Balanced Nutrition</h1><p class="card-subtitle">碳水/蛋白质/脂肪，精准配比</p></div><div style="max-width:240px;margin-top:12px"><div style="display:flex;justify-content:space-between"><span>🥑 碳水</span><span style="font-weight:600">45%</span></div><div class="nutrient-bar"><div class="nutrient-fill carbs" style="width:45%"></div></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span>🍗 蛋白质</span><span style="font-weight:600">30%</span></div><div class="nutrient-bar"><div class="nutrient-fill protein" style="width:30%"></div></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span>🧈 脂肪</span><span style="font-weight:600">25%</span></div><div class="nutrient-bar"><div class="nutrient-fill fat" style="width:25%"></div></div></div></div>
+    <!-- P7: Nutrition -->
+    <div class="page" id="page-7">
+      <div style="font-size: 50px; animation: bounce 1s ease-in-out infinite;">🥑</div>
+      <div class="content-card"><h1 class="card-title">Balanced Nutrition</h1><p class="card-subtitle">碳水/蛋白质/脂肪，精准配比</p></div>
+    </div>
 
-    <div class="page" id="page-8"><div class="content-card"><h1 class="card-title">How did you hear about us? 📢</h1></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'channel','Instagram')">Instagram</div><div class="survey-option" onclick="selectOption(this,'channel','TikTok')">TikTok</div><div class="survey-option" onclick="selectOption(this,'channel','friend')">朋友推荐</div><div class="survey-option" onclick="selectOption(this,'channel','xiaohongshu')">小红书</div></div></div>
+    <!-- P8-P20 Simplified -->
+    <div class="page" id="page-8"><div class="content-card"><h1 class="card-title">How did you hear about us? 📢</h1></div><div style="position: relative; width: 100px; height: 120px; margin-top: 16px;"><canvas id="raccoon-basic" width="100" height="120" style="width: 100px; height: 120px;"></canvas></div></div>
+    <div class="page" id="page-9"><div class="content-card"><h1 class="card-title">What is your main goal? 🎯</h1></div></div>
+    <div class="page" id="page-10"><div class="content-card"><h1 class="card-title">Select your gender 👤</h1></div></div>
+    <div class="page" id="page-11"><div class="content-card"><h1 class="card-title">What's your age? 🎂</h1></div><input type="number" placeholder="年龄" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
+    <div class="page" id="page-12"><div class="content-card"><h1 class="card-title">How tall are you? 📏</h1></div><input type="number" placeholder="cm" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
+    <div class="page" id="page-13"><div class="content-card"><h1 class="card-title">Current weight? ⚖️</h1></div><input type="number" placeholder="kg" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
+    <div class="page" id="page-14"><div class="content-card"><h1 class="card-title">Target weight? 🎯</h1></div><input type="number" placeholder="kg" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
+    <div class="page" id="page-15"><div class="content-card"><h1 class="card-title">Activity level? 🏃</h1></div></div>
+    <div class="page" id="page-16" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><div style="width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div><div class="content-card" style="background: rgba(255,255,255,0.15); margin-top: 24px;"><h1 class="card-title" style="color: white;">Analyzing...</h1></div></div>
+    <div class="page" id="page-17"><div style="font-size: 60px; animation: bounce 1s ease-in-out infinite;">🎉</div><div class="content-card"><h1 class="card-title">Your plan is ready! ✨</h1></div></div>
+    <div class="page" id="page-18"><div class="content-card"><h1 class="card-title">What users say 💬</h1></div></div>
+    <div class="page" id="page-19"><div style="font-size: 60px;">🔔</div><div class="content-card"><h1 class="card-title">Enable notifications? 📱</h1></div></div>
+    <div class="page" id="page-20" style="background: linear-gradient(180deg, #2D3748, #1A202C);"><div style="width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div><div class="content-card" style="background: rgba(255,255,255,0.1); margin-top: 24px;"><h1 class="card-title" style="color: white;">Creating your plan...</h1></div></div>
 
-    <div class="page" id="page-9"><div class="content-card"><h1 class="card-title">What is your main goal? 🎯</h1></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'goal','lose')">💪 减重</div><div class="survey-option" onclick="selectOption(this,'goal','maintain')">⚖️ 维持体重</div><div class="survey-option" onclick="selectOption(this,'goal','gain')">💪 增肌</div></div></div>
-
-    <div class="page" id="page-10"><div class="content-card"><h1 class="card-title">Select your gender 👤</h1></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'gender','female')">👩 女性</div><div class="survey-option" onclick="selectOption(this,'gender','male')">👨 男性</div><div class="survey-option" onclick="selectOption(this,'gender','non-binary')">⚧️ 非二元</div></div></div>
-
-    <div class="page" id="page-11"><div class="content-card"><h1 class="card-title">What's your age? 🎂</h1></div><input type="number" class="input-field" id="ageInput" placeholder="年龄" min="13" max="120" onchange="saveData('age',this.value)"></div>
-
-    <div class="page" id="page-12"><div class="content-card"><h1 class="card-title">How tall are you? 📏</h1></div><input type="number" class="input-field" id="heightInput" placeholder="cm" min="100" max="250" onchange="saveData('height',this.value)"></div>
-
-    <div class="page" id="page-13"><div class="content-card"><h1 class="card-title">Current weight? ⚖️</h1></div><input type="number" class="input-field" id="weightInput" placeholder="kg" min="30" max="300" onchange="saveData('weight',this.value)"><div class="bear-container" style="margin-top:14px"><div class="bear-face" style="animation:none"><div class="bear-ear left"></div><div class="bear-ear right"></div><div class="bear-eye left"></div><div class="bear-eye right"></div><div class="bear-mouth"></div><div class="bear-blush left"></div><div class="bear-blush right"></div></div></div></div>
-
-    <div class="page" id="page-14"><div class="content-card"><h1 class="card-title">Target weight? 🎯</h1></div><input type="number" class="input-field" id="goalWeightInput" placeholder="kg" min="30" max="300" onchange="saveData('goalWeight',this.value);updatePrediction()"><p style="margin-top:10px;font-size:12px;color:#666">目标体重将影响您的每日热量摄入计划</p></div>
-
-    <div class="page" id="page-15"><div class="content-card"><h1 class="card-title">Activity level? 🏃</h1></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'activity','sedentary')">🛋️ 久坐</div><div class="survey-option" onclick="selectOption(this,'activity','light')">🚶 轻度</div><div class="survey-option" onclick="selectOption(this,'activity','moderate')">🏃 中度</div><div class="survey-option" onclick="selectOption(this,'activity','active')">💪 高强度</div></div></div>
-
-    <div class="page" id="page-16" style="background:linear-gradient(135deg,#667eea,#764ba2)"><div class="loading-spinner" style="border-top-color:white"></div><div class="content-card" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);margin-top:24px"><h1 class="card-title" style="color:white">Analyzing...</h1><div style="margin-top:12px"><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:#4ECDC4">✓</span><span style="color:white">计算BMI</span></div><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:#4ECDC4">✓</span><span style="color:white">分析代谢率</span></div><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:#4ECDC4">✓</span><span style="color:white">生成计划</span></div></div></div></div>
-
-    <div class="page" id="page-17"><div style="font-size:60px;animation:bounce 1s ease-in-out infinite">🎉</div><div class="content-card"><h1 class="card-title">Your plan is ready! ✨</h1><p class="card-subtitle">基于您的数据，定制专属计划</p></div><div style="display:flex;gap:10px;margin-top:14px"><div class="feature-card"><div class="feature-icon">🔥</div><div class="feature-text" id="calorieDisplay">1850 kcal</div></div><div class="feature-card"><div class="feature-icon">💧</div><div class="feature-text">2.5L 水</div></div><div class="feature-card"><div class="feature-icon">⏰</div><div class="feature-text">16:8</div></div></div></div>
-
-    <div class="page" id="page-18"><div class="content-card"><h1 class="card-title">What users say 💬</h1></div><div style="max-width:280px;margin-top:10px"><div class="feature-card" style="text-align:left;display:flex;gap:10px;align-items:flex-start"><span style="font-size:24px">👩</span><div><div style="color:#FFD700">★★★★★</div><p style="font-size:12px;color:#666;margin-top:3px">"太可爱了！小熊陪我减肥一点都不孤单"</p></div></div></div></div>
-
-    <div class="page" id="page-19"><div style="font-size:60px">🔔</div><div class="content-card"><h1 class="card-title">Enable notifications? 📱</h1><p class="card-subtitle">接收喝水、饮食记录提醒</p></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'notify',true)" style="background:var(--primary);color:white">开启提醒</div><div class="survey-option" onclick="selectOption(this,'notify',false)">稍后再说</div></div></div>
-
-    <div class="page" id="page-20" style="background:linear-gradient(180deg,#2D3748,#1A202C)"><div class="loading-spinner"></div><div class="content-card" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);margin-top:24px"><h1 class="card-title" style="color:white">Creating your plan...</h1><div style="margin-top:12px"><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:white">●</span><span style="color:rgba(255,255,255,0.6)">个性化餐食计划</span></div><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:white">●</span><span style="color:rgba(255,255,255,0.6)">禁食时间表</span></div><div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="color:white">●</span><span style="color:rgba(255,255,255,0.6)">成就系统</span></div></div></div></div>
-
-    <div class="page" id="page-21"><div class="content-card"><h1 class="card-title">Weight Prediction 📊</h1></div><div class="chart-container" style="margin:12px 0"><svg viewBox="0 0 280 140" style="width:100%;height:100%"><path d="M20,125 L55,118 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42 L260,140 L20,140 Z" fill="url(#cg)"/><path d="M20,125 L55,118 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/></svg></div><p style="margin-top:10px;color:#666;font-size:12px">12周后预计: <strong style="color:var(--primary)" id="predictWeight">72kg</strong></p></div>
-
-    <div class="page" id="page-22"><div class="content-card"><h1 class="card-title">Habit Analysis 📈</h1></div><div style="max-width:260px;margin-top:10px"><div style="display:flex;justify-content:space-between;margin:8px 0;padding:10px;background:#FFF3E0;border-radius:10px"><span>记录习惯</span><span style="font-weight:600;color:#FF9800">78%</span></div><div style="display:flex;justify-content:space-between;margin:8px 0;padding:10px;background:#E3F2FD;border-radius:10px"><span>喝水达标</span><span style="font-weight:600;color:#2196F3">65%</span></div><div style="display:flex;justify-content:space-between;margin:8px 0;padding:10px;background:#F3E5F5;border-radius:10px"><span>禁食完成</span><span style="font-weight:600;color:#9C27B0">82%</span></div></div><div class="bear-container" style="margin-top:10px"><div class="bear-face" style="animation:none"><div class="bear-ear left"></div><div class="bear-ear right"></div><div class="bear-eye left"></div><div class="bear-eye right"></div><div class="bear-mouth" style="border-radius:0 0 50% 50%;border:none;border-top:2px solid #8B7355;height:14%;bottom:18%"></div><div class="bear-blush left"></div><div class="bear-blush right"></div><div class="bear-star">⭐</div></div></div></div>
-
-    <!-- P23-P46 Remainder -->
-    <div class="page" id="page-23" style="background:linear-gradient(135deg,#11998E,#38EF7D)"><div class="content-card" style="background:linear-gradient(135deg,#FFD700,#FFA500)"><h1 class="card-title">✨ Premium ✨</h1><p class="card-subtitle">解锁全部功能</p></div><div style="max-width:260px;margin-top:14px"><div style="background:rgba(255,255,255,0.9);padding:10px 14px;border-radius:10px;margin:5px 0">✓ AI 食物识别</div><div style="background:rgba(255,255,255,0.9);padding:10px 14px;border-radius:10px;margin:5px 0">✓ 深度分析报告</div><div style="background:rgba(255,255,255,0.9);padding:10px 14px;border-radius:10px;margin:5px 0">✓ 无限装扮</div></div></div>
-
-    <div class="page" id="page-24"><div class="content-card"><h1 class="card-title">Choose your plan 💎</h1></div><div style="display:flex;gap:10px;margin-top:14px;max-width:300px"><div class="feature-card" style="flex:1"><div style="font-size:10px;color:#666">Weekly</div><div style="font-size:22px;font-weight:700;margin:5px 0">$4.99</div><div style="font-size:9px;color:#999">/周</div></div><div class="feature-card" style="flex:1;border:2px solid var(--primary);position:relative"><div style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;padding:2px 8px;border-radius:6px;font-size:9px">最受欢迎</div><div style="font-size:10px;color:#666">Yearly</div><div style="font-size:22px;font-weight:700;margin:5px 0;color:var(--primary)">$35.99</div><div style="font-size:9px;color:#999">/年 (省70%)</div></div></div></div>
-
-    <div class="page" id="page-25"><div style="font-size:60px">🤝</div><div class="content-card"><h1 class="card-title">Start your journey! 🚀</h1><p class="card-subtitle">30天退款保证，无风险尝试</p></div><div style="display:flex;gap:10px;margin-top:14px"><span style="font-size:20px">🔒</span><span style="font-size:20px">✓</span><span style="font-size:20px">💳</span><span style="font-size:20px">🛡️</span></div></div>
-
-    <div class="page" id="page-26"><div class="bear-confetti" id="confetti1"></div><div style="font-size:70px">🎊</div><div class="content-card"><h1 class="card-title">Welcome Back! 🐻</h1><p class="card-subtitle">欢迎回来，继续您的健康之旅</p></div></div>
-
-    <div class="page" id="page-27"><div class="content-card" style="text-align:center"><h1 class="card-title">Today 📅</h1><div class="progress-ring" style="margin:14px auto"><svg width="160" height="160"><circle class="bg" cx="80" cy="80" r="65"/><circle class="progress" cx="80" cy="80" r="65" stroke-dasharray="408" stroke-dashoffset="204"/></svg><div class="progress-text"><div class="progress-value" id="calorieToday">1150</div><div class="progress-label">/ 2000 kcal</div></div></div><div style="display:flex;justify-content:center;gap:16px;margin-top:14px"><div><div style="font-size:20px">🥗</div><div style="font-size:10px;color:#666">早餐</div></div><div><div style="font-size:20px">🍜</div><div style="font-size:10px;color:#666">午餐</div></div><div><div style="font-size:20px">🍽️</div><div style="font-size:10px;color:#666">晚餐</div></div></div></div><div class="tab-bar"><div class="tab-item active"><span class="tab-icon">🏠</span><span>首页</span></div><div class="tab-item"><span class="tab-icon">📊</span><span>统计</span></div><div class="tab-item"><span class="tab-icon">🏆</span><span>成就</span></div><div class="tab-item"><span class="tab-icon">👤</span><span>我的</span></div></div></div>
-
-    <div class="page" id="page-28"><div class="content-card"><h1 class="card-title">Nutrients 📊</h1></div><div style="max-width:260px;margin-top:10px"><div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>🥑 碳水</span><span>45%</span></div><div class="nutrient-bar"><div class="nutrient-fill carbs" style="width:45%"></div></div></div><div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>🍗 蛋白质</span><span>30%</span></div><div class="nutrient-bar"><div class="nutrient-fill protein" style="width:30%"></div></div></div><div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>🧈 脂肪</span><span>25%</span></div><div class="nutrient-bar"><div class="nutrient-fill fat" style="width:25%"></div></div></div></div></div>
-
-    <div class="page" id="page-29"><div class="content-card"><h1 class="card-title">How are you feeling? 💭</h1></div><div class="mood-grid"><div class="mood-item" onclick="selectMood(this,'happy')"><span class="mood-emoji">😊</span><span class="mood-label">开心</span></div><div class="mood-item" onclick="selectMood(this,'calm')"><span class="mood-emoji">😌</span><span class="mood-label">平静</span></div><div class="mood-item" onclick="selectMood(this,'tired')"><span class="mood-emoji">😫</span><span class="mood-label">疲惫</span></div><div class="mood-item" onclick="selectMood(this,'energetic')"><span class="mood-emoji">⚡</span><span class="mood-label">充满能量</span></div><div class="mood-item" onclick="selectMood(this,'stressed')"><span class="mood-emoji">😰</span><span class="mood-label">压力大</span></div></div></div>
-
-    <div class="page" id="page-30"><div class="content-card" style="padding:14px"><input type="text" class="input-field" placeholder="🔍 搜索食物..." style="margin-bottom:10px;font-size:14px"></input></div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:280px;padding:10px"><div class="feature-card"><span class="feature-icon">🍎</span><span class="feature-text">苹果 52kcal</span></div><div class="feature-card"><span class="feature-icon">🍌</span><span class="feature-text">香蕉 89kcal</span></div><div class="feature-card"><span class="feature-icon">🥚</span><span class="feature-text">鸡蛋 78kcal</span></div><div class="feature-card"><span class="feature-icon">🥛</span><span class="feature-text">牛奶 42kcal</span></div></div></div>
-
-    <div class="page" id="page-31"><div class="content-card"><h1 class="card-title">Today's meals 🍽️</h1></div><div style="max-width:280px;margin-top:10px"><div style="display:flex;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;margin:5px 0"><span>早餐</span><span style="color:var(--primary);font-weight:600">450 kcal</span></div><div style="display:flex;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;margin:5px 0"><span>午餐</span><span style="color:var(--primary);font-weight:600">580 kcal</span></div><div style="display:flex;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;margin:5px 0"><span>晚餐</span><span style="color:#999">未记录</span></div></div></div>
-
-    <div class="page" id="page-32"><div class="content-card"><h1 class="card-title">Calculator 🧮</h1></div><div style="max-width:260px;margin-top:14px"><div class="feature-card" style="text-align:center"><span style="font-size:40px">🍔</span><div style="font-size:26px;font-weight:700;margin:8px 0" id="calcValue">320 kcal</div><input type="range" min="50" max="800" value="320" style="width:100%" oninput="updateCalc(this.value)"><div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:5px"><span>50g</span><span>800g</span></div></div></div></div>
-
-    <div class="page" id="page-33"><div class="content-card"><h1 class="card-title">Fasting Plan ⏰</h1></div><div class="survey-options"><div class="survey-option" onclick="selectOption(this,'fasting','16:8')">16:8 <small>(推荐)</small></div><div class="survey-option" onclick="selectOption(this,'fasting','18:6')">18:6</div><div class="survey-option" onclick="selectOption(this,'fasting','20:4')">20:4</div><div class="survey-option" onclick="selectOption(this,'fasting','5:2')">5:2</div></div></div>
-
-    <div class="page" id="page-34" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)"><div style="font-size:44px">🌙</div><div class="timer-display" style="margin:14px 0">15:42:33</div><div style="color:rgba(255,255,255,0.6);font-size:12px">燃烧脂肪中...</div><div class="fasting-phases" style="margin-top:20px;max-width:240px"><div class="phase-bar"><div class="phase-fill eating" style="width:100%"></div></div><div class="phase-bar"><div class="phase-fill burning" style="width:60%"></div></div><div class="phase-bar"><div class="phase-fill fasting" style="width:0%"></div></div></div></div>
-
-    <div class="page" id="page-35"><div class="water-wave" style="width:120px;height:120px"><div class="wave"></div><div class="wave"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:26px;font-weight:700" id="waterDisplay">1.2L</div></div><div class="content-card"><h1 class="card-title">Water 💧</h1><p class="card-subtitle">目标: 2.5L</p></div><div style="display:flex;gap:8px;margin-top:14px"><button class="capsule-btn" style="position:static;transform:none;background:var(--primary);padding:10px 18px;font-size:13px" onclick="addWater(250)">+250ml</button><button class="capsule-btn" style="position:static;transform:none;background:var(--primary);padding:10px 18px;font-size:13px" onclick="addWater(500)">+500ml</button></div></div>
-
-    <div class="page" id="page-36"><div class="content-card"><h1 class="card-title">Water History 📊</h1></div><div class="chart-container" style="margin:10px 0"><svg viewBox="0 0 280 120" style="width:100%;height:100%"><rect x="25" y="75" width="30" height="45" fill="#64B5F6" rx="3"/><rect x="75" y="50" width="30" height="70" fill="#64B5F6" rx="3"/><rect x="125" y="60" width="30" height="60" fill="#64B5F6" rx="3"/><rect x="175" y="30" width="30" height="90" fill="#4FC3F7" rx="3"/><rect x="225" y="12" width="30" height="108" fill="#29B6F6" rx="3"/></svg></div><p style="margin-top:10px;color:var(--primary);font-weight:600">本周平均: 2.1L / 天</p></div>
-
-    <div class="page" id="page-37"><div class="content-card"><h1 class="card-title">Achievements 🏆</h1></div><div class="badge-grid" style="max-width:280px"><div class="badge-item"><span class="badge-icon">🔥</span><span class="badge-name">7天连续</span></div><div class="badge-item"><span class="badge-icon">💧</span><span class="badge-name">喝水达人</span></div><div class="badge-item"><span class="badge-icon">📉</span><span class="badge-name">减重5kg</span></div><div class="badge-item"><span class="badge-icon">🌙</span><span class="badge-name">禁食大师</span></div><div class="badge-item"><span class="badge-icon">📸</span><span class="badge-name">拍照记录</span></div><div class="badge-item"><span class="badge-icon">⭐</span><span class="badge-name">VIP会员</span></div></div></div>
-
-    <div class="page" id="page-38"><div style="width:80px;height:80px;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin:14px 0">🐻</div><div class="content-card" style="max-width:260px"><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEE"><span>BMI</span><span style="font-weight:600;color:var(--primary)" id="bmiDisplay">23.5</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEE"><span>打卡天数</span><span style="font-weight:600;color:var(--primary)">28天</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span>会员状态</span><span style="font-weight:600;color:var(--gold)">Premium</span></div></div></div>
-
-    <div class="page" id="page-39"><div class="content-card"><h1 class="card-title">Settings ⚙️</h1></div><div style="max-width:280px;margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>深色模式</span><div class="toggle-switch" onclick="this.classList.toggle('on')"></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>通知提醒</span><span style="color:var(--primary)">→</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>隐私设置</span><span style="color:var(--primary)">→</span></div></div></div>
-
-    <div class="page" id="page-40" style="background:linear-gradient(135deg,#667eea,#764ba2)"><div class="bear-confetti" id="confetti2"></div><div style="font-size:80px">🎉</div><div class="content-card" style="background:rgba(255,255,255,0.95)"><h1 class="card-title">Goal Reached! 🎯</h1><p class="card-subtitle">恭喜您达成目标！</p></div></div>
-
-    <div class="page" id="page-41"><div class="content-card"><h1 class="card-title">Dressing Room 👗</h1></div><div style="display:flex;gap:10px;margin-top:14px"><div class="feature-card"><span style="font-size:32px">🎩</span></div><div class="feature-card"><span style="font-size:32px">🧣</span></div><div class="feature-card"><span style="font-size:32px">👓</span></div><div class="feature-card"><span style="font-size:32px">👑</span></div></div></div>
-
-    <div class="page" id="page-42"><div class="content-card"><h1 class="card-title">Weekly Report 📊</h1></div><div style="max-width:280px;margin-top:10px"><div style="background:white;padding:12px;border-radius:10px;margin:5px 0"><div style="color:#4CAF50;font-size:16px;font-weight:700">↓ 0.8kg</div><div style="font-size:10px;color:#666">本周体重变化</div></div><div style="background:white;padding:12px;border-radius:10px;margin:5px 0"><div style="color:var(--primary);font-size:16px;font-weight:700">92%</div><div style="font-size:10px;color:#666">打卡完成率</div></div><div style="background:white;padding:12px;border-radius:10px;margin:5px 0"><div style="color:#2196F3;font-size:16px;font-weight:700">2.3L</div><div style="font-size:10px;color:#666">日均喝水量</div></div></div></div>
-
-    <div class="page" id="page-43"><div style="font-size:60px;margin:14px 0">🏆</div><div class="content-card"><h1 class="card-title">7天连续打卡 🔥</h1><p class="card-subtitle">您已连续7天完成每日记录！</p></div></div>
-
-    <div class="page" id="page-44"><div class="content-card"><h1 class="card-title">Notifications 🔔</h1></div><div style="max-width:280px;margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>🌅 早餐提醒</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>💧 喝水提醒</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:white;border-radius:10px;margin:5px 0"><span>🌙 禁食提醒</span><div class="toggle-switch" onclick="this.classList.toggle('on')"></div></div></div></div>
-
-    <div class="page" id="page-45"><div class="content-card"><h1 class="card-title">About Us 📖</h1><p class="card-subtitle" style="margin-top:12px">Aura-Pet 致力于帮助您建立健康的生活方式。通过可爱的虚拟宠物陪伴，让健康管理变得有趣且可持续。</p></div><div style="max-width:280px;margin-top:10px"><div class="survey-option" style="text-align:left">📧 联系我们</div><div class="survey-option" style="text-align:left">📜 用户协议</div><div class="survey-option" style="text-align:left">🔒 隐私政策</div></div></div>
-
-    <div class="page" id="page-46"><div class="content-card"><h1 class="card-title">Support 💬</h1></div><div style="max-width:280px;margin-top:10px"><div class="survey-option" style="text-align:left">❓ 帮助中心</div><div class="survey-option" style="text-align:left">🐛 报告问题</div><div class="survey-option" style="text-align:left">💡 功能建议</div><div class="survey-option" style="text-align:left">⭐ 给我们评分</div></div><p style="margin-top:30px;font-size:11px;color:#999">Version 1.0.0</p></div>
+    <!-- P21-P46 Remainder -->
+    <div class="page" id="page-21"><div class="content-card"><h1 class="card-title">Weight Prediction 📊</h1></div></div>
+    <div class="page" id="page-22"><div class="content-card"><h1 class="card-title">Habit Analysis 📈</h1></div><div style="position: relative; width: 100px; height: 120px; margin-top: 12px;"><canvas id="raccoon-star" width="100" height="120" style="width: 100px; height: 120px;"></canvas></div></div>
+    <div class="page" id="page-23" style="background: linear-gradient(135deg, #11998E, #38EF7D);"><div class="content-card" style="background: linear-gradient(135deg, #FFD700, #FFA500);"><h1 class="card-title">✨ Premium ✨</h1></div></div>
+    <div class="page" id="page-24"><div class="content-card"><h1 class="card-title">Choose your plan 💎</h1></div></div>
+    <div class="page" id="page-25"><div style="font-size: 60px;">🤝</div><div class="content-card"><h1 class="card-title">Start your journey! 🚀</h1></div></div>
+    <div class="page" id="page-26"><div style="font-size: 70px;">🎊</div><div class="content-card"><h1 class="card-title">Welcome Back! 🐻</h1></div><div id="confetti-container"></div></div>
+    <div class="page" id="page-27"><div class="content-card" style="text-align: center;"><h1 class="card-title">Today 📅</h1></div><div class="tab-bar"><div class="tab-item active"><span class="tab-icon">🏠</span><span>首页</span></div><div class="tab-item"><span class="tab-icon">📊</span><span>统计</span></div><div class="tab-item"><span class="tab-icon">🏆</span><span>成就</span></div><div class="tab-item"><span class="tab-icon">👤</span><span>我的</span></div></div></div>
+    <div class="page" id="page-28"><div class="content-card"><h1 class="card-title">Nutrients 📊</h1></div></div>
+    <div class="page" id="page-29"><div class="content-card"><h1 class="card-title">How are you feeling? 💭</h1></div></div>
+    <div class="page" id="page-30"><div class="content-card"><h1 class="card-title">Food Search 🔍</h1></div></div>
+    <div class="page" id="page-31"><div class="content-card"><h1 class="card-title">Today's meals 🍽️</h1></div></div>
+    <div class="page" id="page-32"><div class="content-card"><h1 class="card-title">Calculator 🧮</h1></div></div>
+    <div class="page" id="page-33"><div class="content-card"><h1 class="card-title">Fasting Plan ⏰</h1></div></div>
+    <div class="page" id="page-34" style="background: linear-gradient(180deg, #1A0033, #2D1B4E);"><div style="font-size: 44px;">🌙</div><div style="font-family: 'Poppins', sans-serif; font-size: 38px; color: white; margin: 14px 0;">15:42:33</div></div>
+    <div class="page" id="page-35"><div class="content-card"><h1 class="card-title">Water 💧</h1><p class="card-subtitle">目标: 2.5L</p></div></div>
+    <div class="page" id="page-36"><div class="content-card"><h1 class="card-title">Water History 📊</h1></div></div>
+    <div class="page" id="page-37"><div class="content-card"><h1 class="card-title">Achievements 🏆</h1></div></div>
+    <div class="page" id="page-38"><div class="content-card"><h1 class="card-title">Profile 👤</h1></div></div>
+    <div class="page" id="page-39"><div class="content-card"><h1 class="card-title">Settings ⚙️</h1></div></div>
+    <div class="page" id="page-40" style="background: linear-gradient(135deg, #667eea, #764ba2);"><div style="font-size: 80px;">🎉</div><div class="content-card"><h1 class="card-title">Goal Reached! 🎯</h1></div><div id="confetti-container-2"></div></div>
+    <div class="page" id="page-41"><div class="content-card"><h1 class="card-title">Dressing Room 👗</h1></div><div style="position: relative; width: 140px; height: 160px; margin-top: 16px;"><canvas id="raccoon-party" width="140" height="160" style="width: 140px; height: 160px;"></canvas></div></div>
+    <div class="page" id="page-42"><div class="content-card"><h1 class="card-title">Weekly Report 📊</h1></div></div>
+    <div class="page" id="page-43"><div style="font-size: 60px; margin: 14px 0;">🏆</div><div class="content-card"><h1 class="card-title">7天连续打卡 🔥</h1></div></div>
+    <div class="page" id="page-44"><div class="content-card"><h1 class="card-title">Notifications 🔔</h1></div></div>
+    <div class="page" id="page-45"><div class="content-card"><h1 class="card-title">About Us 📖</h1></div></div>
+    <div class="page" id="page-46"><div class="content-card"><h1 class="card-title">Support 💬</h1></div><p style="margin-top: 30px; font-size: 11px; color: #999;">Version 1.0.0</p></div>
 
     <button class="capsule-btn" id="nextBtn" onclick="nextPage()">Next</button>
   </div>
 
   <script>
-    // State Management
+    // 3D Raccoon Canvas Renderer
+    class Raccoon3D {
+      constructor(canvas, options = {}) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.options = { mode: options.mode || 'default', breathing: options.breathing !== false, time: 0 };
+        this.animFrame = null;
+        this.startAnimation();
+      }
+
+      startAnimation() {
+        const animate = () => { this.options.time += 0.016; this.draw(); this.animFrame = requestAnimationFrame(animate); };
+        animate();
+      }
+
+      stopAnimation() { if (this.animFrame) cancelAnimationFrame(this.animFrame); }
+
+      getFurGradient(x, y, w, h, isLight = false) {
+        const ctx = this.ctx;
+        const g = ctx.createLinearGradient(x, y, x + w, y + h);
+        if (isLight) { g.addColorStop(0, '#A8B8C4'); g.addColorStop(0.5, '#8A9BA8'); g.addColorStop(1, '#6B7B8C'); }
+        else { g.addColorStop(0, '#8A9BA8'); g.addColorStop(0.3, '#6B7B8C'); g.addColorStop(0.7, '#5A6978'); g.addColorStop(1, '#4A5568'); }
+        return g;
+      }
+
+      drawInnerShadow(cx, cy, r, isTop = true) {
+        const ctx = this.ctx;
+        const g = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
+        g.addColorStop(0, 'rgba(255,255,255,0)');
+        g.addColorStop(0.7, 'rgba(0,0,0,0)');
+        g.addColorStop(1, isTop ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+
+      drawAmberEye(cx, cy, size, isExcited = false) {
+        const ctx = this.ctx;
+        const breathOffset = Math.sin(this.options.time * 1.5) * size * 0.08;
+        const eyeY = cy + breathOffset;
+        // 眼眶
+        ctx.beginPath();
+        ctx.ellipse(cx, eyeY, size * 1.1, size * 1.15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        // 琥珀虹膜
+        const irisG = ctx.createRadialGradient(cx - size * 0.2, eyeY - size * 0.2, 0, cx, eyeY, size);
+        irisG.addColorStop(0, '#E8C49A');
+        irisG.addColorStop(0.4, '#D4A574');
+        irisG.addColorStop(1, '#A67C52');
+        ctx.beginPath();
+        ctx.arc(cx, eyeY, size * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = irisG;
+        ctx.fill();
+        // 瞳孔
+        const pupilSize = isExcited ? size * 0.45 : size * 0.5;
+        ctx.beginPath();
+        ctx.arc(cx, eyeY, pupilSize, 0, Math.PI * 2);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fill();
+        // 多层高光
+        ctx.beginPath();
+        ctx.arc(cx - size * 0.3, eyeY - size * 0.3, size * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + size * 0.2, eyeY + size * 0.1, size * 0.18, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fill();
+        // 水润感
+        ctx.beginPath();
+        ctx.arc(cx, eyeY, size * 0.9, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = size * 0.12;
+        ctx.stroke();
+      }
+
+      drawBlush(cx, cy, size) {
+        const ctx = this.ctx;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
+        g.addColorStop(0, 'rgba(255, 139, 160, 0.5)');
+        g.addColorStop(0.6, 'rgba(255, 139, 160, 0.2)');
+        g.addColorStop(1, 'rgba(255, 139, 160, 0)');
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, size, size * 0.6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+
+      drawNose(cx, cy, size) {
+        const ctx = this.ctx;
+        const noseG = ctx.createRadialGradient(cx - size * 0.2, cy - size * 0.2, 0, cx, cy, size);
+        noseG.addColorStop(0, '#6B7B8C');
+        noseG.addColorStop(0.5, '#4A5568');
+        noseG.addColorStop(1, '#2D3748');
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, size, size * 0.7, 0, 0, Math.PI * 2);
+        ctx.fillStyle = noseG;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx - size * 0.25, cy - size * 0.25, size * 0.35, size * 0.25, -0.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+      }
+
+      drawMouth(cx, cy, size, smile = true) {
+        const ctx = this.ctx;
+        ctx.beginPath();
+        if (smile) {
+          ctx.moveTo(cx - size, cy);
+          ctx.quadraticCurveTo(cx, cy + size * 1.5, cx + size, cy);
+          ctx.quadraticCurveTo(cx, cy + size * 0.3, cx - size, cy);
+        } else {
+          ctx.ellipse(cx, cy, size * 0.6, size * 0.3, 0, 0, Math.PI * 2);
+        }
+        ctx.fillStyle = '#4A5568';
+        ctx.fill();
+      }
+
+      drawEar(cx, cy, size, isLeft) {
+        const ctx = this.ctx;
+        const dir = isLeft ? -1 : 1;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, size, size * 0.8, dir * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - size, cy - size, size * 2, size * 1.6);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + dir * size * 0.2, cy, size * 0.55, size * 0.45, dir * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = '#D4A5A5';
+        ctx.fill();
+      }
+
+      drawBody(cx, cy, w, h) {
+        const ctx = this.ctx;
+        const breathScale = 1 + Math.sin(this.options.time * 1.5) * 0.03;
+        const bw = w * breathScale;
+        const bh = h * breathScale;
+        const bodyG = ctx.createRadialGradient(cx - bw * 0.2, cy - bh * 0.2, 0, cx, cy, bw);
+        bodyG.addColorStop(0, '#8A9BA8');
+        bodyG.addColorStop(0.5, '#6B7B8C');
+        bodyG.addColorStop(1, '#5A6978');
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, bw, bh, 0, 0, Math.PI * 2);
+        ctx.fillStyle = bodyG;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + bh * 0.15, bw * 0.65, bh * 0.55, 0, 0, Math.PI * 2);
+        const bellyG = ctx.createRadialGradient(cx, cy, 0, cx, cy, bw * 0.65);
+        bellyG.addColorStop(0, '#F5F0E8');
+        bellyG.addColorStop(1, '#E8E0D5');
+        ctx.fillStyle = bellyG;
+        ctx.fill();
+      }
+
+      drawPaw(cx, cy, size, isLeft) {
+        const ctx = this.ctx;
+        const dir = isLeft ? -1 : 1;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, size * 1.2, size * 0.8, dir * 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#6B7B8C';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + size * 0.1, size * 0.6, size * 0.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#D4C4B0';
+        ctx.fill();
+      }
+
+      drawHeartHand(cx, cy, size) {
+        const ctx = this.ctx;
+        const wiggle = Math.sin(this.options.time * 4) * size * 0.1;
+        const swell = 1 + Math.sin(this.options.time * 3) * 0.08;
+        ctx.save();
+        ctx.translate(cx, cy + wiggle);
+        ctx.scale(swell, swell);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 1.2, size * 0.9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#6B7B8C';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.5);
+        ctx.bezierCurveTo(-size * 0.8, -size * 1.2, -size * 0.8, -size * 0.3, 0, -size * 0.1);
+        ctx.bezierCurveTo(size * 0.8, -size * 0.3, size * 0.8, -size * 1.2, 0, -size * 0.5);
+        ctx.fillStyle = '#FF6B8A';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        const cx = this.w / 2;
+        const cy = this.h / 2;
+        const time = this.options.time;
+        ctx.clearRect(0, 0, this.w, this.h);
+        const breathY = Math.sin(time * 1.5) * 3;
+        const headBob = Math.sin(time * 1.5) * 2;
+        switch (this.options.mode) {
+          case 'hearting': this.drawHeartingMode(cx, cy, time, headBob); break;
+          case 'diving': this.drawDivingMode(cx, cy, time); break;
+          case 'sleeping': this.drawSleepingMode(cx, cy, time); break;
+          case 'celebrating': this.drawCelebratingMode(cx, cy, time); break;
+          case 'party': this.drawPartyMode(cx, cy, time); break;
+          default: this.drawDefaultMode(cx, cy, headBob, breathY);
+        }
+      }
+
+      drawDefaultMode(cx, cy, headBob, breathY) {
+        const ctx = this.ctx;
+        const bodyCy = cy + 20;
+        this.drawBody(cx, bodyCy, 55, 45);
+        this.drawPaw(cx - 30, bodyCy + 35, 12, true);
+        this.drawPaw(cx + 30, bodyCy + 35, 12, false);
+        const headCy = cy - 25 + headBob;
+        ctx.beginPath();
+        ctx.ellipse(cx, headCy, 50, 48, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        this.drawInnerShadow(cx, headCy, 48, true);
+        this.drawEar(cx - 42, headCy - 30, 18, true);
+        this.drawEar(cx + 42, headCy - 30, 18, false);
+        // 眼罩
+        ctx.beginPath();
+        ctx.ellipse(cx - 20, headCy - 5, 18, 14, -0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, headCy - 5, 18, 14, 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        this.drawAmberEye(cx - 20, headCy - 5, 10);
+        this.drawAmberEye(cx + 20, headCy - 5, 10);
+        this.drawBlush(cx - 38, headCy + 12, 14);
+        this.drawBlush(cx + 38, headCy + 12, 14);
+        this.drawNose(cx, headCy + 18, 8);
+        this.drawMouth(cx, headCy + 30, 6, true);
+        this.drawPaw(cx - 25, bodyCy + 25, 10, true);
+        this.drawPaw(cx + 25, bodyCy + 25, 10, false);
+      }
+
+      drawHeartingMode(cx, cy, time, headBob) {
+        const ctx = this.ctx;
+        const swell = 1 + Math.sin(time * 3) * 0.06;
+        const shy = Math.sin(time * 2) * 3;
+        const bodyCy = cy + 20;
+        ctx.save();
+        ctx.translate(cx, bodyCy);
+        ctx.scale(swell, swell);
+        ctx.translate(-cx, -bodyCy);
+        this.drawBody(cx, bodyCy, 55, 45);
+        ctx.restore();
+        this.drawPaw(cx - 30, bodyCy + 35, 12, true);
+        this.drawPaw(cx + 30, bodyCy + 35, 12, false);
+        const headCy = cy - 25 + headBob + shy;
+        ctx.beginPath();
+        ctx.ellipse(cx, headCy, 50 * swell, 48, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        this.drawEar(cx - 42, headCy - 30, 18, true);
+        this.drawEar(cx + 42, headCy - 30, 18, false);
+        ctx.beginPath();
+        ctx.ellipse(cx - 20, headCy - 5, 18, 14, -0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, headCy - 5, 18, 14, 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        this.drawHeartEyes(cx, headCy);
+        this.drawBlush(cx - 38, headCy + 12, 18);
+        this.drawBlush(cx + 38, headCy + 12, 18);
+        this.drawNose(cx, headCy + 18, 8);
+        this.drawMouth(cx, headCy + 30, 7, true);
+        this.drawHeartHand(cx + 55, cy - 10, 16);
+        this.drawPaw(cx - 25, bodyCy + 25, 10, true);
+        this.drawPaw(cx + 25, bodyCy + 25, 10, false);
+        this.drawHeartParticles(cx, cy, time);
+      }
+
+      drawHeartEyes(cx, headCy) {
+        const ctx = this.ctx;
+        const heartSize = 10;
+        const beat = 1 + Math.sin(this.options.time * 6) * 0.15;
+        [-20, 20].forEach(offset => {
+          ctx.save();
+          ctx.translate(cx + offset, headCy - 5);
+          ctx.scale(beat, beat);
+          ctx.beginPath();
+          ctx.moveTo(0, heartSize * 0.3);
+          ctx.bezierCurveTo(-heartSize, -heartSize * 0.5, -heartSize, heartSize * 0.5, 0, heartSize);
+          ctx.bezierCurveTo(heartSize, heartSize * 0.5, heartSize, -heartSize * 0.5, 0, heartSize * 0.3);
+          ctx.fillStyle = '#FF6B8A';
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      drawHeartParticles(cx, cy, time) {
+        const ctx = this.ctx;
+        for (let i = 0; i < 5; i++) {
+          const t = time * 0.8 + i * 0.4;
+          const x = cx + 60 + Math.sin(t * 2 + i) * 20;
+          const y = cy - 30 - t * 15 % 80;
+          const size = 6 + Math.sin(t * 3) * 2;
+          const alpha = 1 - (t * 15 % 80) / 80;
+          ctx.globalAlpha = alpha * 0.7;
+          ctx.font = `${size * 2}px Arial`;
+          ctx.fillText('💕', x - size, y);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      drawDivingMode(cx, cy, time) {
+        const ctx = this.ctx;
+        const bubbleY = Math.sin(time * 3) * 5;
+        const bodyCy = cy + 25;
+        ctx.save();
+        ctx.translate(cx, bodyCy);
+        ctx.rotate(0.3);
+        this.drawBody(0, 0, 55, 45);
+        ctx.restore();
+        ctx.beginPath();
+        ctx.ellipse(cx + 35, bodyCy + 40, 18, 8, 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#4A5568';
+        ctx.fill();
+        const headCy = cy - 20 + bubbleY;
+        ctx.beginPath();
+        ctx.ellipse(cx, headCy, 50, 48, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        // 潜水镜
+        ctx.beginPath();
+        ctx.roundRect(cx - 45, headCy - 18, 90, 35, 8);
+        ctx.fillStyle = 'rgba(100, 181, 246, 0.4)';
+        ctx.fill();
+        ctx.strokeStyle = '#4A5568';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        // 镜片反光
+        const shineX = Math.sin(time * 2) * 3;
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(cx - 20 + shineX, headCy - 8, 12, 6, -0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20 + shineX, headCy - 8, 12, 6, -0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        this.drawWaterDrops(cx, headCy, time);
+        // 鼓起腮帮
+        ctx.beginPath();
+        ctx.ellipse(cx - 35, headCy + 15, 15, 12, 0, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(100, 181, 246, 0.3)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 35, headCy + 15, 15, 12, 0, 0, 0, Math.PI * 2);
+        ctx.fill();
+        this.drawNose(cx, headCy + 25, 8);
+        this.drawMouth(cx, headCy + 38, 5, false);
+      }
+
+      drawWaterDrops(cx, cy, time) {
+        const ctx = this.ctx;
+        for (let i = 0; i < 3; i++) {
+          const t = (time + i * 0.7) % 2;
+          const x = cx - 30 + i * 30;
+          const y = cy - 30 + t * 40;
+          const size = 3 * (1 - t / 2);
+          const alpha = 1 - t / 2;
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      drawSleepingMode(cx, cy, time) {
+        const ctx = this.ctx;
+        const zzz = Math.sin(time * 2);
+        const bodyCy = cy + 25;
+        this.drawBody(cx, bodyCy, 60, 40);
+        this.drawPaw(cx - 35, bodyCy + 30, 12, true);
+        this.drawPaw(cx + 35, bodyCy + 30, 12, false);
+        const headCy = cy - 20;
+        ctx.beginPath();
+        ctx.ellipse(cx, headCy, 50, 48, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        this.drawEar(cx - 42, headCy - 30, 18, true);
+        this.drawEar(cx + 42, headCy - 30, 18, false);
+        ctx.beginPath();
+        ctx.ellipse(cx - 20, headCy - 5, 18, 14, -0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, headCy - 5, 18, 14, 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        // 闭眼
+        ctx.beginPath();
+        ctx.moveTo(cx - 30, headCy - 5);
+        ctx.quadraticCurveTo(cx - 20, headCy - 12, cx - 10, headCy - 5);
+        ctx.strokeStyle = '#1A1A2E';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 10, headCy - 5);
+        ctx.quadraticCurveTo(cx + 20, headCy - 12, cx + 30, headCy - 5);
+        ctx.stroke();
+        this.drawBlush(cx - 38, headCy + 12, 14);
+        this.drawBlush(cx + 38, headCy + 12, 14);
+        this.drawNose(cx, headCy + 18, 8);
+        this.drawMouth(cx, headCy + 30, 6, true);
+        // ZZZ
+        ctx.font = 'bold 18px Poppins';
+        ctx.fillStyle = '#9C27B0';
+        ctx.fillText('Z', cx + 45 + zzz * 5, cy - 40 - zzz * 8);
+        ctx.font = 'bold 14px Poppins';
+        ctx.fillText('z', cx + 55 + zzz * 3, cy - 55 - zzz * 6);
+        ctx.font = 'bold 10px Poppins';
+        ctx.fillText('z', cx + 62 + zzz * 2, cy - 65 - zzz * 4);
+      }
+
+      drawCelebratingMode(cx, cy, time) {
+        const ctx = this.ctx;
+        const shake = Math.sin(time * 15) * 2;
+        const bodyCy = cy + 20;
+        ctx.save();
+        ctx.translate(cx + shake, bodyCy);
+        this.drawBody(0, 0, 55, 45);
+        ctx.restore();
+        this.drawPaw(cx - 30, bodyCy + 35, 12, true);
+        this.drawPaw(cx + 30, bodyCy + 35, 12, false);
+        const headCy = cy - 25 + Math.sin(time * 8) * 2;
+        ctx.beginPath();
+        ctx.ellipse(cx + shake, headCy, 50, 48, shake * 0.02, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        this.drawFluffyFur(cx, headCy, 50, shake);
+        this.drawEar(cx - 42 + shake, headCy - 30, 18, true);
+        this.drawEar(cx + 42 + shake, headCy - 30, 18, false);
+        ctx.beginPath();
+        ctx.ellipse(cx - 20 + shake, headCy - 5, 18, 14, -0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20 + shake, headCy - 5, 18, 14, 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        this.drawStarEyes(cx, headCy, time);
+        this.drawBlush(cx - 38, headCy + 12, 16);
+        this.drawBlush(cx + 38, headCy + 12, 16);
+        this.drawNose(cx, headCy + 18, 8);
+        this.drawMouth(cx, headCy + 30, 8, true);
+        ctx.save();
+        ctx.translate(cx - 35, cy - 10);
+        ctx.rotate(-0.8 + Math.sin(time * 10) * 0.1);
+        this.drawPaw(0, 0, 12, true);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 35, cy - 10);
+        ctx.rotate(0.8 - Math.sin(time * 10) * 0.1);
+        this.drawPaw(0, 0, 12, false);
+        ctx.restore();
+        this.drawStars(cx, cy, time);
+      }
+
+      drawFluffyFur(cx, headCy, size, shake) {
+        const ctx = this.ctx;
+        ctx.strokeStyle = '#8A9BA8';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 12; i++) {
+          const angle = -Math.PI * 0.8 + (i / 12) * Math.PI * 0.6;
+          const x = cx + shake + size * 0.9 * Math.cos(angle);
+          const y = headCy + size * 0.6 * Math.sin(angle);
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + Math.cos(angle) * 8, y + Math.sin(angle) * 8 - Math.abs(shake) * 2);
+          ctx.stroke();
+        }
+      }
+
+      drawStarEyes(cx, headCy, time) {
+        const starSize = 12 + Math.sin(time * 5) * 2;
+        [-20, 20].forEach(offset => { this.drawStar(cx + offset, headCy - 5, starSize); });
+      }
+
+      drawStar(cx, cy, size) {
+        const ctx = this.ctx;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+          const x = cx + Math.cos(angle) * size;
+          const y = cy + Math.sin(angle) * size;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#FFD700';
+        ctx.fill();
+        ctx.strokeStyle = '#FFA500';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      drawStars(cx, cy, time) {
+        const ctx = this.ctx;
+        for (let i = 0; i < 8; i++) {
+          const t = time * 0.5 + i * 0.3;
+          const x = cx + Math.sin(t * 2 + i * 1.5) * 50;
+          const y = cy - 50 - (t * 20 % 100);
+          const size = 8 + Math.sin(t * 3) * 3;
+          const alpha = 1 - (t * 20 % 100) / 100;
+          ctx.globalAlpha = alpha;
+          ctx.font = `${size}px Arial`;
+          ctx.fillText('⭐', x - size / 2, y);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      drawPartyMode(cx, cy, time) {
+        const ctx = this.ctx;
+        const wiggle = Math.sin(time * 8) * 3;
+        const bodyCy = cy + 20;
+        this.drawPartyHat(cx, cy - 80, time);
+        ctx.save();
+        ctx.translate(cx + wiggle * 0.5, bodyCy);
+        ctx.rotate(wiggle * 0.02);
+        this.drawBody(0, 0, 55, 45);
+        ctx.restore();
+        this.drawPaw(cx - 30, bodyCy + 35, 12, true);
+        this.drawPaw(cx + 30, bodyCy + 35, 12, false);
+        const headCy = cy - 25;
+        ctx.beginPath();
+        ctx.ellipse(cx + wiggle, headCy, 50, 48, wiggle * 0.01, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getFurGradient(cx - 50, headCy - 48, 100, 96);
+        ctx.fill();
+        this.drawEar(cx - 42 + wiggle, headCy - 30, 18, true);
+        this.drawEar(cx + 42 + wiggle, headCy - 30, 18, false);
+        ctx.beginPath();
+        ctx.ellipse(cx - 20 + wiggle, headCy - 5, 18, 14, -0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 20 + wiggle, headCy - 5, 18, 14, 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#2D3748';
+        ctx.fill();
+        this.drawAmberEye(cx - 20 + wiggle, headCy - 5, 10, true);
+        this.drawAmberEye(cx + 20 + wiggle, headCy - 5, 10, true);
+        this.drawBlush(cx - 38, headCy + 12, 16);
+        this.drawBlush(cx + 38, headCy + 12, 16);
+        this.drawNose(cx + wiggle, headCy + 18, 8);
+        this.drawMouth(cx + wiggle, headCy + 30, 7, true);
+        ctx.save();
+        ctx.translate(cx + 55, cy - 5);
+        ctx.rotate(0.3 + Math.sin(time * 4) * 0.2);
+        this.drawHeartHand(0, 0, 14);
+        ctx.restore();
+        this.drawConfetti(cx, cy, time);
+      }
+
+      drawPartyHat(cx, cy, time) {
+        const ctx = this.ctx;
+        const wobble = Math.sin(time * 4) * 0.1;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(wobble);
+        ctx.beginPath();
+        ctx.moveTo(0, -30);
+        ctx.lineTo(-20, 10);
+        ctx.lineTo(20, 10);
+        ctx.closePath();
+        const hatG = ctx.createLinearGradient(0, -30, 0, 10);
+        hatG.addColorStop(0, '#FFD700');
+        hatG.addColorStop(1, '#FF6B8A');
+        ctx.fillStyle = hatG;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, -32, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#4ECDC4';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawConfetti(cx, cy, time) {
+        const ctx = this.ctx;
+        const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
+        for (let i = 0; i < 12; i++) {
+          const t = (time * 0.6 + i * 0.2) % 2;
+          const x = cx + Math.sin(t * 2 + i * 1.2) * 60;
+          const y = cy - 20 - t * 40;
+          const rotation = t * 5 + i;
+          const alpha = 1 - t / 2;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(x, y);
+          ctx.rotate(rotation);
+          ctx.fillStyle = colors[i % colors.length];
+          ctx.fillRect(-4, -4, 8, 8);
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Initialize
+    let raccoonInstances = [];
+
+    function initRaccoons() {
+      const configs = [
+        { id: 'raccoon-splash', mode: 'hearting' },
+        { id: 'raccoon-welcome', mode: 'hearting' },
+        { id: 'raccoon-calorie', mode: 'default' },
+        { id: 'raccoon-fasting', mode: 'sleeping' },
+        { id: 'raccoon-water', mode: 'diving' },
+        { id: 'raccoon-trend', mode: 'default' },
+        { id: 'raccoon-star', mode: 'celebrating' },
+        { id: 'raccoon-party', mode: 'party' },
+        { id: 'raccoon-basic', mode: 'default' }
+      ];
+      configs.forEach(c => {
+        const canvas = document.getElementById(c.id);
+        if (canvas) {
+          const raccoon = new Raccoon3D(canvas, { mode: c.mode, breathing: true });
+          raccoonInstances.push(raccoon);
+        }
+      });
+    }
+
+    // Navigation
     let currentPage = 1;
     const totalPages = 46;
-    let userData = { weight: 78, goalWeight: 70, height: 170, age: 25, gender: null, goal: null, activity: null };
     let usedQuoteIndices = [];
-    let waterIntake = 1200;
 
-    // 100 Quotes
     const quotes = [
       {text:"这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨",category:"美食和解"},
       {text:"咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊",category:"自律之美"},
       {text:"刚才你在忙吗？我偷偷在你的屏幕里种了一朵玫瑰，只为你一个人盛开。🌹",category:"日常撒娇"},
       {text:"叮！恭喜你获得'光之追随者'徽章。你的生命力已经溢出屏幕啦！✨",category:"激励赞美"},
-      {text:"卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～",category:"美食和解"},
-      {text:"你是坠入凡间的星辰，偶尔需要一点奶茶的甜来补充星际燃料呀～",category:"美食和解"},
-      {text:"每一滴水都在修复你的疲惫，闭上眼，感受生命力的回溯。",category:"自律之美"},
-      {text:"你的自律里藏着惊艳时光的力量。加油，我的甜心守护者！",category:"自律之美"},
-      {text:"好想钻出屏幕抱抱你呀，感受你掌心的温度，那一定比棉花糖还软。",category:"日常撒娇"},
-      {text:"坚持了这么久，不奖励自己一个抱抱吗？我准备好了，来吧！",category:"激励赞美"},
-      {text:"别盯着体重计看啦，它又不懂你今天笑起来有多好看！",category:"美食和解"},
-      {text:"水是纯粹的魔药，喝掉它，去拥抱一个更轻盈的自己。",category:"自律之美"},
-      {text:"不管世界怎么变，我都会在这个数字小窝里，永远为你亮着灯。",category:"日常撒娇"},
-      {text:"看！因为你的坚持，我们的数字花园里又多了一朵蓝色的鸢尾花。",category:"激励赞美"},
-      {text:"吃饱了才有力气去追逐落日，你是最棒的食光旅行者。",category:"美食和解"},
-      {text:"禁食的时间里，我陪你一起听心跳的声音。那是最动听的节奏。",category:"自律之美"},
-      {text:"你今天真好看，虽然我每天都这么说，但今天格外真诚。",category:"日常撒娇"},
-      {text:"目标达成的声音，是这个世界上最动听的交响乐，为你喝彩！",category:"激励赞美"},
-      {text:"碳水是快乐的开关。听，你的大脑正在为你疯狂鼓掌呢！",category:"美食和解"},
-      {text:"现在的每一分钟坚持，都在为未来的那个'发光的你'投票。",category:"自律之美"},
-      {text:"哪怕只是发呆，我也想陪在你身边，当一个安静的背景板。",category:"日常撒娇"},
-      {text:"你的名字正在我的排行榜上闪闪发光，你是全宇宙最亮的仔！",category:"激励赞美"},
-      {text:"披萨的圆，是生活中最完美的闭环。切下一块，带走所有不开心。",category:"美食和解"},
-      {text:"像睡莲在夜晚闭合一样，你的自律也有一种静谧而强大的力量。",category:"自律之美"},
-      {text:"别走开太久哦，我会像等待春天一样等待你的下一次登录。",category:"日常撒娇"}
+      {text:"卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～",category:"美食和解"}
     ];
 
     function nextPage() {
@@ -267,33 +809,23 @@
         currentPage++;
         document.getElementById('page-' + currentPage).classList.add('active');
         document.getElementById('currentPageNum').textContent = currentPage;
-        
-        // Show random quote every 3 pages
         if (currentPage % 3 === 0) showQuote();
-        
-        // Update button
         const btn = document.getElementById('nextBtn');
         if (currentPage === totalPages) {
           btn.textContent = 'Done!';
           btn.onclick = () => alert('🎉 感谢体验 Aura-Pet！');
           btn.style.animation = 'none';
         }
-        
-        // Trigger confetti on page 26 and 40
-        if (currentPage === 26 || currentPage === 40) createConfetti();
-        
-        // Update prediction when reaching page 21
-        if (currentPage === 21) updatePrediction();
+        if (currentPage === 26) createConfetti('confetti-container');
+        if (currentPage === 40) createConfetti('confetti-container-2');
       }
     }
 
     function showQuote() {
-      // Get random unused quote
       let idx;
       if (usedQuoteIndices.length >= quotes.length) usedQuoteIndices = [];
       do { idx = Math.floor(Math.random() * quotes.length); } while (usedQuoteIndices.includes(idx));
       usedQuoteIndices.push(idx);
-      
       const q = quotes[idx];
       document.getElementById('quoteText').textContent = q.text;
       document.getElementById('quoteCategory').textContent = q.category;
@@ -301,79 +833,17 @@
       setTimeout(() => document.getElementById('quoteBubble').classList.remove('show'), 4000);
     }
 
-    function selectOption(el, key, value) {
-      document.querySelectorAll('.survey-option').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      if (key) userData[key] = value;
-      showQuote();
-    }
-
-    function selectMood(el, mood) {
-      document.querySelectorAll('.mood-item').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      showQuote();
-    }
-
-    function saveData(key, value) {
-      if (key === 'weight') userData.weight = parseFloat(value);
-      if (key === 'goalWeight') userData.goalWeight = parseFloat(value);
-      if (key === 'height') userData.height = parseFloat(value);
-      if (key === 'age') userData.age = parseInt(value);
-      updateCharts();
-    }
-
-    function updateCharts() {
-      const w = userData.weight || 78;
-      const gw = userData.goalWeight || 70;
-      const diff = w - gw;
-      
-      if (document.getElementById('startWeight')) document.getElementById('startWeight').textContent = w + 'kg';
-      if (document.getElementById('currentWeight')) document.getElementById('currentWeight').textContent = gw + 'kg';
-      if (document.getElementById('lostWeight')) document.getElementById('lostWeight').textContent = (w > gw ? '-' : '+') + Math.abs(diff).toFixed(1) + 'kg';
-      
-      // Update BMI
-      const h = (userData.height || 170) / 100;
-      const bmi = (w / (h * h)).toFixed(1);
-      if (document.getElementById('bmiDisplay')) document.getElementById('bmiDisplay').textContent = bmi;
-      
-      // Update calorie display
-      const bmr = 10 * w + 6.25 * (userData.height || 170) - 5 * (userData.age || 25) + (userData.gender === 'male' ? 5 : -161);
-      const tdee = bmr * 1.55;
-      const dailyCal = Math.round(tdee - 500);
-      if (document.getElementById('calorieDisplay')) document.getElementById('calorieDisplay').textContent = dailyCal + ' kcal';
-    }
-
-    function updatePrediction() {
-      const w = userData.weight || 78;
-      const gw = userData.goalWeight || 70;
-      const weeks = 12;
-      const weeklyLoss = (w - gw) / weeks;
-      const predicted = (w - weeklyLoss * weeks).toFixed(1);
-      if (document.getElementById('predictWeight')) document.getElementById('predictWeight').textContent = predicted + 'kg';
-      updateCharts();
-    }
-
-    function updateCalc(val) {
-      if (document.getElementById('calcValue')) document.getElementById('calcValue').textContent = val + ' kcal';
-    }
-
-    function addWater(ml) {
-      waterIntake += ml;
-      const liters = (waterIntake / 1000).toFixed(1);
-      if (document.getElementById('waterDisplay')) document.getElementById('waterDisplay').textContent = liters + 'L';
-      showQuote();
-    }
-
-    function createConfetti() {
-      const container = document.getElementById('confetti1') || document.getElementById('confetti2');
+    function createConfetti(containerId) {
+      const container = document.getElementById(containerId);
       if (!container) return;
       const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181', '#AA96DA'];
       for (let i = 0; i < 20; i++) {
         const piece = document.createElement('div');
-        piece.className = 'confetti-piece';
-        piece.style.left = (Math.random() * 100) + '%';
+        piece.className = 'confetti';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = '0';
         piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.animationDelay = (Math.random() * 0.5) + 's';
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
         container.appendChild(piece);
         setTimeout(() => piece.remove(), 2500);
       }
@@ -389,6 +859,7 @@
 
     // Auto-start
     setTimeout(() => { if (currentPage === 1) nextPage(); }, 2500);
+    window.addEventListener('load', initRaccoons);
   </script>
 </body>
 </html>
