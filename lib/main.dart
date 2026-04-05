@@ -140,6 +140,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return FoodListScreen(onComplete: _nextPage);
                 case 32:
                   return CalorieCalculatorScreen(onComplete: _nextPage);
+                case 33:
+                  return FastingPlanScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -13700,6 +13702,388 @@ class _QuickWeightButton extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// ============================================
+/// P34: Fasting Plan Screen
+/// ============================================
+class FastingPlanScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const FastingPlanScreen({super.key, required this.onComplete});
+
+  @override
+  State<FastingPlanScreen> createState() => _FastingPlanScreenState();
+}
+
+class _FastingPlanScreenState extends State<FastingPlanScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bgAnimController;
+  String? _selectedPlan;
+
+  final List<_FastingPlan> _plans = [
+    _FastingPlan(id: '16_8', name: '16:8', description: '16h fasting, 8h eating', hours: 16, color: const Color(0xFF4CAF50)),
+    _FastingPlan(id: '14_10', name: '14:10', description: '14h fasting, 10h eating', hours: 14, color: const Color(0xFF4ECDC4)),
+    _FastingPlan(id: '12_12', name: '12:12', description: '12h fasting, 12h eating', hours: 12, color: const Color(0xFFFFE066)),
+    _FastingPlan(id: '20_4', name: '20:4', description: '20h fasting, 4h eating', hours: 20, color: const Color(0xFFFF6B6B)),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _bgAnimController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _bgAnimController.dispose();
+    super.dispose();
+  }
+
+  void _selectPlan(String planId) {
+    setState(() {
+      _selectedPlan = planId;
+    });
+    _bgAnimController.reset();
+    _bgAnimController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _bgAnimController,
+      builder: (context, child) {
+        // 从浅蓝到深蓝的lerp
+        final bgColor = Color.lerp(
+          const Color(0xFFEDF6FA),
+          const Color(0xFF1a2a3a),
+          _bgAnimController.value,
+        )!;
+
+        return Scaffold(
+          backgroundColor: bgColor,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+
+                  // 标题
+                  Text(
+                    'Choose your\nfasting plan',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Color.lerp(const Color(0xFF2D3748), Colors.white, _bgAnimController.value),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Select the fasting schedule that fits your lifestyle',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Color.lerp(Colors.grey.shade600, Colors.white70, _bgAnimController.value),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 方案卡片
+                  Expanded(
+                    child: Column(
+                      children: _plans.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final plan = entry.value;
+                        final isSelected = _selectedPlan == plan.id;
+
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: index < _plans.length - 1 ? 12 : 0),
+                            child: _FastingPlanCard(
+                              plan: plan,
+                              isSelected: isSelected,
+                              progress: _bgAnimController.value,
+                              onTap: () => _selectPlan(plan.id),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Start胶囊按钮
+                  GestureDetector(
+                    onTap: _selectedPlan != null ? widget.onComplete : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: 56,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: _selectedPlan != null
+                            ? LinearGradient(
+                                colors: [
+                                  _plans.firstWhere((p) => p.id == _selectedPlan).color,
+                                  _plans.firstWhere((p) => p.id == _selectedPlan).color.withOpacity(0.7),
+                                ],
+                              )
+                            : null,
+                        color: _selectedPlan == null ? Colors.grey.shade400 : null,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: _selectedPlan != null
+                            ? [
+                                BoxShadow(
+                                  color: _plans.firstWhere((p) => p.id == _selectedPlan).color.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Start',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: _selectedPlan != null ? Colors.white : Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: _selectedPlan != null ? Colors.white : Colors.grey.shade600,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 禁食方案数据
+class _FastingPlan {
+  final String id;
+  final String name;
+  final String description;
+  final int hours;
+  final Color color;
+
+  _FastingPlan({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.hours,
+    required this.color,
+  });
+}
+
+/// 禁食方案卡片
+class _FastingPlanCard extends StatelessWidget {
+  final _FastingPlan plan;
+  final bool isSelected;
+  final double progress;
+  final VoidCallback onTap;
+
+  const _FastingPlanCard({
+    required this.plan,
+    required this.isSelected,
+    required this.progress,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? plan.color.withOpacity(0.15)
+              : Color.lerp(Colors.white, plan.color.withOpacity(0.1), progress),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? plan.color : Color.lerp(Colors.transparent, plan.color.withOpacity(0.3), progress),
+            width: 2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: plan.color.withOpacity(0.2),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            // 极简时钟图标
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: isSelected ? plan.color : Color.lerp(Colors.grey.shade100, plan.color.withOpacity(0.2), progress),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: CustomPaint(
+                  size: const Size(32, 32),
+                  painter: _MinimalClockPainter(
+                    hours: plan.hours,
+                    color: isSelected ? Colors.white : Color.lerp(Colors.grey.shade600, Colors.white, progress),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 文字
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    plan.name,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                      color: isSelected
+                          ? plan.color
+                          : Color.lerp(const Color(0xFF2D3748), Colors.white, progress),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    plan.description,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      color: isSelected
+                          ? plan.color.withOpacity(0.7)
+                          : Color.lerp(Colors.grey.shade600, Colors.white70, progress),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 选中指示
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? plan.color : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? plan.color : Color.lerp(Colors.grey.shade400, plan.color.withOpacity(0.5), progress),
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 极简时钟
+class _MinimalClockPainter extends CustomPainter {
+  final int hours;
+  final Color color;
+
+  _MinimalClockPainter({required this.hours, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 2;
+
+    // 表盘
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+
+    // 时针 (根据禁食小时数)
+    final hourAngle = (hours / 12) * math.pi * 2 - math.pi / 2;
+    final hourEnd = Offset(
+      center.dx + radius * 0.5 * math.cos(hourAngle),
+      center.dy + radius * 0.5 * math.sin(hourAngle),
+    );
+    canvas.drawLine(
+      center,
+      hourEnd,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 分针
+    final minuteAngle = -math.pi / 2;
+    final minuteEnd = Offset(
+      center.dx + radius * 0.7 * math.cos(minuteAngle),
+      center.dy + radius * 0.7 * math.sin(minuteAngle),
+    );
+    canvas.drawLine(
+      center,
+      minuteEnd,
+      Paint()
+        ..color = color
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 中心点
+    canvas.drawCircle(center, 2, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MinimalClockPainter oldDelegate) =>
+      oldDelegate.hours != hours || oldDelegate.color != color;
 }
 
 /// 占位页
