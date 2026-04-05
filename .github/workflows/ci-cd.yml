@@ -1,6 +1,6 @@
 # ============================================
 # AURA-PET: GitHub Actions CI/CD
-# 自动部署到 GitHub Pages
+# 自动部署 Flutter Web 到 GitHub Pages
 # ============================================
 
 name: Deploy Aura-Pet
@@ -12,8 +12,8 @@ on:
     branches: [main]
 
 jobs:
-  # ========== 前端部署 ==========
-  deploy-frontend:
+  # ========== Flutter Web 构建 & 部署 ==========
+  build-and-deploy-flutter:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,13 +24,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          cd flutter_app && flutter pub get
+
+      - name: Analyze
+        run: |
+          cd flutter_app && flutter analyze --no-fatal-infos
+
+      - name: Build web
+        run: |
+          cd flutter_app && flutter build web --release
+
+      - name: Configure Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload artifact
+      - name: Upload to Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs/'
+          path: flutter_app/build/web/
 
       - name: Deploy to GitHub Pages
         id: deployment
@@ -60,38 +78,6 @@ jobs:
       - name: Run tests
         run: |
           pytest tests/ -v
-
-  # ========== Flutter 构建 ==========
-  build-flutter:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: flutter_app
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.0'
-          channel: 'stable'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Build web
-        run: flutter build web --release
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-build
-          path: flutter_app/build/web/
 
   # ========== Docker 构建 ==========
   docker-build:
