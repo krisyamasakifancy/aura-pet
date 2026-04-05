@@ -1,585 +1,374 @@
 -- ============================================
--- Aura-Pet (BitePal Full-Stack Parity)
--- PostgreSQL Full Schema
--- Digital Impressionism Color Palette
+-- AURA-PET: 完整数据库 Schema
+-- PostgreSQL + Redis
 -- ============================================
 
--- Extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-
--- ============================================
--- ENUMS
--- ============================================
-CREATE TYPE pet_species AS ENUM ('raccoon', 'cat', 'dog', 'bunny', 'fox', 'owl');
-CREATE TYPE pet_mood AS ENUM ('happy', 'neutral', 'sad', 'excited', 'sleepy', 'dizzy');
-CREATE TYPE food_category AS ENUM ('protein', 'carb', 'vegetable', 'fruit', 'dessert', 'drink', 'snack');
-CREATE TYPE subscription_tier AS ENUM ('free', 'premium', 'pro');
-CREATE TYPE shop_item_type AS ENUM ('hat', 'glasses', 'scarf', 'background', 'pet_food', 'emotion');
-CREATE TYPE transaction_type AS ENUM ('meal_reward', 'streak_bonus', 'purchase', 'refund', 'subscription');
-
--- ============================================
--- USERS
--- ============================================
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 用户表 ==========
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- 基础信息
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    display_name VARCHAR(100),
+    username VARCHAR(50) UNIQUE NOT NULL,
     avatar_url TEXT,
     
-    -- Subscription
-    subscription_tier subscription_tier DEFAULT 'free',
-    subscription_expires_at TIMESTAMP WITH TIME ZONE,
-    stripe_customer_id VARCHAR(255),
+    -- 用户画像
+    height_cm DECIMAL(5,2),           -- 身高 (cm)
+    weight_kg DECIMAL(5,2),           -- 体重 (kg)
+    age INTEGER,                       -- 年龄
+    gender VARCHAR(10),                -- male/female/other
+    activity_level VARCHAR(20),        -- sedentary/light/moderate/active/very_active
+    fitness_goal VARCHAR(20),          -- lose_fat/gain_muscle/maintain
     
-    -- Virtual Currency
-    bitecoins INTEGER DEFAULT 100,
+    -- 计算字段 (自动更新)
+    bmr DECIMAL(8,2),                 -- 基础代谢率 (Mifflin-St Jeor)
+    tdee DECIMAL(8,2),                -- 每日总消耗
     
-    -- Stats
-    total_meals_logged INTEGER DEFAULT 0,
-    current_streak INTEGER DEFAULT 0,
-    longest_streak INTEGER DEFAULT 0,
-    last_meal_at TIMESTAMP WITH TIME ZONE,
+    -- 设置
+    language VARCHAR(10) DEFAULT 'zh-CN',
+    currency VARCHAR(10) DEFAULT 'CNY',
+    timezone VARCHAR(50) DEFAULT 'Asia/Shanghai',
     
-    -- Timestamps
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    deleted_at TIMESTAMP WITH TIME ZONE
+    -- 订阅
+    subscription_tier VARCHAR(20) DEFAULT 'free',  -- free/premium/enterprise
+    subscription_expires_at TIMESTAMP,
+    
+    -- 时间戳
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- 状态
+    is_verified BOOLEAN DEFAULT FALSE,
+    is_premium BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE
 );
 
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_subscription ON users(subscription_tier);
+CREATE INDEX idx_users_created_at ON users(created_at);
 
--- ============================================
--- PETS (五维数值模型)
--- ============================================
-CREATE TABLE pets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 宠物表 ==========
+CREATE TABLE IF NOT EXISTS pets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
-    -- Identity
-    name VARCHAR(50) NOT NULL,
-    species pet_species NOT NULL,
-    nickname VARCHAR(50),
+    -- 宠物基本信息
+    name VARCHAR(50) NOT NULL DEFAULT '毛毛',
+    species VARCHAR(50) DEFAULT 'raccoon',     -- raccoon/cat/dragon
+    evolution_stage VARCHAR(20) DEFAULT 'baby',  -- baby/child/teen/adult
     
-    -- 五维数值 (0-100)
-    hunger INTEGER DEFAULT 50 CHECK (hunger >= 0 AND hunger <= 100),
-    joy INTEGER DEFAULT 50 CHECK (joy >= 0 AND joy <= 100),
-    vigor INTEGER DEFAULT 50 CHECK (vigor >= 0 AND vigor <= 100),
-    affinity INTEGER DEFAULT 0 CHECK (affinity >= 0 AND affinity <= 100),
-    evolution_xp INTEGER DEFAULT 0 CHECK (evolution_xp >= 0),
+    -- 数值
+    level INTEGER DEFAULT 1,
+    xp INTEGER DEFAULT 0,
+    xp_to_next INTEGER DEFAULT 100,
+    coins INTEGER DEFAULT 100,
+    joy INTEGER DEFAULT 80,
+    fullness INTEGER DEFAULT 70,
+    water_intake INTEGER DEFAULT 0,
+    water_goal INTEGER DEFAULT 2000,
+    streak_days INTEGER DEFAULT 0,
+    meals_today INTEGER DEFAULT 0,
     
-    -- Evolution Level
-    evolution_level INTEGER DEFAULT 1 CHECK (evolution_level >= 1 AND evolution_level <= 10),
+    -- 外观
+    nutrition_balance DECIMAL(3,2) DEFAULT 0,  -- -1 到 1
+    equipped_item_id VARCHAR(50),
+    background_id VARCHAR(50),
+    aura_color VARCHAR(20) DEFAULT 'pink',
     
-    -- Current State
-    current_mood pet_mood DEFAULT 'neutral',
-    is_sleeping BOOLEAN DEFAULT FALSE,
-    is_dizzy BOOLEAN DEFAULT FALSE,
+    -- 状态
+    mood VARCHAR(20) DEFAULT 'happy',
+    last_fed_at TIMESTAMP,
+    last_interaction_at TIMESTAMP,
     
-    -- Position in pet list (for multi-pet)
-    slot_index INTEGER DEFAULT 0,
+    -- 时间戳
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    -- Timestamps
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(user_id, slot_index)
+    UNIQUE(user_id)
 );
 
-CREATE INDEX idx_pets_user ON pets(user_id);
+CREATE INDEX idx_pets_user_id ON pets(user_id);
 
--- ============================================
--- MEALS (餐食流水)
--- ============================================
-CREATE TABLE meals (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 餐食记录表 ==========
+CREATE TABLE IF NOT EXISTS meal_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pet_id UUID REFERENCES pets(id),
     
-    -- Food Info
+    -- 食物信息
     food_name VARCHAR(255) NOT NULL,
-    food_category food_category,
-    estimated_calories INTEGER,
-    estimated_protein DECIMAL(6,2),
-    estimated_carbs DECIMAL(6,2),
-    estimated_fat DECIMAL(6,2),
+    food_emoji VARCHAR(50),
+    food_category VARCHAR(50),              -- dessert/main/fast/healthy/drinks/snacks
     
-    -- Vision AI Results (Multi-model validation)
-    vision_gpt4o_result JSONB,
-    vision_gemini_result JSONB,
-    vision_confidence_score DECIMAL(3,2),
-    vision_final_consensus JSONB,
+    -- 营养数据
+    calories INTEGER,
+    protein_grams DECIMAL(6,2),
+    carbs_grams DECIMAL(6,2),
+    fat_grams DECIMAL(6,2),
+    fiber_grams DECIMAL(6,2),
+    sodium_mg DECIMAL(8,2),
     
-    -- Image
+    -- Aura-Pet 特色
+    aura_score DECIMAL(4,1),               -- 综合评分 0-100
+    anxiety_label VARCHAR(100),            -- 去焦虑标签
+    phrases TEXT[],                        -- 小浣熊说的话
+    
+    -- 来源
+    source VARCHAR(20) DEFAULT 'manual',   -- manual/barcode/ai
+    barcode VARCHAR(100),
     image_url TEXT,
-    image_thumbnail_url TEXT,
     
-    -- Tags & Mood
-    tags TEXT[],
-    anxiety_relief_label VARCHAR(100), -- "心情补给", "能量加油站"
-    
-    -- Rewards
+    -- 奖励
     coins_earned INTEGER DEFAULT 0,
     xp_earned INTEGER DEFAULT 0,
     
-    -- Timestamps
-    logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- 时间
+    meal_type VARCHAR(20),                 -- breakfast/lunch/dinner/snack
+    logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_meals_user ON meals(user_id);
-CREATE INDEX idx_meals_logged_at ON meals(logged_at);
-CREATE INDEX idx_meals_category ON meals(food_category);
+CREATE INDEX idx_meal_logs_user_id ON meal_logs(user_id);
+CREATE INDEX idx_meal_logs_logged_at ON meal_logs(logged_at);
+CREATE INDEX idx_meal_logs_meal_type ON meal_logs(meal_type);
 
--- ============================================
--- WATER_TRACKING (水分追踪)
--- ============================================
-CREATE TABLE water_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 每日统计表 ==========
+CREATE TABLE IF NOT EXISTS daily_stats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
-    amount_ml INTEGER NOT NULL CHECK (amount_ml > 0),
-    logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_water_user_date ON water_logs(user_id, logged_at);
-
--- ============================================
--- FASTING_TRACKER (轻断食计时)
--- ============================================
-CREATE TABLE fasting_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
     
-    started_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    ended_at TIMESTAMP WITH TIME ZONE,
-    target_hours INTEGER DEFAULT 16,
-    actual_hours DECIMAL(5,2),
-    completed BOOLEAN DEFAULT FALSE
-);
-
-CREATE INDEX idx_fasting_user ON fasting_sessions(user_id);
-
--- ============================================
--- SHOP_ITEMS (商店库存)
--- ============================================
-CREATE TABLE shop_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
-    -- Item Info
-    item_key VARCHAR(100) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    item_type shop_item_type NOT NULL,
-    
-    -- Compatibility
-    applicable_species pet_species[],
-    evolution_level_required INTEGER DEFAULT 1,
-    
-    -- Economy
-    price_bitecoins INTEGER NOT NULL,
-    is_limited BOOLEAN DEFAULT FALSE,
-    limited_quantity INTEGER,
-    limited_remaining INTEGER,
-    
-    -- Visual
-    preview_image_url TEXT,
-    layers JSONB, -- For layered rendering
-    
-    -- Timestamps
-    available_from TIMESTAMP WITH TIME ZONE,
-    available_until TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_shop_items_type ON shop_items(item_type);
-CREATE INDEX idx_shop_items_price ON shop_items(price_bitecoins);
-
--- ============================================
--- USER_INVENTORY (用户背包)
--- ============================================
-CREATE TABLE user_inventory (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    item_id UUID NOT NULL REFERENCES shop_items(id),
-    quantity INTEGER DEFAULT 1,
-    purchased_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(user_id, item_id)
-);
-
-CREATE INDEX idx_inventory_user ON user_inventory(user_id);
-
--- ============================================
--- USER_PET_APPEARANCE (宠物外观)
--- ============================================
-CREATE TABLE pet_appearances (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-    
-    -- Equipped Items (Layered)
-    equipped_hat UUID REFERENCES shop_items(id),
-    equipped_glasses UUID REFERENCES shop_items(id),
-    equipped_scarf UUID REFERENCES shop_items(id),
-    equipped_background UUID REFERENCES shop_items(id),
-    
-    -- Color customization
-    primary_color VARCHAR(7), -- Hex
-    secondary_color VARCHAR(7),
-    
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE UNIQUE INDEX idx_appearance_pet ON pet_appearances(pet_id);
-
--- ============================================
--- TRANSACTIONS (金币流水)
--- ============================================
-CREATE TABLE transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    transaction_type transaction_type NOT NULL,
-    amount INTEGER NOT NULL, -- Positive for income, negative for expense
-    balance_after INTEGER NOT NULL,
-    
-    -- Reference
-    meal_id UUID REFERENCES meals(id),
-    shop_item_id UUID REFERENCES shop_items(id),
-    
-    description VARCHAR(255),
-    metadata JSONB,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_transactions_user ON transactions(user_id);
-CREATE INDEX idx_transactions_type ON transactions(transaction_type);
-
--- ============================================
--- DAILY_STATS (每日统计)
--- ============================================
-CREATE TABLE daily_stats (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    stat_date DATE NOT NULL,
-    
-    -- Meals
-    meals_count INTEGER DEFAULT 0,
+    -- 摄入统计
     total_calories INTEGER DEFAULT 0,
-    nutrition_balance_score DECIMAL(5,2), -- 0-100
+    total_protein DECIMAL(8,2) DEFAULT 0,
+    total_carbs DECIMAL(8,2) DEFAULT 0,
+    total_fat DECIMAL(8,2) DEFAULT 0,
     
-    -- Water
-    water_ml INTEGER DEFAULT 0,
-    water_goal_achieved BOOLEAN DEFAULT FALSE,
+    meals_count INTEGER DEFAULT 0,
+    water_intake INTEGER DEFAULT 0,
     
-    -- Streak
+    -- 宠物数据
+    pet_joy_avg INTEGER DEFAULT 0,
+    pet_fullness_avg INTEGER DEFAULT 0,
     streak_continued BOOLEAN DEFAULT FALSE,
     
-    -- Pet Stats Snapshot
-    pet_hunger_avg INTEGER,
-    pet_joy_avg INTEGER,
-    pet_vigor_avg INTEGER,
+    -- Aura Score
+    avg_aura_score DECIMAL(4,1) DEFAULT 0,
     
-    UNIQUE(user_id, stat_date)
+    -- 时间戳
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id, date),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_daily_stats_user ON daily_stats(user_id);
-CREATE INDEX idx_daily_stats_date ON daily_stats(stat_date);
+CREATE INDEX idx_daily_stats_user_date ON daily_stats(user_id, date);
 
--- ============================================
--- ANXIETY_RELIEF_LABELS (去焦虑标签库)
--- ============================================
-CREATE TABLE anxiety_relief_labels (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 订阅表 ==========
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
-    food_category food_category NOT NULL,
-    calorie_range VARCHAR(20), -- "0-200", "200-400", "400-800", "800+"
+    tier VARCHAR(20) NOT NULL,             -- free/premium/enterprise
+    status VARCHAR(20) NOT NULL,          -- active/cancelled/expired/past_due
     
-    -- Labels (rotating)
-    label_key VARCHAR(100) NOT NULL,
-    label_text VARCHAR(255) NOT NULL,
-    label_emoji VARCHAR(50),
-    label_color VARCHAR(7),
+    -- 支付信息
+    payment_provider VARCHAR(20),          -- stripe/apple/google
+    payment_id VARCHAR(255),
+    price_cents INTEGER,
+    currency VARCHAR(10) DEFAULT 'USD',
     
-    frequency_weight INTEGER DEFAULT 1 -- Higher = more likely to appear
+    -- 时间
+    starts_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    current_period_start TIMESTAMP,
+    current_period_end TIMESTAMP,
+    cancelled_at TIMESTAMP,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Pre-populate label library
-INSERT INTO anxiety_relief_labels (food_category, calorie_range, label_key, label_text, label_emoji, label_color, frequency_weight) VALUES
--- Dessert
-('dessert', '400-800', 'soul_charge', '灵魂充电时间', '⚡', '#FFD700', 3),
-('dessert', '400-800', 'happiness_injection', '快乐因子注入中', '💫', '#FF69B4', 3),
-('dessert', '800+', 'luxury_reward', '尊享犒劳时刻', '👑', '#FF1493', 2),
-('dessert', '200-400', 'sweet_blessing', '甜蜜小确幸', '🌸', '#FFB6C1', 4),
-('dessert', '0-200', 'guilt_free_treat', '无罪恶感小确幸', '✨', '#98FB98', 5),
-
--- Protein
-('protein', '400-800', 'power_building', '力量积攒中', '💪', '#FF6B6B', 3),
-('protein', '200-400', 'muscle_fuel', '肌肉燃料补给', '🏋️', '#FFA07A', 4),
-
--- Carb
-('carb', '400-800', 'comfort_hug', '碳水安慰拥抱', '🤗', '#DEB887', 3),
-('carb', '200-400', 'energy_reserve', '能量储备充足', '🔋', '#F0E68C', 4),
-
--- Vegetable
-('vegetable', '0-200', 'green_power', '绿色能量满格', '🌿', '#90EE90', 5),
-('vegetable', '200-400', 'nutrition_fortress', '营养堡垒建设', '🏰', '#32CD32', 4),
-
--- Fruit
-('fruit', '0-200', 'nature_candy', '大自然糖果', '🍬', '#FFA500', 5),
-('fruit', '200-400', 'vitamin_bomb', '维C炸弹来袭', '💣', '#FF4500', 3),
-
--- Drink
-('drink', '0-100', 'hydration_blessing', '水分祝福达成', '💧', '#87CEEB', 5),
-('drink', '100-300', 'caffeine_companion', '咖啡因伙伴上线', '☕', '#8B4513', 3),
-
--- Snack
-('snack', '0-200', 'mini_adventure', '小小冒险奖励', '🎒', '#DDA0DD', 4),
-('snack', '200-400', 'mood_booster', '心情助推器启动', '🚀', '#FF6347', 3),
-('snack', '400+', 'celebration_mode', '庆典模式开启', '🎉', '#FF1493', 2);
-
--- ============================================
--- CONVERSATION_CORPUS (去焦虑对话语料库)
--- ============================================
-CREATE TABLE conversation_corpus (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- ========== 商品表 ==========
+CREATE TABLE IF NOT EXISTS shop_items (
+    id VARCHAR(50) PRIMARY KEY,
     
-    -- Trigger conditions
-    food_category food_category,
-    anxiety_level VARCHAR(20), -- 'low', 'medium', 'high'
-    pet_mood pet_mood,
-    time_of_day VARCHAR(20), -- 'morning', 'noon', 'afternoon', 'evening', 'night'
-    
-    -- Persona & Response
-    persona_action VARCHAR(255), -- "小浣熊开心地转圈"
-    dialogue_text TEXT NOT NULL,
-    dialogue_emoji VARCHAR(50),
-    
-    -- Animation hint
-    animation_trigger VARCHAR(100), -- "spin", "jump", "bounce", "sleepy"
-    
-    frequency_weight INTEGER DEFAULT 1
-);
-
--- Pre-populate conversation corpus
-INSERT INTO conversation_corpus (food_category, anxiety_level, pet_mood, time_of_day, persona_action, dialogue_text, dialogue_emoji, animation_trigger, frequency_weight) VALUES
--- Dessert responses (most important for anxiety relief)
-('dessert', 'high', 'happy', 'any', '小浣熊兴奋地转圈圈', '哇！是你最爱的甜点！生活已经这么苦了当然要对自己好一点呀～', '😍', 'spin', 5),
-('dessert', 'medium', 'happy', 'any', '小浣熊眼睛亮晶晶', '嘿嘿，这个看起来超好吃的！吃甜食会释放快乐多巴胺哦～科学认证的！', '🤤', 'bounce', 4),
-('dessert', 'low', 'neutral', 'any', '小浣熊优雅地品尝', '精致的甜点时光～懂得品味生活的人才最懂幸福呢！', '😌', 'idle', 3),
-
--- Healthy food responses
-('vegetable', 'any', 'happy', 'any', '小浣熊竖起大拇指', '蔬菜侠出击！今天的你又在为身体加油啦～', '👍', 'jump', 4),
-('vegetable', 'any', 'neutral', 'any', '小浣熊认真点头', '均衡饮食，智慧选择！你的身体会感谢你的～', '💚', 'idle', 3),
-('fruit', 'any', 'happy', 'any', '小浣熊开心蹦跳', '水果派对！天然的甜蜜才是真正的快乐源泉呀！', '🍎', 'bounce', 4),
-('protein', 'any', 'neutral', 'any', '小浣熊展示肌肉', '蛋白质补给完成！你正在变得更强壮呢～', '💪', 'jump', 3),
-
--- Carb responses
-('carb', 'any', 'happy', 'morning', '小浣熊元气满满', '早安！碳水是起床的第一能量～今天也要元气满满哦！', '🌅', 'jump', 4),
-('carb', 'any', 'neutral', 'evening', '小浣熊温柔地说', '晚餐的碳水是温暖的陪伴～好好享受这份满足感吧！', '🌙', 'idle', 3),
-('carb', 'any', 'sad', 'any', '小浣熊递上纸巾', '想吃就吃呀～情绪低落的时候更需要给自己一些慰藉呢。', '🤗', 'hug', 4),
-
--- High calorie comfort
-('dessert', 'high', 'excited', 'any', '小浣熊欢呼雀跃', '热量炸弹来袭！！炸裂的快乐因子正在充盈你的灵魂！！', '🎉', 'spin', 3),
-('snack', 'high', 'happy', 'any', '小浣熊疯狂摇摆', '放纵一下吧！偶尔的放肆是为了更长久的坚持呀～', '🔥', 'shake', 3),
-
--- Drink responses
-('drink', 'any', 'neutral', 'morning', '小浣熊精神抖擞', '早安咖啡时间到！咖啡因正在唤醒你的每一个细胞～', '☕', 'jump', 4),
-('drink', 'any', 'sad', 'afternoon', '小浣熊轻轻拍肩', '下午的低谷很正常呀～来一杯给自己充充电吧！', '🤚', 'comfort', 3),
-
--- General comfort
-(NULL, 'high', 'sad', 'any', '小浣熊拥抱你', '别担心呀～吃东西是为了让自己开心，不是为了愧疚呢。', '🫂', 'hug', 5),
-(NULL, 'medium', 'neutral', 'any', '小浣熊微笑点头', '每一餐都是爱自己的表现～你在好好照顾自己呢！', '💝', 'idle', 4),
-(NULL, 'any', 'happy', 'any', '小浣熊开心拍手', '记录本身就是一种自律呀！你已经很棒了！', '👏', 'clap', 4);
-
--- ============================================
--- SUBSCRIPTION_FEATURES (订阅功能表)
--- ============================================
-CREATE TABLE subscription_features (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tier subscription_tier NOT NULL,
-    feature_key VARCHAR(100) NOT NULL,
-    feature_name VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     description TEXT,
+    emoji VARCHAR(50),
+    category VARCHAR(30) NOT NULL,          -- accessories/backgrounds/effects/frames
     
-    UNIQUE(tier, feature_key)
+    price_cents INTEGER NOT NULL,
+    price_coins INTEGER,                    -- 如果可以用游戏币购买
+    currency VARCHAR(10) DEFAULT 'USD',
+    
+    -- 稀有度
+    rarity VARCHAR(20) DEFAULT 'common',   -- common/rare/epic/legendary/limited
+    available_from TIMESTAMP,
+    available_until TIMESTAMP,
+    
+    -- 预览
+    preview_url TEXT,
+    thumbnail_url TEXT,
+    
+    -- 状态
+    is_active BOOLEAN DEFAULT TRUE,
+    is_limited BOOLEAN DEFAULT FALSE,
+    total_stock INTEGER,
+    sold_count INTEGER DEFAULT 0,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO subscription_features (tier, feature_key, feature_name, description) VALUES
--- Premium ($35.99/year)
-('premium', 'micro_nutrients', '微量元素指纹', 'AI分析食物中微量元素的详细组成'),
-('premium', 'weekly_pet_report', '宠物进化周报', '每周生成宠物的成长报告和建议'),
-('premium', 'advanced_analytics', '高级数据分析', '查看30天/90天的营养趋势深度分析'),
-('premium', 'unlimited_photos', '无限照片存储', '无限制保存餐食照片和历史'),
-('premium', 'exclusive_items', '限定商店物品', '访问Premium专属装扮物品'),
+-- ========== 用户背包 ==========
+CREATE TABLE IF NOT EXISTS user_inventory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_id VARCHAR(50) NOT NULL REFERENCES shop_items(id),
+    
+    -- 装备状态
+    is_owned BOOLEAN DEFAULT TRUE,
+    is_equipped BOOLEAN DEFAULT FALSE,
+    equipped_at TIMESTAMP,
+    
+    -- 来源
+    acquired_through VARCHAR(30),          -- purchase/reward/gift/achievement
+    acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id, item_id),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES shop_items(id)
+);
 
--- Pro
-('pro', 'micro_nutrients', '微量元素指纹', 'AI分析食物中微量元素的详细组成'),
-('pro', 'weekly_pet_report', '宠物进化周报', '每周生成宠物的成长报告和建议'),
-('pro', 'advanced_analytics', '高级数据分析', '查看30天/90天的营养趋势深度分析'),
-('pro', 'unlimited_photos', '无限照片存储', '无限制保存餐食照片和历史'),
-('pro', 'exclusive_items', '限定商店物品', '访问Pro专属装扮物品'),
-('pro', 'personal_coach', '私人营养教练', 'AI营养师1对1定制饮食建议'),
-('pro', 'family_sharing', '家庭共享', '最多5个账户共享Premium功能');
+CREATE INDEX idx_user_inventory_user_id ON user_inventory(user_id);
+CREATE INDEX idx_user_inventory_equipped ON user_inventory(user_id, is_equipped);
 
--- ============================================
--- FUNCTIONS & TRIGGERS
--- ============================================
+-- ========== 成就表 ==========
+CREATE TABLE IF NOT EXISTS achievements (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category VARCHAR(30),                  -- streak/nutrition/social/shop
+    
+    icon VARCHAR(50),
+    reward_coins INTEGER DEFAULT 0,
+    reward_xp INTEGER DEFAULT 0,
+    reward_item_id VARCHAR(50),
+    
+    condition_type VARCHAR(30),            -- streak_days/meals_count/aura_score
+    condition_value INTEGER,
+    
+    is_secret BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Auto-update updated_at
+-- ========== 用户成就 ==========
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    achievement_id VARCHAR(50) NOT NULL REFERENCES achievements(id),
+    
+    is_unlocked BOOLEAN DEFAULT FALSE,
+    unlocked_at TIMESTAMP,
+    is_notified BOOLEAN DEFAULT FALSE,
+    
+    UNIQUE(user_id, achievement_id)
+);
+
+-- ========== 刷新视图 ==========
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER tr_users_updated_at BEFORE UPDATE ON users
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER tr_pets_updated_at BEFORE UPDATE ON pets
+CREATE TRIGGER update_pets_updated_at BEFORE UPDATE ON pets
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- Calculate nutrition balance score
-CREATE OR REPLACE FUNCTION calculate_nutrition_balance(meal_calories INTEGER, protein DECIMAL, carbs DECIMAL, fat DECIMAL)
-RETURNS DECIMAL AS $$
-DECLARE
-    score DECIMAL;
-    protein_ratio DECIMAL;
-    fat_ratio DECIMAL;
-BEGIN
-    IF meal_calories = 0 THEN
-        RETURN 0;
-    END IF;
-    
-    protein_ratio := (protein * 4) / meal_calories;
-    fat_ratio := (fat * 9) / meal_calories;
-    
-    -- Balanced: 20-30% protein, <30% fat
-    IF protein_ratio BETWEEN 0.20 AND 0.35 AND fat_ratio < 0.35 THEN
-        score := 90 + (RANDOM() * 10);
-    ELSIF protein_ratio BETWEEN 0.15 AND 0.40 AND fat_ratio < 0.45 THEN
-        score := 70 + (RANDOM() * 20);
-    ELSE
-        score := 50 + (RANDOM() * 30);
-    END IF;
-    
-    RETURN ROUND(score, 2);
-END;
-$$ LANGUAGE plpgsql;
-
--- Award coins for meal logging
-CREATE OR REPLACE FUNCTION award_meal_coins()
+-- ========== 触发器：更新 BMR/TDEE ==========
+CREATE OR REPLACE FUNCTION update_user_metabolism()
 RETURNS TRIGGER AS $$
 DECLARE
-    coin_amount INTEGER;
-    xp_amount INTEGER;
-    current_balance INTEGER;
+    bmr_val DECIMAL(8,2);
+    activity_mult DECIMAL(4,2);
 BEGIN
-    -- Base reward
-    coin_amount := 5 + (RANDOM() * 10)::INTEGER;
-    xp_amount := 10 + (RANDOM() * 5)::INTEGER;
-    
-    -- Streak bonus
-    IF NEW.logged_at - (SELECT last_meal_at FROM users WHERE id = NEW.user_id) < INTERVAL '1 day' THEN
-        coin_amount := coin_amount + 5;
-        xp_amount := xp_amount + 5;
+    -- Mifflin-St Jeor 公式
+    IF NEW.gender = 'male' THEN
+        bmr_val := (10 * NEW.weight_kg) + (6.25 * NEW.height_cm) - (5 * NEW.age) + 5;
+    ELSE
+        bmr_val := (10 * NEW.weight_kg) + (6.25 * NEW.height_cm) - (5 * NEW.age) - 161;
     END IF;
     
-    -- Get current balance
-    SELECT bitecoins INTO current_balance FROM users WHERE id = NEW.user_id;
+    -- 活动系数
+    activity_mult := CASE NEW.activity_level
+        WHEN 'sedentary' THEN 1.2
+        WHEN 'light' THEN 1.375
+        WHEN 'moderate' THEN 1.55
+        WHEN 'active' THEN 1.725
+        WHEN 'very_active' THEN 1.9
+        ELSE 1.2
+    END;
     
-    -- Update user coins
-    UPDATE users 
-    SET bitecoins = bitecoins + coin_amount,
-        total_meals_logged = total_meals_logged + 1,
-        last_meal_at = NEW.logged_at
-    WHERE id = NEW.user_id;
+    -- 目标调整
+    IF NEW.fitness_goal = 'lose_fat' THEN
+        NEW.tdee := ROUND(bmr_val * activity_mult * 0.8, 2);
+    ELSIF NEW.fitness_goal = 'gain_muscle' THEN
+        NEW.tdee := ROUND(bmr_val * activity_mult * 1.15, 2);
+    ELSE
+        NEW.tdee := ROUND(bmr_val * activity_mult, 2);
+    END IF;
     
-    -- Record transaction
-    INSERT INTO transactions (user_id, transaction_type, amount, balance_after, meal_id, description)
-    VALUES (
-        NEW.user_id, 
-        'meal_reward', 
-        coin_amount, 
-        current_balance + coin_amount, 
-        NEW.id,
-        'Meal logging reward'
-    );
-    
-    -- Update pet XP
-    UPDATE pets SET evolution_xp = evolution_xp + xp_amount WHERE user_id = NEW.user_id;
+    NEW.bmr := ROUND(bmr_val, 2);
     
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER tr_meals_after_insert
-    AFTER INSERT ON meals
-    FOR EACH ROW EXECUTE FUNCTION award_meal_coins();
+CREATE TRIGGER update_user_metabolism_trigger
+    BEFORE INSERT OR UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_user_metabolism();
 
--- ============================================
--- VIEWS
--- ============================================
+-- ========== 预置数据 ==========
 
--- User dashboard view
-CREATE VIEW v_user_dashboard AS
-SELECT 
-    u.id as user_id,
-    u.display_name,
-    u.bitecoins,
-    u.subscription_tier,
-    u.current_streak,
-    u.total_meals_logged,
-    
-    p.id as pet_id,
-    p.name as pet_name,
-    p.species,
-    p.hunger,
-    p.joy,
-    p.vigor,
-    p.affinity,
-    p.evolution_xp,
-    p.evolution_level,
-    p.current_mood,
-    
-    COALESCE(today_meals.meals_today, 0) as meals_today,
-    COALESCE(today_meals.calories_today, 0) as calories_today,
-    COALESCE(today_water.water_ml, 0) as water_today
+-- 预置商店物品
+INSERT INTO shop_items (id, name, description, emoji, category, price_cents, rarity) VALUES
+('glasses_round', '圆框眼镜', '文艺小清新', '👓', 'accessories', 299, 'common'),
+('glasses_sun', '复古墨镜', '酷酷的出街必备', '🕶️', 'accessories', 499, 'rare'),
+('glasses_star', '星星眼镜', '闪亮亮的', '⭐', 'accessories', 399, 'rare'),
+('bow_pink', '粉色蝴蝶结', '可爱满分', '🎀', 'accessories', 299, 'common'),
+('bow_blue', '蓝色蝴蝶结', '清新优雅', '🎀', 'accessories', 299, 'common'),
+('hat_wizard', '魔法帽', '神秘感满满', '🎩', 'accessories', 699, 'epic'),
+('hat_crown', '小皇冠', '尊贵象征', '👑', 'accessories', 999, 'epic'),
+('scarf_plaid', '格子围巾', '英伦风格', '🧣', 'accessories', 249, 'common'),
+('bg_monet', '莫奈花园', '睡莲池畔', '🌸', 'backgrounds', 699, 'rare'),
+('bg_starry', '星空', '银河璀璨', '✨', 'backgrounds', 599, 'rare'),
+('bg_ocean', '海洋', '波光粼粼', '🌊', 'backgrounds', 599, 'rare'),
+('bg_sunset', '日落', '橘色浪漫', '🌅', 'backgrounds', 499, 'common'),
+('bg_forest', '森林', '绿野仙踪', '🌲', 'backgrounds', 499, 'common'),
+('bg_aurora', '极光', '神秘极光', '🌌', 'backgrounds', 999, 'legendary'),
+('frame_gold', '金色画框', '华丽感', '🖼️', 'frames', 399, 'rare'),
+('frame_minimal', '简约边框', '极简风格', '⬜', 'frames', 199, 'common');
 
-FROM users u
-LEFT JOIN pets p ON p.user_id = u.id AND p.slot_index = 0
-LEFT JOIN LATERAL (
-    SELECT COUNT(*) as meals_today, COALESCE(SUM(estimated_calories), 0) as calories_today
-    FROM meals
-    WHERE user_id = u.id AND DATE(logged_at) = CURRENT_DATE
-) today_meals ON true
-LEFT JOIN LATERAL (
-    SELECT COALESCE(SUM(amount_ml), 0) as water_ml
-    FROM water_logs
-    WHERE user_id = u.id AND DATE(logged_at) = CURRENT_DATE
-) today_water ON true;
+-- 预置成就
+INSERT INTO achievements (id, name, description, category, icon, reward_coins, reward_xp, condition_type, condition_value) VALUES
+('first_meal', '第一餐', '记录你的第一餐', 'streak', '🍽️', 50, 20, 'meals_count', 1),
+('week_streak', '一周坚持', '连续记录 7 天', 'streak', '🔥', 200, 100, 'streak_days', 7),
+('month_streak', '月度达人', '连续记录 30 天', 'streak', '🏆', 1000, 500, 'streak_days', 30),
+('healthy_eater', '健康达人', '摄入 10 次健康餐', 'nutrition', '🥗', 150, 80, 'category_count', 10),
+('dessert_lover', '甜食爱好者', '记录 10 次甜点', 'nutrition', '🍰', 150, 80, 'category_count', 10),
+('aura_master', '能量大师', 'Aura Score 达到 90', 'nutrition', '💫', 300, 150, 'aura_score', 90),
+('collector_10', '收集达人', '拥有 10 件装扮', 'shop', '🛍️', 100, 50, 'inventory_count', 10),
+('collector_50', '收藏家', '拥有 50 件装扮', 'shop', '💎', 500, 200, 'inventory_count', 50);
 
--- ============================================
--- SEED DATA
--- ============================================
-
--- Sample shop items
-INSERT INTO shop_items (item_key, name, description, item_type, price_bitecoins, layers) VALUES
-('raccoon_basic_hat', '小浣熊经典帽', '经典款小浣熊棒球帽', 'hat', 50, '{"z_index": 1, "position": "top"}'),
-('raccoon_sunglasses', '墨镜酷哥', '超酷的太阳镜', 'glasses', 80, '{"z_index": 2, "position": "eyes"}'),
-('rainbow_scarf', '彩虹围巾', '七色彩虹围巾', 'scarf', 100, '{"z_index": 3, "position": "neck"}'),
-('night_sky_bg', '夜空背景', '璀璨星空背景', 'background', 150, '{"z_index": 0, "position": "back"}'),
-('golden_crown', '金色皇冠', '尊贵的金色皇冠', 'hat', 500, '{"z_index": 1, "position": "top"}'),
-('heart_glasses', '爱心眼镜', '粉红爱心眼镜', 'glasses', 120, '{"z_index": 2, "position": "eyes"}'),
-('flower_scarf', '花朵围巾', '春天花朵图案围巾', 'scarf', 130, '{"z_index": 3, "position": "neck"}'),
-('sunset_bg', '日落背景', '温暖日落背景', 'background', 180, '{"z_index": 0, "position": "back"}');
-
--- Analytics & Permissions
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO aura_pet_reader;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO aura_pet_writer;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO aura_pet_writer;
+-- ========== 结束 ==========

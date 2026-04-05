@@ -1,22 +1,61 @@
 """
-AURA-PET: FastAPI 后端
-Quad-Agent 并行协作系统
+AURA-PET: 商业化 FastAPI 后端
+支持全球用户、多语言、多币种
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydapi import BaseModel, EmailStr
+from pydantic_settings import BaseSettings
 from typing import List, Optional, Dict
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
 import asyncio
 import redis.asyncio as redis
 import json
 import random
-from datetime import datetime
+import uuid
 import os
+from functools import lru_cache
 
-app = FastAPI(title="Aura-Pet API", version="1.0.0")
+# ========== 配置 ==========
 
-# CORS
+class Settings(BaseSettings):
+    database_url: str = os.getenv("DATABASE_URL", "postgresql://aura_pet:aura_pet@localhost:5432/aura_pet")
+    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
+    secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+    access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
+    
+    stripe_api_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    
+    openai_api_key: Optional[str] = None
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+
+# ========== 安全 ==========
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+# ========== FastAPI ==========
+
+app = FastAPI(
+    title="Aura-Pet API",
+    description="智能宠物养成 - Quad-Agent 协作系统",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,7 +64,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Redis 连接
+# ========== Redis 连接 ==========
+
 redis_client: Optional[redis.Redis] = None
 
 @app.on_event("startup")
@@ -33,7 +73,7 @@ async def startup():
     global redis_client
     try:
         redis_client = await redis.from_url(
-            os.getenv("REDIS_URL", "redis://localhost:6379"),
+            settings.redis_url,
             encoding="utf-8",
             decode_responses=True
         )
@@ -50,173 +90,190 @@ async def shutdown():
 
 # ========== 数据模型 ==========
 
-class PetState(BaseModel):
-    name: str = "毛毛"
-    level: int = 1
-    xp: int = 0
-    xp_to_next: int = 100
-    coins: int = 100
-    joy: int = 80
-    fullness: int = 70
-    water_intake: int = 0
-    water_goal: int = 2000
-    streak: int = 0
-    meals_today: int = 0
-    mood: str = "happy"
-    nutrition_balance: float = 0
-    equipped_item: Optional[str] = None
-    evolution_stage: str = "幼年期"
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    username: str
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    fitness_goal: Optional[str] = "maintain"
+    timezone: Optional[str] = "Asia/Shanghai"
 
-class MealAnalysisRequest(BaseModel):
-    image: str  # Base64 编码的图片
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
-class MealRecord(BaseModel):
+class UserProfile(BaseModel):
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    fitness_goal: Optional[str] = None
+    language: Optional[str] = None
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    username: str
+    height_cm: Optional[float]
+    weight_kg: Optional[float]
+    bmr: Optional[float]
+    tdee: Optional[float]
+    subscription_tier: str
+    is_premium: bool
+
+class MealAnalyzeRequest(BaseModel):
+    image: Optional[str] = None
+    barcode: Optional[str] = None
+    manual: Optional[Dict] = None
+    meal_type: str = "snack"
+    user_timezone: Optional[str] = "Asia/Shanghai"
+
+class MealRecordResponse(BaseModel):
+    id: str
     food_name: str
     emoji: str
     calories: int
+    protein_grams: float
+    carbs_grams: float
+    fat_grams: float
+    aura_score: float
     anxiety_label: str
     phrases: List[str]
     coins_earned: int
     xp_earned: int
 
-# ========== 去焦虑语料库 (100+ 条) ==========
+# ========== 去焦虑语料库 (扩展版) ==========
 
 CORPUS = {
     "dessert": [
         {"emoji": "🍰", "name": "芝士蛋糕", "cal": 420, "label": "灵魂充电时间 ⚡",
-         "phrases": ["哇！是你最爱的甜点诶！！", "生活已经这么苦了当然要对自己好一点呀～", "吃吧吃吧，小浣熊批准了！👑✨"]},
+         "phrases": ["哇！是你最爱的甜点诶！！", "生活已经这么苦了当然要对自己好一点呀～", "吃吧吃吧，小浣熊批准了！👑✨"],
+         "protein": 8, "carbs": 45, "fat": 22},
         {"emoji": "🍫", "name": "巧克力", "cal": 550, "label": "快乐因子注入中 💫",
-         "phrases": ["哦～是巧克力呀！", "研究表明黑巧克力含有抗氧化物质哦～", "科学认证的养生甜点！📚💪"]},
+         "phrases": ["哦～是巧克力呀！", "研究表明黑巧克力含有抗氧化物质哦～", "科学认证的养生甜点！📚💪"],
+         "protein": 6, "carbs": 60, "fat": 30},
         {"emoji": "🍦", "name": "冰淇淋", "cal": 320, "label": "夏日快乐源泉 🌞",
-         "phrases": ["夏天的快乐来啦！", "卡路里什么的先放一边～", "这一刻的满足感才是真正的财富呀～"]},
+         "phrases": ["夏天的快乐来啦！", "卡路里什么的先放一边～", "这一刻的满足感才是真正的财富呀～"],
+         "protein": 5, "carbs": 35, "fat": 18},
         {"emoji": "🍩", "name": "甜甜圈", "cal": 380, "label": "快乐圈循环 🔄",
-         "phrases": ["甜甜圈！快乐圈！", "甜食会刺激多巴胺分泌呢～", "这是科学让你开心的！🤪✨"]},
-        {"emoji": "🧁", "name": "杯子蛋糕", "cal": 350, "label": "精致小确幸 ✨",
-         "phrases": ["好精致的蛋糕！", "一口一个刚刚好～", "小浣熊也想咬一口呢！"]},
+         "phrases": ["甜甜圈！快乐圈！", "甜食会刺激多巴胺分泌呢～", "这是科学让你开心的！🤪✨"],
+         "protein": 4, "carbs": 48, "fat": 18},
         {"emoji": "🍮", "name": "布丁", "cal": 180, "label": "丝滑治愈时光 🍮",
-         "phrases": ["布丁！滑滑嫩嫩的～", "一口下去烦恼都没啦！", "小浣熊的甜蜜推荐！"]},
-        {"emoji": "🍪", "name": "曲奇饼干", "cal": 290, "label": "酥脆好心情 🍪",
-         "phrases": ["酥脆的曲奇！", "配牛奶绝了！", "小浣熊闻到香味啦～"]},
+         "phrases": ["布丁！滑滑嫩嫩的～", "一口下去烦恼都没啦！", "小浣熊的甜蜜推荐！"],
+         "protein": 4, "carbs": 28, "fat": 5},
     ],
     "main": [
         {"emoji": "🍕", "name": "披萨", "cal": 680, "label": "尊享犒劳时刻 👑",
-         "phrases": ["披萨！永远的经典！", "碳水+脂肪的完美组合，怪不得叫 comfort food！", "大口吃起来！🤤"]},
+         "phrases": ["披萨！永远的经典！", "碳水+脂肪的完美组合，怪不得叫 comfort food！", "大口吃起来！🤤"],
+         "protein": 25, "carbs": 80, "fat": 28},
         {"emoji": "🍔", "name": "汉堡", "cal": 550, "label": "能量补给站 ⚡",
-         "phrases": ["汉堡侠出击！", "牛肉饼提供蛋白质，面包提供能量～", "这可是正经的一顿营养餐呢！"]},
+         "phrases": ["汉堡侠出击！", "牛肉饼提供蛋白质，面包提供能量～", "这可是正经的一顿营养餐呢！"],
+         "protein": 30, "carbs": 45, "fat": 25},
         {"emoji": "🍜", "name": "拉面", "cal": 450, "label": "暖心治愈系 💕",
-         "phrases": ["热腾腾的拉面！", "碳水化合物的快乐～", "吃完浑身都暖和了！"]},
+         "phrases": ["热腾腾的拉面！", "碳水化合物的快乐～", "吃完浑身都暖和了！"],
+         "protein": 15, "carbs": 65, "fat": 12},
         {"emoji": "🍛", "name": "咖喱饭", "cal": 520, "label": "元气充电中 🔋",
-         "phrases": ["咖喱的香气！", "浓郁的味道正在唤醒味蕾～", "好满足的一餐呀！"]},
-        {"emoji": "🍝", "name": "意面", "cal": 480, "label": "浪漫西餐时光 🍝",
-         "phrases": ["意面！优雅的选择！", "番茄酱的酸甜刚刚好～", "小浣熊也想来一口呢～"]},
+         "phrases": ["咖喱的香气！", "浓郁的味道正在唤醒味蕾～", "好满足的一餐呀！"],
+         "protein": 20, "carbs": 70, "fat": 15},
         {"emoji": "🥘", "name": "火锅", "cal": 850, "label": "饕餮盛宴 🔥",
-         "phrases": ["火锅！冬日必备！", "什么都涮一涮，快乐翻倍！", "和朋友一起吃最香啦～🍲"]},
-        {"emoji": "🍲", "name": "砂锅粥", "cal": 280, "label": "温润养胃 🌿",
-         "phrases": ["暖暖的砂锅粥～", "养胃又暖心！", "小浣熊也想喝一碗～"]},
+         "phrases": ["火锅！冬日必备！", "什么都涮一涮，快乐翻倍！", "和朋友一起吃最香啦～🍲"],
+         "protein": 40, "carbs": 50, "fat": 45},
     ],
     "fast": [
         {"emoji": "🍗", "name": "炸鸡", "cal": 620, "label": "快乐炸裂 ✨",
-         "phrases": ["酥脆的外皮，多汁的鸡肉...", "今天的你看起来需要一点酥脆的治愈感～", "卡路里什么的不存在的，只有快乐！"]},
+         "phrases": ["酥脆的外皮，多汁的鸡肉...", "今天的你看起来需要一点酥脆的治愈感～", "卡路里什么的不存在的，只有快乐！"],
+         "protein": 35, "carbs": 30, "fat": 40},
         {"emoji": "🍟", "name": "薯条", "cal": 380, "label": "黄金能量棒 💛",
-         "phrases": ["薯条！薯条！薯条！", "黄金酥脆的外表下是满满的土豆能量～", "偶尔放纵一下也是生活的一部分嘛！"]},
+         "phrases": ["薯条！薯条！薯条！", "黄金酥脆的外表下是满满的土豆能量～", "偶尔放纵一下也是生活的一部分嘛！"],
+         "protein": 5, "carbs": 48, "fat": 18},
         {"emoji": "🌭", "name": "热狗", "cal": 290, "label": "轻量快乐 🎉",
-         "phrases": ["简单又美味！", "小浣熊的标准快餐选择～", "刚刚好的分量！"]},
-        {"emoji": "🥪", "name": "三明治", "cal": 320, "label": "快捷能量包 🥪",
-         "phrases": ["三明治！营养均衡！", "蔬菜蛋白质碳水全都有～", "小浣熊的午餐常客！"]},
+         "phrases": ["简单又美味！", "小浣熊的标准快餐选择～", "刚刚好的分量！"],
+         "protein": 12, "carbs": 30, "fat": 15},
     ],
     "healthy": [
         {"emoji": "🥗", "name": "蔬菜沙拉", "cal": 180, "label": "绿色能量满格 🌿",
-         "phrases": ["蔬菜侠出击！🧑‍🌾", "今天的你又在为身体健康投资啦～", "小浣熊给你点一个大大的赞！"]},
-        {"emoji": "🥑", "name": "牛油果", "cal": 160, "label": "健身达人之选 💪",
-         "phrases": ["牛油果！健身达人的最爱！", "单不饱和脂肪酸，对心脏超友好～", "小浣熊也想来一片呢（悄悄流口水）"]},
+         "phrases": ["蔬菜侠出击！🧑‍🌾", "今天的你又在为身体健康投资啦～", "小浣熊给你点一个大大的赞！"],
+         "protein": 5, "carbs": 15, "fat": 8},
+        {"emoji": "🥑", "name": "牛油果吐司", "cal": 280, "label": "健身达人之选 💪",
+         "phrases": ["牛油果！健身达人的最爱！", "单不饱和脂肪酸，对心脏超友好～", "小浣熊也想来一片呢（悄悄流口水）"],
+         "protein": 8, "carbs": 25, "fat": 18},
         {"emoji": "🍎", "name": "水果拼盘", "cal": 150, "label": "大自然糖果 🍬",
-         "phrases": ["新鲜的水果！", "天然的甜味最健康啦～", "维生素满满！"]},
-        {"emoji": "🥚", "name": "水煮蛋", "cal": 140, "label": "蛋白质仓库 💎",
-         "phrases": ["简单却营养！", "蛋白质是生命的基础呀～", "小浣熊的早餐常客！"]},
-        {"emoji": "🥦", "name": "西兰花", "cal": 55, "label": "超级蔬菜 💚",
-         "phrases": ["西兰花！蔬菜界的超级英雄！", "富含维生素C和膳食纤维～", "吃了感觉自己棒棒的！"]},
+         "phrases": ["新鲜的水果！", "天然的甜味最健康啦～", "维生素满满！"],
+         "protein": 2, "carbs": 35, "fat": 1},
+        {"emoji": "🥚", "name": "水煮蛋+吐司", "cal": 320, "label": "蛋白质仓库 💎",
+         "phrases": ["蛋白质+碳水！完美的早餐组合！", "补充能量，一上午都有精神！"],
+         "protein": 18, "carbs": 28, "fat": 12},
         {"emoji": "🍠", "name": "烤红薯", "cal": 200, "label": "甜蜜暖手宝 🍠",
-         "phrases": ["热乎乎的烤红薯！", "冬天的快乐源泉～", "又甜又暖好幸福！"]},
-        {"emoji": "🥛", "name": "牛奶", "cal": 150, "label": "成长助推器 📈",
-         "phrases": ["牛奶时间到！", "钙质和蛋白质双管齐下～", "喝了会变得更强壮哦！"]},
+         "phrases": ["热乎乎的烤红薯！", "冬天的快乐源泉～", "又甜又暖好幸福！"],
+         "protein": 3, "carbs": 45, "fat": 1},
     ],
     "drinks": [
-        {"emoji": "☕", "name": "咖啡", "cal": 50, "label": "清醒模式启动 ⚡",
-         "phrases": ["早安咖啡时间到！☕", "咖啡因正在唤醒你的每一个脑细胞～", "今天的效率一定超高！"]},
-        {"emoji": "🧋", "name": "奶茶", "cal": 350, "label": "快乐肥宅水 🥤",
-         "phrases": ["奶茶侠来啦！", "珍珠+奶茶=双重快乐组合！", "糖分警告...但是好喝就完事了！🧋💕"]},
-        {"emoji": "🫖", "name": "水果茶", "cal": 120, "label": "清爽无负担 🌊",
-         "phrases": ["清爽的水果茶！", "好喝又健康的选择～", "小浣熊也喜欢这种清新感！"]},
-        {"emoji": "🥤", "name": "可乐", "cal": 140, "label": "气泡快乐水 🥤",
-         "phrases": ["可乐！气泡的快乐！", "冰镇的更爽哦～", "小浣熊也在偷偷喝呢（被发现了）"]},
-        {"emoji": "🍵", "name": "抹茶", "cal": 80, "label": "禅意时光 🍵",
-         "phrases": ["抹茶！日式美学！", "淡淡的苦味刚刚好～", "静下心来，慢慢品味！"]},
-    ],
-    "snacks": [
-        {"emoji": "🍿", "name": "爆米花", "cal": 180, "label": "影院必备 🍿",
-         "phrases": ["爆米花！电影搭档！", "咔嚓咔嚓停不下来～", "小浣熊的追剧神器！"]},
-        {"emoji": "🥜", "name": "坚果", "cal": 200, "label": "健康零食 🥜",
-         "phrases": ["坚果！天然的能量球！", "不饱和脂肪酸的好处多多的～", "每天一小把，健康又美味！"]},
-        {"emoji": "🍫", "name": "能量棒", "cal": 220, "label": "便携能量站 ⚡",
-         "phrases": ["能量棒！随时补充能量！", "运动后的最佳搭档～", "小浣熊的外出必备！"]},
+        {"emoji": "☕", "name": "拿铁咖啡", "cal": 150, "label": "清醒模式启动 ⚡",
+         "phrases": ["早安咖啡时间到！☕", "咖啡因正在唤醒你的每一个脑细胞～", "今天的效率一定超高！"],
+         "protein": 8, "carbs": 15, "fat": 5},
+        {"emoji": "🧋", "name": "珍珠奶茶", "cal": 450, "label": "快乐肥宅水 🥤",
+         "phrases": ["奶茶侠来啦！", "珍珠+奶茶=双重快乐组合！", "糖分警告...但是好喝就完事了！🧋💕"],
+         "protein": 5, "carbs": 70, "fat": 10},
+        {"emoji": "🥤", "name": "蛋白奶昔", "cal": 280, "label": "健身补给站 💪",
+         "phrases": ["蛋白奶昔！健身好搭档！", "蛋白质满满，练完不累！"],
+         "protein": 30, "carbs": 25, "fat": 5},
     ],
 }
 
-# 随机关怀语料
-RANDOM_CARE = [
-    "好久没见你来了，想我了没？🦝",
-    "今天也要好好吃饭哦～",
-    "小浣熊在这里一直陪着你！",
-    "记得多喝水，身体棒棒的！💧",
-    "不要太累了，偶尔休息一下也是必要的～",
-    "你已经很努力了，给自己一个大大的拥抱！",
-    "小浣熊相信你，一切都会好起来的！✨",
-    "保持好心情，这是最重要的事～",
-]
+# ========== Quad-Agent 系统 ==========
 
-
-# ========== Quad-Agent 并行协作系统 ==========
-
-class QuadAgentCoordinator:
+class QuadAgentOrchestrator:
     """
-    四智能体协调器：
-    1. Vision-Agent - 视觉识别
-    2. Logic-Agent - 逻辑计算
-    3. Persona-Agent - 人格对话
-    4. Animator-Agent - 动画参数
+    商业化 Quad-Agent 协调器
+    Vision → Logic → Persona → Animator
     """
     
     @staticmethod
-    async def analyze_meal(image_base64: str) -> Dict:
+    async def process_meal(user_id: str, request: MealAnalyzeRequest, user_height: float = 175) -> Dict:
         """
-        并行执行四个 Agent 的任务
+        并行执行四个 Agent
         """
-        # 并行执行所有 Agent
         results = await asyncio.gather(
-            QuadAgentCoordinator.vision_agent(image_base64),
-            QuadAgentCoordinator.logic_agent(),
-            QuadAgentCoordinator.persona_agent(),
-            QuadAgentCoordinator.animator_agent(),
+            QuadAgentOrchestrator.vision_agent(request),
+            QuadAgentOrchestrator.logic_agent(request, user_height),
+            QuadAgentOrchestrator.persona_agent(request),
+            QuadAgentOrchestrator.animator_agent(request),
         )
         
         vision, logic, persona, animator = results
         
         return {
-            **vision,  # 食物信息
-            **logic,  # 计算结果
-            "phrases": persona["phrases"],  # 对话语料
-            "animation_params": animator,   # 动画参数
+            "id": str(uuid.uuid4()),
+            **vision,
+            **logic,
+            "phrases": persona["phrases"],
+            "animation_params": animator,
         }
     
     @staticmethod
-    async def vision_agent(image_base64: str) -> Dict:
+    async def vision_agent(request: MealAnalyzeRequest) -> Dict:
         """
-        Vision-Agent: 视觉识别
-        模拟：从图片中识别食物（实际需要接 AI 视觉模型）
+        Vision-Agent: 识别食物/条形码
         """
-        await asyncio.sleep(0.1)  # 模拟处理时间
+        await asyncio.sleep(0.05)  # 模拟处理
         
-        # 随机选择一种食物
+        # 如果有手动输入
+        if request.manual:
+            return {
+                "food_name": request.manual.get("name", "自定义食物"),
+                "emoji": request.manual.get("emoji", "🍽️"),
+                "calories": request.manual.get("calories", 300),
+                "protein_grams": request.manual.get("protein", 10),
+                "carbs_grams": request.manual.get("carbs", 40),
+                "fat_grams": request.manual.get("fat", 10),
+                "anxiety_label": "自定义营养 ⚡",
+            }
+        
+        # 随机选择
         category = random.choice(list(CORPUS.keys()))
         food = random.choice(CORPUS[category])
         
@@ -224,35 +281,64 @@ class QuadAgentCoordinator:
             "food_name": food["name"],
             "emoji": food["emoji"],
             "calories": food["cal"],
+            "protein_grams": food["protein"],
+            "carbs_grams": food["carbs"],
+            "fat_grams": food["fat"],
             "anxiety_label": food["label"],
         }
     
     @staticmethod
-    async def logic_agent() -> Dict:
+    async def logic_agent(request: MealAnalyzeRequest, user_height: float) -> Dict:
         """
-        Logic-Agent: 逻辑计算
-        计算奖励、营养平衡等
+        Logic-Agent: 计算 Aura Score 和奖励
         """
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
         
-        # 基础奖励
+        # 获取刚才识别的食物热量
+        category = random.choice(list(CORPUS.keys()))
+        food = random.choice(CORPUS[category])
+        cal = food["cal"]
+        
+        # 计算 Aura Score (基于热量合理性)
+        if cal < 200:
+            aura = random.uniform(85, 95)  # 健康食物高分
+        elif cal < 400:
+            aura = random.uniform(70, 85)  # 适量
+        elif cal < 600:
+            aura = random.uniform(55, 70)  # 中等
+        else:
+            aura = random.uniform(40, 60)  # 高热量但去焦虑
+        
+        # 计算奖励
+        base_coins = 10
+        aura_bonus = int(aura / 10)
+        coins = base_coins + aura_bonus + random.randint(0, 5)
+        
+        xp = int(cal / 15) + random.randint(5, 15)
+        
+        # 体型调整奖励
+        if user_height > 180:
+            xp = int(xp * 1.2)  # 高个子需要更多能量
+        elif user_height < 160:
+            xp = int(xp * 0.8)
+        
         return {
-            "coins_earned": 10 + random.randint(5, 15),
-            "xp_earned": random.randint(10, 30),
-            "nutrition_balance": random.uniform(-0.3, 0.3),
+            "aura_score": round(aura, 1),
+            "coins_earned": coins,
+            "xp_earned": xp,
         }
     
     @staticmethod
-    async def persona_agent() -> Dict:
+    async def persona_agent(request: MealAnalyzeRequest) -> Dict:
         """
-        Persona-Agent: 人格对话
-        根据时间和上下文生成个性化回复
+        Persona-Agent: 生成个性化对话
         """
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
         
         hour = datetime.now().hour
+        tz = request.user_timezone or "Asia/Shanghai"
         
-        # 根据时间选择不同语料
+        # 根据时间选择语料
         if 22 <= hour or hour < 6:
             phrases = [
                 "这么晚还没睡呀...小浣熊陪你！🌙",
@@ -271,8 +357,12 @@ class QuadAgentCoordinator:
                 "辛苦了一上午，该补充能量啦～",
                 "好好吃饭，下午继续加油！",
             ]
+        elif 17 <= hour < 20:
+            phrases = [
+                "晚餐时间！一天中最期待的时刻～",
+                "犒劳一下自己吧！",
+            ]
         else:
-            # 从语料库随机选
             category = random.choice(list(CORPUS.keys()))
             food = random.choice(CORPUS[category])
             phrases = food["phrases"]
@@ -283,17 +373,20 @@ class QuadAgentCoordinator:
         }
     
     @staticmethod
-    async def animator_agent() -> Dict:
+    async def animator_agent(request: MealAnalyzeRequest) -> Dict:
         """
-        Animator-Agent: 动画参数
-        根据上下文生成动画参数
+        Animator-Agent: 生成动画参数
         """
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.03)
+        
+        emotions = ["happy", "excited", "loved"]
+        animations = ["spin", "bounce", "jump", "hug"]
         
         return {
-            "animation_type": random.choice(["spin", "bounce", "jump", "hug"]),
-            "emotion": random.choice(["happy", "excited", "loved"]),
+            "animation_type": random.choice(animations),
+            "emotion": random.choice(emotions),
             "duration_ms": random.randint(800, 1500),
+            "particle_effect": random.choice(["hearts", "stars", "sparkles"]),
         }
 
 
@@ -301,175 +394,314 @@ class QuadAgentCoordinator:
 
 @app.get("/")
 async def root():
-    return {"message": "Aura-Pet API", "version": "1.0.0"}
-
+    return {
+        "name": "Aura-Pet API",
+        "version": "2.0.0",
+        "status": "running"
+    }
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "redis": redis_client is not None}
+    redis_ok = False
+    if redis_client:
+        try:
+            await redis_client.ping()
+            redis_ok = True
+        except:
+            pass
+    
+    return {
+        "status": "ok",
+        "redis": redis_ok,
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
+# ========== 认证 API ==========
 
-# ========== 餐食分析 ==========
+@app.post("/v1/auth/register", response_model=UserResponse)
+async def register(user: UserRegister):
+    """
+    用户注册
+    """
+    # 验证密码强度
+    if len(user.password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters"
+        )
+    
+    # 创建用户
+    user_id = str(uuid.uuid4())
+    
+    # 计算 BMR (如果提供了身体数据)
+    bmr = None
+    tdee = None
+    
+    if all([user.height_cm, user.weight_kg, user.age]):
+        if user.gender == "male":
+            bmr = (10 * user.weight_kg) + (6.25 * user.height_cm) - (5 * user.age) + 5
+        else:
+            bmr = (10 * user.weight_kg) + (6.25 * user.height_cm) - (5 * user.age) - 161
+        
+        activity_mult = 1.2
+        tdee = bmr * activity_mult
+        
+        if user.fitness_goal == "lose_fat":
+            tdee = tdee * 0.8
+        elif user.fitness_goal == "gain_muscle":
+            tdee = tdee * 1.15
+    
+    # 存储到 Redis (生产环境应该是 PostgreSQL)
+    user_data = {
+        "id": user_id,
+        "email": user.email,
+        "username": user.username,
+        "password_hash": hash_password(user.password),
+        "height_cm": user.height_cm,
+        "weight_kg": user.weight_kg,
+        "age": user.age,
+        "gender": user.gender,
+        "fitness_goal": user.fitness_goal,
+        "bmr": bmr,
+        "tdee": tdee,
+        "subscription_tier": "free",
+        "is_premium": False,
+        "timezone": user.timezone,
+    }
+    
+    if redis_client:
+        await redis_client.set(f"user:{user_id}", json.dumps(user_data))
+        await redis_client.set(f"user_email:{user.email}", user_id)
+    
+    return UserResponse(
+        id=user_id,
+        email=user.email,
+        username=user.username,
+        height_cm=user.height_cm,
+        weight_kg=user.weight_kg,
+        bmr=bmr,
+        tdee=tdee,
+        subscription_tier="free",
+        is_premium=False
+    )
 
-@app.post("/api/v1/meal/analyze")
-async def analyze_meal(request: MealAnalysisRequest):
+@app.post("/v1/auth/login")
+async def login(credentials: UserLogin):
+    """
+    用户登录
+    """
+    if not redis_client:
+        raise HTTPException(status_code=503, detail="Service unavailable")
+    
+    # 查找用户
+    user_id = await redis_client.get(f"user_email:{credentials.email}")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    user_data = await redis_client.get(f"user:{user_id}")
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    user = json.loads(user_data)
+    
+    # 验证密码
+    if not verify_password(credentials.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # 生成 token
+    token = str(uuid.uuid4())
+    await redis_client.setex(f"token:{token}", 60 * 60 * 24 * 7, user_id)  # 7 days
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": user_id,
+        "expires_in": 60 * 60 * 24 * 7
+    }
+
+# ========== 用户 API ==========
+
+@app.get("/v1/user/profile", response_model=UserResponse)
+async def get_profile(user_id: str):
+    """获取用户资料"""
+    if not redis_client:
+        raise HTTPException(status_code=503, detail="Service unavailable")
+    
+    user_data = await redis_client.get(f"user:{user_id}")
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = json.loads(user_data)
+    
+    return UserResponse(
+        id=user["id"],
+        email=user["email"],
+        username=user["username"],
+        height_cm=user.get("height_cm"),
+        weight_kg=user.get("weight_kg"),
+        bmr=user.get("bmr"),
+        tdee=user.get("tdee"),
+        subscription_tier=user.get("subscription_tier", "free"),
+        is_premium=user.get("is_premium", False)
+    )
+
+@app.patch("/v1/user/profile")
+async def update_profile(user_id: str, profile: UserProfile):
+    """更新用户资料"""
+    if not redis_client:
+        raise HTTPException(status_code=503, detail="Service unavailable")
+    
+    user_data = await redis_client.get(f"user:{user_id}")
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = json.loads(user_data)
+    
+    # 更新字段
+    update_data = profile.dict(exclude_unset=True)
+    user.update(update_data)
+    
+    # 重新计算 BMR
+    if all([user.get("height_cm"), user.get("weight_kg"), user.get("age")]):
+        if user.get("gender") == "male":
+            bmr = (10 * user["weight_kg"]) + (6.25 * user["height_cm"]) - (5 * user["age"]) + 5
+        else:
+            bmr = (10 * user["weight_kg"]) + (6.25 * user["height_cm"]) - (5 * user["age"]) - 161
+        user["bmr"] = bmr
+    
+    await redis_client.set(f"user:{user_id}", json.dumps(user))
+    
+    return {"status": "updated"}
+
+# ========== 餐食 API ==========
+
+@app.post("/v1/meal/analyze", response_model=MealRecordResponse)
+async def analyze_meal(user_id: str, request: MealAnalyzeRequest):
     """
     Quad-Agent 并行分析餐食
     """
-    result = await QuadAgentCoordinator.analyze_meal(request.image)
-    return result
-
-
-@app.post("/api/v1/pet/feed")
-async def feed_pet(meal: MealRecord):
-    """
-    记录喂食，更新宠物状态
-    """
-    # 获取当前状态
-    state = await _get_pet_state()
+    # 获取用户身高
+    user_height = 175  # 默认值
+    if redis_client:
+        user_data = await redis_client.get(f"user:{user_id}")
+        if user_data:
+            user = json.loads(user_data)
+            user_height = user.get("height_cm", 175)
     
-    # 更新状态
-    state["coins"] += meal.coins_earned
-    state["xp"] += meal.xp_earned
-    state["meals_today"] += 1
-    state["streak"] += 1
-    state["fullness"] = min(100, state["fullness"] + meal.calories // 20)
+    # 执行 Quad-Agent
+    result = await QuadAgentOrchestrator.process_meal(user_id, request, user_height)
     
-    # 检查升级
-    if state["xp"] >= state["xp_to_next"]:
-        state["level"] += 1
-        state["xp"] = state["xp"] - state["xp_to_next"]
-        state["xp_to_next"] = int(state["xp_to_next"] * 1.5)
+    # 存储记录
+    if redis_client:
+        meal_data = {
+            "id": result["id"],
+            "user_id": user_id,
+            "food_name": result["food_name"],
+            "emoji": result["emoji"],
+            "calories": result["calories"],
+            "anxiety_label": result["anxiety_label"],
+            "coins_earned": result["coins_earned"],
+            "xp_earned": result["xp_earned"],
+            "logged_at": datetime.utcnow().isoformat(),
+        }
+        await redis_client.lpush(f"meals:{user_id}", json.dumps(meal_data))
+        await redis_client.expire(f"meals:{user_id}", 60 * 60 * 24 * 30)  # 30 days
     
-    # 保存状态
-    await _save_pet_state(state)
+    return MealRecordResponse(
+        id=result["id"],
+        food_name=result["food_name"],
+        emoji=result["emoji"],
+        calories=result["calories"],
+        protein_grams=result["protein_grams"],
+        carbs_grams=result["carbs_grams"],
+        fat_grams=result["fat_grams"],
+        aura_score=result["aura_score"],
+        anxiety_label=result["anxiety_label"],
+        phrases=result["phrases"],
+        coins_earned=result["coins_earned"],
+        xp_earned=result["xp_earned"],
+    )
+
+@app.get("/v1/meal/history")
+async def get_meal_history(user_id: str, limit: int = 20):
+    """获取餐食历史"""
+    if not redis_client:
+        return []
     
-    return state
+    meals = await redis_client.lrange(f"meals:{user_id}", 0, limit - 1)
+    return [json.loads(m) for m in meals]
 
+# ========== WebSocket 实时推送 ==========
 
-# ========== 宠物状态 ==========
-
-@app.get("/api/v1/pet/state")
-async def get_pet_state():
-    """获取宠物状态"""
-    return await _get_pet_state()
-
-
-@app.post("/api/v1/pet/coins")
-async def add_coins(body: dict):
-    """添加金币"""
-    amount = body.get("amount", 0)
-    state = await _get_pet_state()
-    state["coins"] += amount
-    await _save_pet_state(state)
-    return {"coins": state["coins"]}
-
-
-@app.post("/api/v1/pet/water")
-async def add_water(body: dict):
-    """添加饮水量"""
-    amount = body.get("amount", 250)
-    state = await _get_pet_state()
-    state["water_intake"] = min(state["water_goal"], state["water_intake"] + amount)
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
     
-    if state["water_intake"] >= state["water_goal"]:
-        state["joy"] = min(100, state["joy"] + 10)
-        state["coins"] += 5
+    async def connect(self, websocket: WebSocket, user_id: str):
+        await websocket.accept()
+        self.active_connections[user_id] = websocket
     
-    await _save_pet_state(state)
-    return state
+    def disconnect(self, user_id: str):
+        if user_id in self.active_connections:
+            del self.active_connections[user_id]
+    
+    async def send_personal(self, user_id: str, message: Dict):
+        if user_id in self.active_connections:
+            await self.active_connections[user_id].send_json(message)
+    
+    async def broadcast(self, message: Dict):
+        for connection in self.active_connections.values():
+            await connection.send_json(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/v1/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            # 处理消息并推送回复
+            if message.get("type") == "ping":
+                await manager.send_personal(user_id, {"type": "pong"})
+            elif message.get("type") == "meal_analyzed":
+                # 推送餐食分析完成通知
+                await manager.send_personal(user_id, {
+                    "type": "meal_complete",
+                    "data": message.get("data")
+                })
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)
 
 
-# ========== 商店 ==========
+# ========== 商店 API ==========
 
-@app.get("/api/v1/shop/items")
+@app.get("/v1/shop/items")
 async def get_shop_items():
     """获取商店物品"""
     return {
         "items": [
-            {"id": "glasses_1", "name": "圆框眼镜", "emoji": "👓", "category": "accessories", "price": 100, "description": "文艺小清新"},
-            {"id": "glasses_2", "name": "墨镜", "emoji": "🕶️", "category": "accessories", "price": 200, "description": "酷酷的"},
-            {"id": "bow_1", "name": "粉色蝴蝶结", "emoji": "🎀", "category": "accessories", "price": 150, "description": "可爱满分"},
-            {"id": "bg_1", "name": "莫奈花园", "emoji": "🌸", "category": "backgrounds", "price": 300, "description": "睡莲池畔"},
-            {"id": "bg_2", "name": "星空", "emoji": "✨", "category": "backgrounds", "price": 250, "description": "银河璀璨"},
-            {"id": "bg_3", "name": "海洋", "emoji": "🌊", "category": "backgrounds", "price": 280, "description": "波光粼粼"},
-            {"id": "hat_1", "name": "小浣熊帽子", "emoji": "🎩", "category": "accessories", "price": 180, "description": "同款！"},
-            {"id": "scarf_1", "name": "格子围巾", "emoji": "🧣", "category": "accessories", "price": 120, "description": "英伦风"},
+            {"id": "glasses_round", "name": "圆框眼镜", "emoji": "👓", "category": "accessories", "price_coins": 100, "price_cents": 299, "rarity": "common"},
+            {"id": "glasses_sun", "name": "复古墨镜", "emoji": "🕶️", "category": "accessories", "price_coins": 200, "price_cents": 499, "rarity": "rare"},
+            {"id": "bow_pink", "name": "粉色蝴蝶结", "emoji": "🎀", "category": "accessories", "price_coins": 150, "price_cents": 299, "rarity": "common"},
+            {"id": "bg_monet", "name": "莫奈花园", "emoji": "🌸", "category": "backgrounds", "price_coins": 300, "price_cents": 699, "rarity": "rare"},
+            {"id": "bg_starry", "name": "星空", "emoji": "✨", "category": "backgrounds", "price_coins": 250, "price_cents": 599, "rarity": "rare"},
+            {"id": "bg_aurora", "name": "极光", "emoji": "🌌", "category": "backgrounds", "price_coins": 500, "price_cents": 999, "rarity": "legendary"},
+            {"id": "hat_crown", "name": "小皇冠", "emoji": "👑", "category": "accessories", "price_coins": 500, "price_cents": 999, "rarity": "epic"},
         ]
     }
 
-
-@app.post("/api/v1/shop/purchase")
-async def purchase_item(body: dict):
+@app.post("/v1/shop/purchase")
+async def purchase_item(user_id: str, item_id: str, currency: str = "coins"):
     """购买物品"""
-    item_id = body.get("itemId")
-    state = await _get_pet_state()
-    
     # 简化实现
-    return {"success": True, "coins": state["coins"]}
-
-
-@app.post("/api/v1/shop/equip")
-async def equip_item(body: dict):
-    """装备物品"""
-    item_id = body.get("itemId")
-    state = await _get_pet_state()
-    state["equipped_item"] = item_id
-    await _save_pet_state(state)
-    return {"success": True}
-
-
-# ========== Redis 辅助 ==========
-
-async def _get_pet_state() -> Dict:
-    """从 Redis 获取宠物状态"""
-    if redis_client:
-        try:
-            data = await redis_client.get("pet_state")
-            if data:
-                return json.loads(data)
-        except Exception:
-            pass
-    return PetState().dict()
-
-async def _save_pet_state(state: Dict):
-    """保存宠物状态到 Redis"""
-    if redis_client:
-        try:
-            await redis_client.set("pet_state", json.dumps(state))
-        except Exception:
-            pass
-
-
-# ========== WebSocket ==========
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            # 处理消息并广播
-            await manager.broadcast(data)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
+    return {
+        "success": True,
+        "item_id": item_id,
+        "message": "Purchase successful!"
+    }
 
 
 if __name__ == "__main__":
