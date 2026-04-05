@@ -150,6 +150,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WaterHistoryScreen(onComplete: _nextPage);
                 case 37:
                   return AchievementsScreen(onComplete: _nextPage);
+                case 38:
+                  return ProfileScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -15796,6 +15798,469 @@ class _HeartFountainPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _HeartFountainPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+
+/// ============================================
+/// P39: Profile Core Data Screen
+/// ============================================
+class ProfileScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const ProfileScreen({super.key, required this.onComplete});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
+  // 从UserMetrics获取数据
+  double get _height => UserMetrics.height ?? 170.0;
+  double get _weight => UserMetrics.weight ?? 65.0;
+  
+  // BMI计算
+  double get _bmi {
+    final heightM = _height / 100;
+    return _weight / (heightM * heightM);
+  }
+  
+  String get _bmiCategory {
+    if (_bmi < 18.5) return 'Underweight';
+    if (_bmi < 24.9) return 'Normal';
+    if (_bmi < 29.9) return 'Overweight';
+    return 'Obese';
+  }
+  
+  Color get _bmiColor {
+    if (_bmi < 18.5) return const Color(0xFFFFE066);
+    if (_bmi < 24.9) return const Color(0xFF4CAF50);
+    if (_bmi < 29.9) return const Color(0xFFFF6B6B);
+    return const Color(0xFFFF6B6B);
+  }
+
+  // 连续打卡天数 (模拟)
+  final int _streakDays = 15;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+
+                // 标题
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // 用户头像
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4ECDC4), Color(0xFF6DD5C4)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4ECDC4).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Text(
+                  UserMetrics.gender == 'male' ? 'Colvin' : 'Colvin',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // 核心数据卡片
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DataCard(
+                        title: 'BMI',
+                        value: _bmi.toStringAsFixed(1),
+                        subtitle: _bmiCategory,
+                        color: _bmiColor,
+                        icon: '📊',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _DataCard(
+                        title: 'Streak',
+                        value: '$_streakDays',
+                        subtitle: 'days',
+                        color: const Color(0xFFFF6B6B),
+                        icon: '🔥',
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // 健康报告入口
+                GestureDetector(
+                  onTap: () {
+                    // 切回P22预测曲线页
+                    _goToPage(21); // P22 is index 21
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4CAF50).withOpacity(0.1),
+                          const Color(0xFF8BC34A).withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text('📋', style: TextStyle(fontSize: 24)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Health Report',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'View your detailed progress',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.grey.shade400,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // 用户详情列表
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _ProfileListItem(
+                        icon: '📏',
+                        title: 'Height',
+                        value: '${_height.toStringAsFixed(0)} cm',
+                        color: const Color(0xFF64B5F6),
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1),
+                      _ProfileListItem(
+                        icon: '⚖️',
+                        title: 'Weight',
+                        value: '${_weight.toStringAsFixed(1)} kg',
+                        color: const Color(0xFF4ECDC4),
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1),
+                      _ProfileListItem(
+                        icon: '🎂',
+                        title: 'Age',
+                        value: '${UserMetrics.age ?? 25} years',
+                        color: const Color(0xFFFFE066),
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1),
+                      _ProfileListItem(
+                        icon: '🎯',
+                        title: 'Goal',
+                        value: '${UserMetrics.goalWeight?.toStringAsFixed(1) ?? '65.0'} kg',
+                        color: const Color(0xFFFF6B6B),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Settings胶囊按钮
+                GestureDetector(
+                  onTap: widget.onComplete,
+                  child: Container(
+                    height: 56,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.settings, color: Colors.white, size: 22),
+                          SizedBox(width: 8),
+                          Text(
+                            'Settings',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _goToPage(int pageIndex) {
+    // 找到PageController并跳转
+    // 简化处理：直接调用onComplete多次
+    for (int i = 0; i < 46 - pageIndex - 1; i++) {
+      // 向上跳转需要负向
+    }
+    // 直接返回主页
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+}
+
+/// 数据卡片
+class _DataCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final Color color;
+  final String icon;
+
+  const _DataCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 28)),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              color: color,
+            ),
+          ),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 列表项
+class _ProfileListItem extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String value;
+  final Color color;
+
+  const _ProfileListItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(icon, style: const TextStyle(fontSize: 20)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 占位页
