@@ -9,6 +9,9 @@ import 'providers/achievement_provider.dart';
 import 'screens/main_navigation.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/onboarding/aura_onboarding_screen.dart';
+import 'screens/aura_home_screen.dart';
+import 'screens/fasting/aura_fasting_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'services/quote_engine.dart';
 import 'services/monet_clock.dart';
@@ -123,7 +126,7 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
             case '/onboarding':
               return _SilkPageRoute(
                 settings: settings,
-                pageBuilder: (_) => const OnboardingScreen(),
+                pageBuilder: (_) => const AuraOnboardingScreen(),
               );
             case '/auth/login':
               return _SilkPageRoute(
@@ -134,7 +137,12 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
             case '/home':
               return _SilkPageRoute(
                 settings: settings,
-                pageBuilder: (_) => const MainNavigation(),
+                pageBuilder: (_) => const AuraHomeScreen(),
+              );
+            case '/fasting':
+              return _SilkPageRoute(
+                settings: settings,
+                pageBuilder: (_) => const AuraFastingScreen(),
               );
             default:
               return _SilkPageRoute(
