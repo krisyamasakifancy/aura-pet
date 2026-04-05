@@ -148,6 +148,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WaterTrackerScreen(onComplete: _nextPage);
                 case 36:
                   return WaterHistoryScreen(onComplete: _nextPage);
+                case 37:
+                  return AchievementsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -15444,6 +15446,356 @@ class _HappyWaterBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P38: Achievements Screen
+/// ============================================
+class AchievementsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AchievementsScreen({super.key, required this.onComplete});
+
+  @override
+  State<AchievementsScreen> createState() => _AchievementsScreenState();
+}
+
+class _AchievementsScreenState extends State<AchievementsScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _particleController;
+  int? _selectedAchievement;
+
+  final List<_Achievement> _achievements = [
+    _Achievement(id: 0, icon: '🏆', name: 'First Step', unlocked: true, color: const Color(0xFFFFD700)),
+    _Achievement(id: 1, icon: '🔥', name: '7 Day Streak', unlocked: true, color: const Color(0xFFFF6B6B)),
+    _Achievement(id: 2, icon: '💧', name: 'Hydration Hero', unlocked: true, color: const Color(0xFF64B5F6)),
+    _Achievement(id: 3, icon: '🥗', name: 'Healthy Eater', unlocked: true, color: const Color(0xFF4ECDC4)),
+    _Achievement(id: 4, icon: '⏰', name: 'Early Bird', unlocked: true, color: const Color(0xFFFFE066)),
+    _Achievement(id: 5, icon: '📊', name: 'Data Master', unlocked: false, color: const Color(0xFF9B59B6)),
+    _Achievement(id: 6, icon: '🎯', name: 'Goal Crusher', unlocked: false, color: const Color(0xFFE67E22)),
+    _Achievement(id: 7, icon: '💪', name: 'Fitness Pro', unlocked: false, color: const Color(0xFF4CAF50)),
+    _Achievement(id: 8, icon: '⭐', name: 'Super Star', unlocked: false, color: const Color(0xFFDDA0DD)),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _particleController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _particleController.dispose();
+    super.dispose();
+  }
+
+  void _tapAchievement(int id) {
+    final achievement = _achievements[id];
+    if (achievement.unlocked) {
+      setState(() {
+        _selectedAchievement = _selectedAchievement == id ? null : id;
+      });
+      if (_selectedAchievement != null) {
+        _particleController.reset();
+        _particleController.forward();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            // 标题
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Your\nAchievements',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    height: 1.1,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Text(
+                    '${_achievements.where((a) => a.unlocked).length}/${_achievements.length} unlocked',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 勋章网格
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Stack(
+                  children: [
+                    GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.85,
+                      ),
+                      itemCount: _achievements.length,
+                      itemBuilder: (context, index) {
+                        final achievement = _achievements[index];
+                        final isSelected = _selectedAchievement == index;
+                        return _AchievementCard(
+                          achievement: achievement,
+                          isSelected: isSelected,
+                          onTap: () => _tapAchievement(index),
+                        );
+                      },
+                    ),
+
+                    // 心形粒子特效
+                    if (_selectedAchievement != null)
+                      Positioned.fill(
+                        child: AnimatedBuilder(
+                          animation: _particleController,
+                          builder: (context, child) {
+                            return CustomPaint(
+                              painter: _HeartFountainPainter(
+                                progress: _particleController.value,
+                                color: _achievements[_selectedAchievement!].color,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Next胶囊按钮
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 成就数据
+class _Achievement {
+  final int id;
+  final String icon;
+  final String name;
+  final bool unlocked;
+  final Color color;
+
+  _Achievement({
+    required this.id,
+    required this.icon,
+    required this.name,
+    required this.unlocked,
+    required this.color,
+  });
+}
+
+/// 成就卡片
+class _AchievementCard extends StatelessWidget {
+  final _Achievement achievement;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AchievementCard({
+    required this.achievement,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: achievement.unlocked
+              ? achievement.color.withOpacity(0.15)
+              : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? achievement.color
+                : achievement.unlocked
+                    ? achievement.color.withOpacity(0.3)
+                    : Colors.grey.shade300,
+            width: isSelected ? 3 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: achievement.color.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 磨砂玻璃效果
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: achievement.unlocked
+                    ? Colors.white.withOpacity(0.8)
+                    : Colors.grey.shade300,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: achievement.unlocked
+                    ? Text(
+                        achievement.icon,
+                        style: const TextStyle(fontSize: 28),
+                      )
+                    : Icon(
+                        Icons.lock,
+                        color: Colors.grey.shade500,
+                        size: 24,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              achievement.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: achievement.unlocked
+                    ? const Color(0xFF2D3748)
+                    : Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 心形喷泉
+class _HeartFountainPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _HeartFountainPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height * 0.8);
+    final random = math.Random(42);
+
+    for (int i = 0; i < 20; i++) {
+      final seed = random.nextDouble();
+      final angle = (seed - 0.5) * math.pi * 0.8 - math.pi / 2;
+      final speed = 50 + random.nextDouble() * 100;
+
+      final x = center.dx + math.cos(angle) * speed * progress;
+      final y = center.dy + math.sin(angle) * speed * progress - 100 * progress * progress;
+      final opacity = (1 - progress) * (0.5 + random.nextDouble() * 0.5);
+      final heartSize = 6.0 + random.nextDouble() * 8;
+
+      _drawHeart(canvas, Offset(x, y), heartSize, color.withOpacity(opacity));
+    }
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx - size * 1.2, center.dy - size * 0.3,
+      center.dx - size * 1.2, center.dy - size * 1.2,
+      center.dx, center.dy - size * 0.3,
+    );
+    path.cubicTo(
+      center.dx + size * 1.2, center.dy - size * 1.2,
+      center.dx + size * 1.2, center.dy - size * 0.3,
+      center.dx, center.dy + size * 0.3,
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeartFountainPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// 占位页
