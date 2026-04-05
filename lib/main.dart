@@ -77,6 +77,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return ChannelSurveyScreen(onComplete: _nextPage);
                 case 8:
                   return GoalSurveyScreen(onComplete: _nextPage);
+                case 9:
+                  return AdditionalGoalsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -3350,6 +3352,258 @@ class _GoalCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// P10: Additional Goals Screen (Multi-select)
+/// ============================================
+class AdditionalGoalsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AdditionalGoalsScreen({super.key, required this.onComplete});
+
+  @override
+  State<AdditionalGoalsScreen> createState() => _AdditionalGoalsScreenState();
+}
+
+class _AdditionalGoalsScreenState extends State<AdditionalGoalsScreen> {
+  final Set<String> _selectedGoals = {};
+
+  final List<_AdditionalGoal> _goals = [
+    _AdditionalGoal(id: 'healthy_food', name: 'Build healthy relationship with food', emoji: '🥗'),
+    _AdditionalGoal(id: 'energy', name: 'Boost daily energy', emoji: '⚡'),
+    _AdditionalGoal(id: 'sleep', name: 'Improve sleep quality', emoji: '😴'),
+    _AdditionalGoal(id: 'stress', name: 'Reduce stress', emoji: '🧘'),
+  ];
+
+  void _toggleGoal(String id) {
+    setState(() {
+      if (_selectedGoals.contains(id)) {
+        _selectedGoals.remove(id);
+      } else {
+        _selectedGoals.add(id);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              // 标题
+              const Text(
+                'Any additional\ngoals?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Select all that apply',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // 目标选项列表
+              Expanded(
+                child: ListView.separated(
+                  itemCount: _goals.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final goal = _goals[index];
+                    final isSelected = _selectedGoals.contains(goal.id);
+                    return _AdditionalGoalCard(
+                      goal: goal,
+                      isSelected: isSelected,
+                      onTap: () => _toggleGoal(goal.id),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 胶囊按钮
+              GestureDetector(
+                onTap: _selectedGoals.isNotEmpty ? widget.onComplete : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selectedGoals.isNotEmpty
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          )
+                        : null,
+                    color: _selectedGoals.isEmpty ? Colors.grey.shade300 : null,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _selectedGoals.isNotEmpty
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: _selectedGoals.isNotEmpty ? Colors.white : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: _selectedGoals.isNotEmpty ? Colors.white : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 附加目标数据模型
+class _AdditionalGoal {
+  final String id;
+  final String name;
+  final String emoji;
+  _AdditionalGoal({required this.id, required this.name, required this.emoji});
+}
+
+/// 附加目标卡片组件
+class _AdditionalGoalCard extends StatelessWidget {
+  final _AdditionalGoal goal;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AdditionalGoalCard({
+    required this.goal,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Emoji
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF4CAF50).withOpacity(0.2)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  goal.emoji,
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 名称
+            Expanded(
+              child: Text(
+                goal.name,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                  color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF2D3748),
+                ),
+              ),
+            ),
+
+            // 复选框
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
                   width: 2,
