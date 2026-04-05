@@ -13,6 +13,7 @@ class UserMetrics {
   static double? weight;
   static int? age;
   static double? goalWeight;
+  static String? activityLevel;
 }
 
 void main() {
@@ -103,6 +104,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WeightScreen(onComplete: _nextPage);
                 case 14:
                   return GoalWeightScreen(onComplete: _nextPage);
+                case 15:
+                  return ActivityScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -5891,6 +5894,314 @@ class _HopefulBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P16: Activity Level Screen
+/// ============================================
+class ActivityScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const ActivityScreen({super.key, required this.onComplete});
+
+  @override
+  State<ActivityScreen> createState() => _ActivityScreenState();
+}
+
+class _ActivityScreenState extends State<ActivityScreen> {
+  String? _selectedActivity;
+
+  final List<_ActivityOption> _activities = [
+    _ActivityOption(
+      id: 'sedentary',
+      name: 'Sedentary',
+      emoji: '🛋️',
+      description: 'Little or no exercise',
+      detail: 'Office work, mostly sitting',
+    ),
+    _ActivityOption(
+      id: 'lightly',
+      name: 'Lightly active',
+      emoji: '🚶',
+      description: '1-3 days/week',
+      detail: 'Light exercise or sports 1-3 days a week',
+    ),
+    _ActivityOption(
+      id: 'moderately',
+      name: 'Moderately active',
+      emoji: '🏃',
+      description: '3-5 days/week',
+      detail: 'Moderate exercise or sports 3-5 days a week',
+    ),
+    _ActivityOption(
+      id: 'very',
+      name: 'Very active',
+      emoji: '💪',
+      description: 'Daily exercise',
+      detail: 'Hard exercise or sports 6-7 days a week',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              
+              // 标题
+              const Text(
+                "What's your\nactivity level?",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'This helps us calculate your calories',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 选项列表
+              Expanded(
+                child: ListView.separated(
+                  itemCount: _activities.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final activity = _activities[index];
+                    final isSelected = _selectedActivity == activity.id;
+                    return _ActivityCard(
+                      activity: activity,
+                      isSelected: isSelected,
+                      onTap: () {
+                        setState(() {
+                          _selectedActivity = activity.id;
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: _selectedActivity != null
+                    ? () {
+                        UserMetrics.activityLevel = _selectedActivity;
+                        widget.onComplete();
+                      }
+                    : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selectedActivity != null
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          )
+                        : null,
+                    color: _selectedActivity == null ? Colors.grey.shade300 : null,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _selectedActivity != null
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: _selectedActivity != null ? Colors.white : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: _selectedActivity != null ? Colors.white : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 活跃程度选项
+class _ActivityOption {
+  final String id;
+  final String name;
+  final String emoji;
+  final String description;
+  final String detail;
+  _ActivityOption({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.description,
+    required this.detail,
+  });
+}
+
+/// 活跃程度卡片
+class _ActivityCard extends StatelessWidget {
+  final _ActivityOption activity;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ActivityCard({
+    required this.activity,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? const Color(0xFF4CAF50).withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Emoji图标
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF4CAF50).withOpacity(0.2)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(
+                  activity.emoji,
+                  style: const TextStyle(fontSize: 28),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 名称和描述
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    activity.name,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    activity.description,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.8) : Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    activity.detail,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 选中指示
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 
