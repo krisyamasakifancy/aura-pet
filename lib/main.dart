@@ -67,6 +67,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return CalorieFeatureScreen(onComplete: _nextPage);
                 case 3:
                   return FastingFeatureScreen(onComplete: _nextPage);
+                case 4:
+                  return WeightTrendScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -1639,6 +1641,298 @@ class _GrassPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+/// P5: Weight Trend Screen
+/// ============================================
+class WeightTrendScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WeightTrendScreen({super.key, required this.onComplete});
+
+  @override
+  State<WeightTrendScreen> createState() => _WeightTrendScreenState();
+}
+
+class _WeightTrendScreenState extends State<WeightTrendScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _chartController;
+  late AnimationController _bearController;
+
+  final List<double> _weightData = [60, 62, 58, 55, 53, 51];
+
+  @override
+  void initState() {
+    super.initState();
+    _chartController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..forward();
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _chartController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'See results\nthat inspire you',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Watch your progress with\nbeautiful charts',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  AnimatedBuilder(
+                    animation: _bearController,
+                    builder: (context, child) {
+                      final bounce = math.sin(_bearController.value * math.pi * 2) * 5;
+                      return Transform.translate(
+                        offset: Offset(0, bounce),
+                        child: CustomPaint(
+                          size: const Size(100, 100),
+                          painter: _ExcitedHeartBearPainter(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: _chartController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          size: const Size(double.infinity, 180),
+                          painter: _WeightChartPainter(
+                            data: _weightData,
+                            progress: _chartController.value,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _StatCard(label: 'Start', value: '${_weightData.first.toInt()} kg', color: const Color(0xFF4ECDC4)),
+                  _StatCard(label: 'Current', value: '${_weightData.last.toInt()} kg', color: const Color(0xFFFF6B6B)),
+                  _StatCard(label: 'Lost', value: '${(_weightData.first - _weightData.last).toInt()} kg', color: const Color(0xFF4CAF50)),
+                ],
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                  ),
+                  child: const Center(child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Next', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  )),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _StatCard({required this.label, required this.value, required this.color});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: color)),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Canvas: 心形眼神惊喜小熊
+class _ExcitedHeartBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.3, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.18, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.3, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.18, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.2, height: r), Paint()..color = const Color(0xFFE8C4A0));
+    _drawHeartEye(canvas, Offset(c.dx - r * 0.32, c.dy - r * 0.15), r * 0.25);
+    _drawHeartEye(canvas, Offset(c.dx + r * 0.32, c.dy - r * 0.15), r * 0.25);
+    _drawStar(canvas, Offset(c.dx - r * 0.65, c.dy - r * 0.5), 8);
+    _drawStar(canvas, Offset(c.dx + r * 0.65, c.dy - r * 0.5), 8);
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.35), width: r * 0.3, height: r * 0.2), Paint()..color = const Color(0xFF8B4513));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.37), width: r * 0.2, height: r * 0.12), Paint()..color = const Color(0xFFFF6B6B));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.3, height: r * 0.18), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.3, height: r * 0.18), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+  }
+  void _drawHeartEye(Canvas canvas, Offset center, double size) {
+    final p = Paint()..color = const Color(0xFFFF6B6B);
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(center.dx - size * 1.2, center.dy - size * 0.3, center.dx - size * 1.2, center.dy - size * 1.2, center.dx, center.dy - size * 0.3);
+    path.cubicTo(center.dx + size * 1.2, center.dy - size * 1.2, center.dx + size * 1.2, center.dy - size * 0.3, center.dx, center.dy + size * 0.3);
+    canvas.drawPath(path, p);
+    canvas.drawCircle(center + Offset(-size * 0.3, -size * 0.5), size * 0.2, Paint()..color = Colors.white.withOpacity(0.6));
+  }
+  void _drawStar(Canvas canvas, Offset center, double size) {
+    final p = Paint()..color = const Color(0xFFFFD700);
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 4 * math.pi / 5) - math.pi / 2;
+      final r = i % 2 == 0 ? size : size * 0.4;
+      final x = center.dx + r * math.cos(angle);
+      final y = center.dy + r * math.sin(angle);
+      if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, p);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Canvas: 莫奈渐变Bezier体重曲线
+class _WeightChartPainter extends CustomPainter {
+  final List<double> data;
+  final double progress;
+  _WeightChartPainter({required this.data, required this.progress});
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+    const pad = 35.0;
+    final w = size.width - pad * 2;
+    final h = size.height - pad * 2;
+    final maxW = data.reduce((a, b) => a > b ? a : b);
+    final minW = data.reduce((a, b) => a < b ? a : b);
+    final range = maxW - minW;
+    List<Offset> pts = [];
+    for (int i = 0; i < data.length; i++) {
+      final x = pad + (i / (data.length - 1)) * w;
+      final y = pad + h - ((data[i] - minW) / range) * h;
+      pts.add(Offset(x, y));
+    }
+    if (progress < 1.0) pts = pts.sublist(0, (pts.length * progress).ceil());
+    if (pts.isEmpty) return;
+    
+    // 填充
+    final fill = Path();
+    fill.moveTo(pts.first.dx, size.height - pad);
+    fill.lineTo(pts.first.dx, pts.first.dy);
+    for (int i = 0; i < pts.length - 1; i++) {
+      final p0 = i > 0 ? pts[i - 1] : pts[i];
+      final p1 = pts[i], p2 = pts[i + 1];
+      final p3 = i + 2 < pts.length ? pts[i + 2] : p2;
+      fill.cubicTo(p1.dx + (p2.dx - p0.dx) / 6, p1.dy + (p2.dy - p0.dy) / 6,
+                   p2.dx - (p3.dx - p1.dx) / 6, p2.dy - (p3.dy - p1.dy) / 6, p2.dx, p2.dy);
+    }
+    fill.lineTo(pts.last.dx, size.height - pad);
+    fill.close();
+    canvas.drawPath(fill, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+      colors: [const Color(0xFFB8D4E3).withOpacity(0.6), const Color(0xFFF4A460).withOpacity(0.4), const Color(0xFFE6B89C).withOpacity(0.3)]).createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
+    
+    // 曲线
+    final curve = Path();
+    curve.moveTo(pts.first.dx, pts.first.dy);
+    for (int i = 0; i < pts.length - 1; i++) {
+      final p0 = i > 0 ? pts[i - 1] : pts[i];
+      final p1 = pts[i], p2 = pts[i + 1];
+      final p3 = i + 2 < pts.length ? pts[i + 2] : p2;
+      curve.cubicTo(p1.dx + (p2.dx - p0.dx) / 6, p1.dy + (p2.dy - p0.dy) / 6,
+                    p2.dx - (p3.dx - p1.dx) / 6, p2.dy - (p3.dy - p1.dy) / 6, p2.dx, p2.dy);
+    }
+    canvas.drawPath(curve, Paint()..shader = LinearGradient(colors: [const Color(0xFF4ECDC4), const Color(0xFFFF6B6B), const Color(0xFF4CAF50)]).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke ..strokeWidth = 4 ..strokeCap = StrokeCap.round);
+    
+    // 数据点
+    for (final pt in pts) {
+      canvas.drawCircle(pt, 7, Paint()..color = Colors.white);
+      canvas.drawCircle(pt, 4, Paint()..color = const Color(0xFF4CAF50));
+    }
+    
+    // 坐标轴
+    canvas.drawLine(Offset(pad, pad), Offset(pad, size.height - pad), Paint()..color = Colors.grey.withOpacity(0.3));
+    canvas.drawLine(Offset(pad, size.height - pad), Offset(size.width - pad, size.height - pad), Paint()..color = Colors.grey.withOpacity(0.3));
+    
+    // 标签
+    for (int i = 0; i <= 3; i++) {
+      final y = pad + (h / 3) * i;
+      final val = maxW - (range / 3) * i;
+      final tp = TextPainter(text: TextSpan(text: '${val.toInt()}', style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: Colors.grey.shade500)), textDirection: TextDirection.ltr);
+      tp.layout(); tp.paint(canvas, Offset(2, y - tp.height / 2));
+    }
+    final weeks = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'];
+    for (int i = 0; i < weeks.length && i < data.length; i++) {
+      final x = pad + (i / (data.length - 1)) * w;
+      final tp = TextPainter(text: TextSpan(text: weeks[i], style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: Colors.grey.shade500)), textDirection: TextDirection.ltr);
+      tp.layout(); tp.paint(canvas, Offset(x - tp.width / 2, size.height - pad + 6));
+    }
+  }
+  @override
+  bool shouldRepaint(covariant _WeightChartPainter oldDelegate) => oldDelegate.progress != progress;
 }
 
 /// ============================================
