@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' as math;
 
 /// ============================================
@@ -152,6 +154,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return AchievementsScreen(onComplete: _nextPage);
                 case 38:
                   return ProfileScreen(onComplete: _nextPage);
+                case 39:
+                  return SettingsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -16261,6 +16265,520 @@ class _ProfileListItem extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// ============================================
+/// P40: Settings Screen
+/// ============================================
+class SettingsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const SettingsScreen({super.key, required this.onComplete});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
+  bool _notifications = true;
+  bool _unitKg = true; // kg=true, lb=false
+  bool _darkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    // SharedPreferences would load here in production
+    // For demo, using default values
+  }
+
+  Future<void> _saveSettings() async {
+    // SharedPreferences would save here in production
+  }
+
+  void _toggle(int index) {
+    setState(() {
+      switch (index) {
+        case 0:
+          _notifications = !_notifications;
+          break;
+        case 1:
+          _unitKg = !_unitKg;
+          break;
+        case 2:
+          _darkMode = !_darkMode;
+          break;
+      }
+    });
+    _saveSettings();
+    // 系统级震动反馈
+    HapticFeedback.lightImpact();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // 标题
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'System\nSettings',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 设置列表
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _SettingsToggleItem(
+                        icon: '🔔',
+                        title: 'Notifications',
+                        subtitle: 'Meal & water reminders',
+                        value: _notifications,
+                        onToggle: () => _toggle(0),
+                        index: 0,
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                      _SettingsToggleItem(
+                        icon: '⚖️',
+                        title: 'Unit',
+                        subtitle: _unitKg ? 'Kilograms (kg)' : 'Pounds (lb)',
+                        value: _unitKg,
+                        onToggle: () => _toggle(1),
+                        index: 1,
+                        showUnitLabel: true,
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                      _SettingsToggleItem(
+                        icon: '🌙',
+                        title: 'Dark Mode',
+                        subtitle: 'Easier on the eyes',
+                        value: _darkMode,
+                        onToggle: () => _toggle(2),
+                        index: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 小熊插画
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size(60, 60),
+                      painter: _SettingsBearPainter(),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Customize your\nexperience!',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: GestureDetector(
+                  onTap: widget.onComplete,
+                  child: Container(
+                    height: 56,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Next',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 设置开关项
+class _SettingsToggleItem extends StatefulWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final VoidCallback onToggle;
+  final int index;
+  final bool showUnitLabel;
+
+  const _SettingsToggleItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onToggle,
+    required this.index,
+    this.showUnitLabel = false,
+  });
+
+  @override
+  State<_SettingsToggleItem> createState() => _SettingsToggleItemState();
+}
+
+class _SettingsToggleItemState extends State<_SettingsToggleItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onToggle();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4ECDC4).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    widget.icon,
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 单位标签 (kg/lb)
+              if (widget.showUnitLabel)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ECDC4).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    widget.value ? 'kg' : 'lb',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4ECDC4),
+                    ),
+                  ),
+                ),
+              // 开关
+              _CustomSwitch(value: widget.value),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 自定义开关
+class _CustomSwitch extends StatefulWidget {
+  final bool value;
+
+  const _CustomSwitch({required this.value});
+
+  @override
+  State<_CustomSwitch> createState() => _CustomSwitchState();
+}
+
+class _CustomSwitchState extends State<_CustomSwitch>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _slideAnim;
+  late Animation<Color?> _colorAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _slideAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _colorAnim = ColorTween(
+      begin: Colors.grey.shade300,
+      end: const Color(0xFF4CAF50),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    
+    if (widget.value) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_CustomSwitch oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      if (widget.value) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: 52,
+          height: 30,
+          decoration: BoxDecoration(
+            color: _colorAnim.value,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 3 + _slideAnim.value * 22,
+                top: 3,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Canvas: 设置小熊
+class _SettingsBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // 头
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx - r * 0.26, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.25);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.4, c.dx + r * 0.15, c.dy + r * 0.25);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
