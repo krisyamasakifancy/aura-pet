@@ -1,49 +1,12 @@
 # ============================================
-# Docker Compose - Aura-Pet Full Stack
+# AURA-PET: Docker Compose 配置
+# Redis + FastAPI + PostgreSQL
 # ============================================
 
 version: '3.8'
 
 services:
-  # ----------------------------------------
-  # Backend API
-  # ----------------------------------------
-  api:
-    build: ./backend
-    container_name: aura-pet-api
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aura_pet
-      - SQL_ECHO=false
-      - SECRET_KEY=aura-pet-secret-key-change-in-production
-    depends_on:
-      - db
-    networks:
-      - aura-network
-    restart: unless-stopped
-
-  # ----------------------------------------
-  # PostgreSQL Database
-  # ----------------------------------------
-  db:
-    image: postgres:16-alpine
-    container_name: aura-pet-db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=aura_pet
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - aura-network
-    restart: unless-stopped
-
-  # ----------------------------------------
-  # Redis (for caching & sessions)
-  # ----------------------------------------
+  # ========== Redis 缓存层 ==========
   redis:
     image: redis:7-alpine
     container_name: aura-pet-redis
@@ -51,28 +14,88 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
     networks:
       - aura-network
-    restart: unless-stopped
 
-  # ----------------------------------------
-  # Frontend Web (Static)
-  # ----------------------------------------
-  frontend:
-    image: nginx:alpine
-    container_name: aura-pet-frontend
+  # ========== PostgreSQL 数据库 ==========
+  postgres:
+    image: postgres:15-alpine
+    container_name: aura-pet-postgres
+    environment:
+      POSTGRES_DB: aura_pet
+      POSTGRES_USER: aura_pet
+      POSTGRES_PASSWORD: aura_pet_secure_password
     ports:
-      - "8080:80"
+      - "5432:5432"
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aura_pet"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
     networks:
       - aura-network
+
+  # ========== FastAPI 后端 ==========
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aura-pet-backend
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://aura_pet:aura_pet_secure_password@postgres:5432/aura_pet
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
+    networks:
+      - aura-network
+    volumes:
+      - ./backend:/app
+
+  # ========== 前端开发服务器 ==========
+  frontend:
+    image: node:20-alpine
+    container_name: aura-pet-frontend
+    working_dir: /app
+    command: >
+      sh -c "npm install -g http-server && 
+             cd /app/docs &&
+               http-server -p 8080 -c-1"
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - aura-network
 
 networks:
   aura-network:
     driver: bridge
 
 volumes:
-  postgres_data:
   redis_data:
+  postgres_data:

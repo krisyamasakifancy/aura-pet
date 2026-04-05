@@ -1,30 +1,22 @@
 """
-Aura-Pet Backend - Main FastAPI Application
-Complete REST API with all endpoints
+AURA-PET: FastAPI 后端
+Quad-Agent 并行协作系统
 """
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import datetime, timedelta
-from uuid import UUID, uuid4
+from pydantic import BaseModel
+from typing import List, Optional, Dict
 import asyncio
+import redis.asyncio as redis
+import json
 import random
+from datetime import datetime
+import os
 
-# ============================================
-# APP INITIALIZATION
-# ============================================
+app = FastAPI(title="Aura-Pet API", version="1.0.0")
 
-app = FastAPI(
-    title="Aura-Pet API",
-    description="智能宠物养成 - BitePal Parity",
-    version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,737 +25,452 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================================
-# IN-MEMORY STORE (Demo Mode)
-# ============================================
+# Redis 连接
+redis_client: Optional[redis.Redis] = None
 
-class DemoStore:
-    """In-memory store for demo mode without database."""
-    
-    def __init__(self):
-        self.users = {
-            "demo_user": {
-                "id": "demo_user",
-                "email": "demo@aura-pet.com",
-                "display_name": "Demo User",
-                "bitecoins": 150,
-                "subscription_tier": "free",
-                "current_streak": 5,
-                "total_meals_logged": 23,
-                "password_hash": "demo123"
-            }
-        }
-        
-        self.pets = {
-            "demo_user": {
-                "id": "pet_001",
-                "name": "小浣熊",
-                "species": "raccoon",
-                "hunger": 70,
-                "joy": 80,
-                "vigor": 65,
-                "affinity": 45,
-                "evolution_xp": 120,
-                "evolution_level": 2,
-                "current_mood": "happy",
-                "is_sleeping": False,
-                "is_dizzy": False
-            }
-        }
-        
-        self.meals = []
-        self.water_today = 1200
-        self.inventory = {}
-        self.transactions = []
-    
-    def get_user(self):
-        return self.users["demo_user"]
-    
-    def get_pet(self):
-        return self.pets["demo_user"]
-    
-    def update_pet(self, updates):
-        pet = self.get_pet()
-        pet.update(updates)
-        return pet
+@app.on_event("startup")
+async def startup():
+    global redis_client
+    try:
+        redis_client = await redis.from_url(
+            os.getenv("REDIS_URL", "redis://localhost:6379"),
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        print("✅ Redis connected")
+    except Exception as e:
+        print(f"⚠️ Redis not available: {e}")
+        redis_client = None
 
-store = DemoStore()
+@app.on_event("shutdown")
+async def shutdown():
+    if redis_client:
+        await redis_client.close()
 
-# ============================================
-# PYDANTIC MODELS
-# ============================================
+# ========== 数据模型 ==========
 
-class UserResponse(BaseModel):
-    id: str
-    email: str
-    display_name: str
-    bitecoins: int
-    subscription_tier: str
-    current_streak: int
-    total_meals_logged: int
+class PetState(BaseModel):
+    name: str = "毛毛"
+    level: int = 1
+    xp: int = 0
+    xp_to_next: int = 100
+    coins: int = 100
+    joy: int = 80
+    fullness: int = 70
+    water_intake: int = 0
+    water_goal: int = 2000
+    streak: int = 0
+    meals_today: int = 0
+    mood: str = "happy"
+    nutrition_balance: float = 0
+    equipped_item: Optional[str] = None
+    evolution_stage: str = "幼年期"
 
-class PetStateResponse(BaseModel):
-    id: str
-    name: str
-    species: str
-    hunger: int
-    joy: int
-    vigor: int
-    affinity: int
-    evolution_xp: int
-    evolution_level: int
-    current_mood: str
-    is_sleeping: bool
-    is_dizzy: bool
+class MealAnalysisRequest(BaseModel):
+    image: str  # Base64 编码的图片
 
-class MealLogRequest(BaseModel):
+class MealRecord(BaseModel):
     food_name: str
+    emoji: str
     calories: int
-    category: str
-    anxiety_relief_label: str
-    anxiety_relief_emoji: str
-
-class MealLogResponse(BaseModel):
-    id: str
-    food_name: str
-    calories: int
-    category: str
-    anxiety_relief_label: str
-    anxiety_relief_emoji: str
+    anxiety_label: str
+    phrases: List[str]
     coins_earned: int
     xp_earned: int
-    pet_state: PetStateResponse
-    dialogue: str
-    animation_trigger: str
 
-class FoodAnalysisResponse(BaseModel):
-    success: bool
-    food_name: str
-    calories: int
-    category: str
-    anxiety_relief_label: str
-    anxiety_relief_emoji: str
-    confidence: float
-    colors_detected: List[str]
+# ========== 去焦虑语料库 (100+ 条) ==========
 
-class TouchRequest(BaseModel):
-    touch_type: str
+CORPUS = {
+    "dessert": [
+        {"emoji": "🍰", "name": "芝士蛋糕", "cal": 420, "label": "灵魂充电时间 ⚡",
+         "phrases": ["哇！是你最爱的甜点诶！！", "生活已经这么苦了当然要对自己好一点呀～", "吃吧吃吧，小浣熊批准了！👑✨"]},
+        {"emoji": "🍫", "name": "巧克力", "cal": 550, "label": "快乐因子注入中 💫",
+         "phrases": ["哦～是巧克力呀！", "研究表明黑巧克力含有抗氧化物质哦～", "科学认证的养生甜点！📚💪"]},
+        {"emoji": "🍦", "name": "冰淇淋", "cal": 320, "label": "夏日快乐源泉 🌞",
+         "phrases": ["夏天的快乐来啦！", "卡路里什么的先放一边～", "这一刻的满足感才是真正的财富呀～"]},
+        {"emoji": "🍩", "name": "甜甜圈", "cal": 380, "label": "快乐圈循环 🔄",
+         "phrases": ["甜甜圈！快乐圈！", "甜食会刺激多巴胺分泌呢～", "这是科学让你开心的！🤪✨"]},
+        {"emoji": "🧁", "name": "杯子蛋糕", "cal": 350, "label": "精致小确幸 ✨",
+         "phrases": ["好精致的蛋糕！", "一口一个刚刚好～", "小浣熊也想咬一口呢！"]},
+        {"emoji": "🍮", "name": "布丁", "cal": 180, "label": "丝滑治愈时光 🍮",
+         "phrases": ["布丁！滑滑嫩嫩的～", "一口下去烦恼都没啦！", "小浣熊的甜蜜推荐！"]},
+        {"emoji": "🍪", "name": "曲奇饼干", "cal": 290, "label": "酥脆好心情 🍪",
+         "phrases": ["酥脆的曲奇！", "配牛奶绝了！", "小浣熊闻到香味啦～"]},
+    ],
+    "main": [
+        {"emoji": "🍕", "name": "披萨", "cal": 680, "label": "尊享犒劳时刻 👑",
+         "phrases": ["披萨！永远的经典！", "碳水+脂肪的完美组合，怪不得叫 comfort food！", "大口吃起来！🤤"]},
+        {"emoji": "🍔", "name": "汉堡", "cal": 550, "label": "能量补给站 ⚡",
+         "phrases": ["汉堡侠出击！", "牛肉饼提供蛋白质，面包提供能量～", "这可是正经的一顿营养餐呢！"]},
+        {"emoji": "🍜", "name": "拉面", "cal": 450, "label": "暖心治愈系 💕",
+         "phrases": ["热腾腾的拉面！", "碳水化合物的快乐～", "吃完浑身都暖和了！"]},
+        {"emoji": "🍛", "name": "咖喱饭", "cal": 520, "label": "元气充电中 🔋",
+         "phrases": ["咖喱的香气！", "浓郁的味道正在唤醒味蕾～", "好满足的一餐呀！"]},
+        {"emoji": "🍝", "name": "意面", "cal": 480, "label": "浪漫西餐时光 🍝",
+         "phrases": ["意面！优雅的选择！", "番茄酱的酸甜刚刚好～", "小浣熊也想来一口呢～"]},
+        {"emoji": "🥘", "name": "火锅", "cal": 850, "label": "饕餮盛宴 🔥",
+         "phrases": ["火锅！冬日必备！", "什么都涮一涮，快乐翻倍！", "和朋友一起吃最香啦～🍲"]},
+        {"emoji": "🍲", "name": "砂锅粥", "cal": 280, "label": "温润养胃 🌿",
+         "phrases": ["暖暖的砂锅粥～", "养胃又暖心！", "小浣熊也想喝一碗～"]},
+    ],
+    "fast": [
+        {"emoji": "🍗", "name": "炸鸡", "cal": 620, "label": "快乐炸裂 ✨",
+         "phrases": ["酥脆的外皮，多汁的鸡肉...", "今天的你看起来需要一点酥脆的治愈感～", "卡路里什么的不存在的，只有快乐！"]},
+        {"emoji": "🍟", "name": "薯条", "cal": 380, "label": "黄金能量棒 💛",
+         "phrases": ["薯条！薯条！薯条！", "黄金酥脆的外表下是满满的土豆能量～", "偶尔放纵一下也是生活的一部分嘛！"]},
+        {"emoji": "🌭", "name": "热狗", "cal": 290, "label": "轻量快乐 🎉",
+         "phrases": ["简单又美味！", "小浣熊的标准快餐选择～", "刚刚好的分量！"]},
+        {"emoji": "🥪", "name": "三明治", "cal": 320, "label": "快捷能量包 🥪",
+         "phrases": ["三明治！营养均衡！", "蔬菜蛋白质碳水全都有～", "小浣熊的午餐常客！"]},
+    ],
+    "healthy": [
+        {"emoji": "🥗", "name": "蔬菜沙拉", "cal": 180, "label": "绿色能量满格 🌿",
+         "phrases": ["蔬菜侠出击！🧑‍🌾", "今天的你又在为身体健康投资啦～", "小浣熊给你点一个大大的赞！"]},
+        {"emoji": "🥑", "name": "牛油果", "cal": 160, "label": "健身达人之选 💪",
+         "phrases": ["牛油果！健身达人的最爱！", "单不饱和脂肪酸，对心脏超友好～", "小浣熊也想来一片呢（悄悄流口水）"]},
+        {"emoji": "🍎", "name": "水果拼盘", "cal": 150, "label": "大自然糖果 🍬",
+         "phrases": ["新鲜的水果！", "天然的甜味最健康啦～", "维生素满满！"]},
+        {"emoji": "🥚", "name": "水煮蛋", "cal": 140, "label": "蛋白质仓库 💎",
+         "phrases": ["简单却营养！", "蛋白质是生命的基础呀～", "小浣熊的早餐常客！"]},
+        {"emoji": "🥦", "name": "西兰花", "cal": 55, "label": "超级蔬菜 💚",
+         "phrases": ["西兰花！蔬菜界的超级英雄！", "富含维生素C和膳食纤维～", "吃了感觉自己棒棒的！"]},
+        {"emoji": "🍠", "name": "烤红薯", "cal": 200, "label": "甜蜜暖手宝 🍠",
+         "phrases": ["热乎乎的烤红薯！", "冬天的快乐源泉～", "又甜又暖好幸福！"]},
+        {"emoji": "🥛", "name": "牛奶", "cal": 150, "label": "成长助推器 📈",
+         "phrases": ["牛奶时间到！", "钙质和蛋白质双管齐下～", "喝了会变得更强壮哦！"]},
+    ],
+    "drinks": [
+        {"emoji": "☕", "name": "咖啡", "cal": 50, "label": "清醒模式启动 ⚡",
+         "phrases": ["早安咖啡时间到！☕", "咖啡因正在唤醒你的每一个脑细胞～", "今天的效率一定超高！"]},
+        {"emoji": "🧋", "name": "奶茶", "cal": 350, "label": "快乐肥宅水 🥤",
+         "phrases": ["奶茶侠来啦！", "珍珠+奶茶=双重快乐组合！", "糖分警告...但是好喝就完事了！🧋💕"]},
+        {"emoji": "🫖", "name": "水果茶", "cal": 120, "label": "清爽无负担 🌊",
+         "phrases": ["清爽的水果茶！", "好喝又健康的选择～", "小浣熊也喜欢这种清新感！"]},
+        {"emoji": "🥤", "name": "可乐", "cal": 140, "label": "气泡快乐水 🥤",
+         "phrases": ["可乐！气泡的快乐！", "冰镇的更爽哦～", "小浣熊也在偷偷喝呢（被发现了）"]},
+        {"emoji": "🍵", "name": "抹茶", "cal": 80, "label": "禅意时光 🍵",
+         "phrases": ["抹茶！日式美学！", "淡淡的苦味刚刚好～", "静下心来，慢慢品味！"]},
+    ],
+    "snacks": [
+        {"emoji": "🍿", "name": "爆米花", "cal": 180, "label": "影院必备 🍿",
+         "phrases": ["爆米花！电影搭档！", "咔嚓咔嚓停不下来～", "小浣熊的追剧神器！"]},
+        {"emoji": "🥜", "name": "坚果", "cal": 200, "label": "健康零食 🥜",
+         "phrases": ["坚果！天然的能量球！", "不饱和脂肪酸的好处多多的～", "每天一小把，健康又美味！"]},
+        {"emoji": "🍫", "name": "能量棒", "cal": 220, "label": "便携能量站 ⚡",
+         "phrases": ["能量棒！随时补充能量！", "运动后的最佳搭档～", "小浣熊的外出必备！"]},
+    ],
+}
 
-class TouchResponse(BaseModel):
-    animation_trigger: str
-    dialogue: str
-    coins_earned: int
+# 随机关怀语料
+RANDOM_CARE = [
+    "好久没见你来了，想我了没？🦝",
+    "今天也要好好吃饭哦～",
+    "小浣熊在这里一直陪着你！",
+    "记得多喝水，身体棒棒的！💧",
+    "不要太累了，偶尔休息一下也是必要的～",
+    "你已经很努力了，给自己一个大大的拥抱！",
+    "小浣熊相信你，一切都会好起来的！✨",
+    "保持好心情，这是最重要的事～",
+]
 
-class WaterRequest(BaseModel):
-    amount_ml: int
 
-class WaterResponse(BaseModel):
-    success: bool
-    amount_ml: int
-    today_total: int
-    goal_achieved: bool
+# ========== Quad-Agent 并行协作系统 ==========
 
-class ShopItemResponse(BaseModel):
-    id: str
-    item_key: str
-    name: str
-    description: str
-    item_type: str
-    price_bitecoins: int
-
-class PurchaseRequest(BaseModel):
-    item_id: str
-
-class PurchaseResponse(BaseModel):
-    success: bool
-    new_balance: int
-    item_id: str
-    message: str
-
-class DailyStatsResponse(BaseModel):
-    date: str
-    meals_count: int
-    total_calories: int
-    coins_earned_today: int
-    water_ml: int
-    water_goal: int
-    streak: int
-    pet_state: PetStateResponse
-
-class AuthRequest(BaseModel):
-    email: str
-    password: str
-
-class AuthResponse(BaseModel):
-    access_token: str
-    token_type: str
-    user: UserResponse
-
-# ============================================
-# HELPER FUNCTIONS
-# ============================================
-
-def calculate_rewards(calories: int, streak: int):
-    """Calculate rewards based on calories and streak."""
-    base_coins = 10
-    base_xp = 15
+class QuadAgentCoordinator:
+    """
+    四智能体协调器：
+    1. Vision-Agent - 视觉识别
+    2. Logic-Agent - 逻辑计算
+    3. Persona-Agent - 人格对话
+    4. Animator-Agent - 动画参数
+    """
     
-    # Calorie multiplier (de-anxiety logic)
-    if calories > 600:
-        multiplier = 2.0
-    elif calories > 400:
-        multiplier = 1.5
-    elif calories > 200:
-        multiplier = 1.2
-    else:
-        multiplier = 1.0
+    @staticmethod
+    async def analyze_meal(image_base64: str) -> Dict:
+        """
+        并行执行四个 Agent 的任务
+        """
+        # 并行执行所有 Agent
+        results = await asyncio.gather(
+            QuadAgentCoordinator.vision_agent(image_base64),
+            QuadAgentCoordinator.logic_agent(),
+            QuadAgentCoordinator.persona_agent(),
+            QuadAgentCoordinator.animator_agent(),
+        )
+        
+        vision, logic, persona, animator = results
+        
+        return {
+            **vision,  # 食物信息
+            **logic,  # 计算结果
+            "phrases": persona["phrases"],  # 对话语料
+            "animation_params": animator,   # 动画参数
+        }
     
-    coins = int(base_coins * multiplier)
-    xp = int(base_xp * multiplier)
+    @staticmethod
+    async def vision_agent(image_base64: str) -> Dict:
+        """
+        Vision-Agent: 视觉识别
+        模拟：从图片中识别食物（实际需要接 AI 视觉模型）
+        """
+        await asyncio.sleep(0.1)  # 模拟处理时间
+        
+        # 随机选择一种食物
+        category = random.choice(list(CORPUS.keys()))
+        food = random.choice(CORPUS[category])
+        
+        return {
+            "food_name": food["name"],
+            "emoji": food["emoji"],
+            "calories": food["cal"],
+            "anxiety_label": food["label"],
+        }
     
-    # Streak bonus
-    if streak > 0:
-        coins += 5
-        xp += 5
+    @staticmethod
+    async def logic_agent() -> Dict:
+        """
+        Logic-Agent: 逻辑计算
+        计算奖励、营养平衡等
+        """
+        await asyncio.sleep(0.1)
+        
+        # 基础奖励
+        return {
+            "coins_earned": 10 + random.randint(5, 15),
+            "xp_earned": random.randint(10, 30),
+            "nutrition_balance": random.uniform(-0.3, 0.3),
+        }
     
-    return {"coins": coins, "xp": xp, "multiplier": multiplier}
+    @staticmethod
+    async def persona_agent() -> Dict:
+        """
+        Persona-Agent: 人格对话
+        根据时间和上下文生成个性化回复
+        """
+        await asyncio.sleep(0.1)
+        
+        hour = datetime.now().hour
+        
+        # 根据时间选择不同语料
+        if 22 <= hour or hour < 6:
+            phrases = [
+                "这么晚还没睡呀...小浣熊陪你！🌙",
+                "深夜觅食中...小浣熊也懂这种快乐～",
+                "夜猫子一枚！记得早点休息哦～",
+            ]
+        elif 6 <= hour < 9:
+            phrases = [
+                "早安！新的一天从美味早餐开始！☀️",
+                "早餐是一天中最重要的一餐哦～",
+                "吃得好，一天都有精神！",
+            ]
+        elif 11 <= hour < 14:
+            phrases = [
+                "午餐时间到！",
+                "辛苦了一上午，该补充能量啦～",
+                "好好吃饭，下午继续加油！",
+            ]
+        else:
+            # 从语料库随机选
+            category = random.choice(list(CORPUS.keys()))
+            food = random.choice(CORPUS[category])
+            phrases = food["phrases"]
+        
+        return {
+            "phrases": phrases,
+            "selected_phrase": random.choice(phrases),
+        }
+    
+    @staticmethod
+    async def animator_agent() -> Dict:
+        """
+        Animator-Agent: 动画参数
+        根据上下文生成动画参数
+        """
+        await asyncio.sleep(0.05)
+        
+        return {
+            "animation_type": random.choice(["spin", "bounce", "jump", "hug"]),
+            "emotion": random.choice(["happy", "excited", "loved"]),
+            "duration_ms": random.randint(800, 1500),
+        }
 
-def generate_dialogue(category: str, calories: int):
-    """Generate dialogue based on food category."""
-    dialogues = {
-        "dessert": [
-            "哇！！是你最爱的甜点诶！！生活已经这么苦了当然要对自己好一点呀～",
-            "嘿嘿这个看起来也太美味了吧！知道吗，吃甜食会释放快乐多巴胺哦～",
-            "想吃就吃呀～今天的卡路里明天再算！现在的快乐最重要！"
-        ],
-        "vegetable": [
-            "蔬菜侠出击！今天的你又在为身体健康加油啦～继续保持呀！",
-            "均衡饮食，智慧选择！你的身体正在悄悄感谢你呢～"
-        ],
-        "fruit": [
-            "水果派对！天然的甜蜜才是真正的快乐源泉呀！",
-            "大自然糖果来啦～维C炸弹准备发射！"
-        ],
-        "protein": [
-            "蛋白质补给完成！你正在变得更强壮呢～",
-            "力量积攒中！肌肉燃料补给成功！"
-        ],
-        "carb": [
-            "碳水是力量的源泉呀！吃饱了才有力气追逐梦想嘛～",
-            "晚餐的碳水是温暖的陪伴～好好享受这份满足感吧！"
-        ],
-        "drink": [
-            "水分祝福达成！咖啡因正在唤醒你的每一个细胞～",
-            "早安咖啡时间到！今天的效率一定超高的！"
-        ],
-        "snack": [
-            "小小冒险奖励！偶尔的放纵是为了更长久的坚持呀～",
-            "心情助推器启动！庆典模式开启！"
-        ]
-    }
-    
-    category_dialogues = dialogues.get(category, dialogues["snack"])
-    return random.choice(category_dialogues)
 
-def get_animation_for_reward(multiplier: float):
-    """Get animation trigger based on reward multiplier."""
-    if multiplier >= 2.0:
-        return "spin"
-    elif multiplier >= 1.5:
-        return "bounce"
-    elif multiplier >= 1.2:
-        return "jump"
-    return "idle"
-
-# ============================================
-# API ENDPOINTS
-# ============================================
+# ========== API 端点 ==========
 
 @app.get("/")
 async def root():
-    return {
-        "name": "Aura-Pet API",
-        "version": "2.0.0",
-        "status": "running"
-    }
+    return {"message": "Aura-Pet API", "version": "1.0.0"}
+
 
 @app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+async def health():
+    return {"status": "ok", "redis": redis_client is not None}
 
-# ----------------------------------------
-# AUTH ENDPOINTS
-# ----------------------------------------
 
-@app.post("/api/v1/auth/login", response_model=AuthResponse)
-async def login(request: AuthRequest):
+# ========== 餐食分析 ==========
+
+@app.post("/api/v1/meal/analyze")
+async def analyze_meal(request: MealAnalysisRequest):
     """
-    User login endpoint.
-    Returns access token and user info.
+    Quad-Agent 并行分析餐食
     """
-    # Demo mode: accept demo credentials
-    if request.email == "demo@aura-pet.com" and request.password == "demo123":
-        user = store.get_user()
-        return AuthResponse(
-            access_token="demo_token_" + str(uuid4()),
-            token_type="bearer",
-            user=UserResponse(**user)
-        )
-    
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+    result = await QuadAgentCoordinator.analyze_meal(request.image)
+    return result
 
-@app.post("/api/v1/auth/register", response_model=AuthResponse)
-async def register(request: AuthRequest):
-    """User registration endpoint."""
-    # Demo mode: return demo user
-    return AuthResponse(
-        access_token="demo_token_" + str(uuid4()),
-        token_type="bearer",
-        user=UserResponse(**store.get_user())
-    )
 
-# ----------------------------------------
-# USER ENDPOINTS
-# ----------------------------------------
-
-@app.get("/api/v1/user/me", response_model=UserResponse)
-async def get_current_user():
-    """Get current user information."""
-    return UserResponse(**store.get_user())
-
-@app.post("/api/v1/user/coins/add")
-async def add_coins(amount: int):
-    """Add coins to user balance (admin/testing)."""
-    user = store.get_user()
-    user["bitecoins"] += amount
-    return {"success": True, "new_balance": user["bitecoins"]}
-
-# ----------------------------------------
-# PET ENDPOINTS
-# ----------------------------------------
-
-@app.get("/api/v1/pet", response_model=PetStateResponse)
-async def get_pet():
-    """Get current pet state."""
-    return PetStateResponse(**store.get_pet())
-
-@app.patch("/api/v1/pet/state")
-async def update_pet_state(mood: Optional[str] = None):
-    """Update pet state."""
-    updates = {}
-    if mood:
-        updates["current_mood"] = mood
-    pet = store.update_pet(updates)
-    return {"success": True, "pet": pet}
-
-@app.patch("/api/v1/pet/stats")
-async def update_pet_stats(
-    hunger: Optional[int] = None,
-    joy: Optional[int] = None,
-    vigor: Optional[int] = None,
-    affinity: Optional[int] = None
-):
-    """Update pet stats."""
-    updates = {}
-    if hunger is not None:
-        updates["hunger"] = max(0, min(100, hunger))
-    if joy is not None:
-        updates["joy"] = max(0, min(100, joy))
-    if vigor is not None:
-        updates["vigor"] = max(0, min(100, vigor))
-    if affinity is not None:
-        updates["affinity"] = max(0, min(100, affinity))
-    
-    pet = store.update_pet(updates)
-    return {"success": True, "pet": pet}
-
-# ----------------------------------------
-# MEAL ENDPOINTS
-# ----------------------------------------
-
-@app.post("/api/v1/meals", response_model=MealLogResponse)
-async def log_meal(request: MealLogRequest):
+@app.post("/api/v1/pet/feed")
+async def feed_pet(meal: MealRecord):
     """
-    Log a meal and trigger Quad-Agent coordination.
-    
-    Flow:
-    1. Vision Agent (pre-processed): Get food info
-    2. Logic Agent: Calculate rewards
-    3. Persona Agent: Generate dialogue
-    4. Animator Agent: Return animation
+    记录喂食，更新宠物状态
     """
-    user = store.get_user()
-    pet = store.get_pet()
+    # 获取当前状态
+    state = await _get_pet_state()
     
-    # 1. Calculate rewards (Logic Agent)
-    rewards = calculate_rewards(request.calories, user["current_streak"])
+    # 更新状态
+    state["coins"] += meal.coins_earned
+    state["xp"] += meal.xp_earned
+    state["meals_today"] += 1
+    state["streak"] += 1
+    state["fullness"] = min(100, state["fullness"] + meal.calories // 20)
     
-    # 2. Update user
-    user["bitecoins"] += rewards["coins"]
-    user["current_streak"] += 1
-    user["total_meals_logged"] += 1
+    # 检查升级
+    if state["xp"] >= state["xp_to_next"]:
+        state["level"] += 1
+        state["xp"] = state["xp"] - state["xp_to_next"]
+        state["xp_to_next"] = int(state["xp_to_next"] * 1.5)
     
-    # 3. Update pet
-    pet["joy"] = min(100, pet["joy"] + rewards["coins"] // 2)
-    pet["affinity"] = min(100, pet["affinity"] + 1)
-    pet["evolution_xp"] += rewards["xp"]
+    # 保存状态
+    await _save_pet_state(state)
     
-    # Check evolution
-    if pet["evolution_xp"] >= pet["evolution_level"] * 100:
-        pet["evolution_level"] += 1
-        pet["evolution_xp"] = pet["evolution_xp"] - pet["evolution_level"] * 100
-    
-    # Set mood based on multiplier
-    if rewards["multiplier"] >= 2.0:
-        pet["current_mood"] = "excited"
-    elif rewards["multiplier"] >= 1.5:
-        pet["current_mood"] = "happy"
-    
-    # 4. Generate dialogue (Persona Agent)
-    dialogue = generate_dialogue(request.category, request.calories)
-    
-    # 5. Get animation (Animator Agent)
-    animation = get_animation_for_reward(rewards["multiplier"])
-    
-    # Save meal
-    meal_id = str(uuid4())
-    store.meals.append({
-        "id": meal_id,
-        "food_name": request.food_name,
-        "calories": request.calories,
-        "category": request.category,
-        "coins_earned": rewards["coins"],
-        "xp_earned": rewards["xp"],
-        "logged_at": datetime.now().isoformat()
-    })
-    
-    return MealLogResponse(
-        id=meal_id,
-        food_name=request.food_name,
-        calories=request.calories,
-        category=request.category,
-        anxiety_relief_label=request.anxiety_relief_label,
-        anxiety_relief_emoji=request.anxiety_relief_emoji,
-        coins_earned=rewards["coins"],
-        xp_earned=rewards["xp"],
-        pet_state=PetStateResponse(**pet),
-        dialogue=dialogue,
-        animation_trigger=animation
-    )
+    return state
 
-@app.post("/api/v1/meals/analyze")
-async def analyze_food_image(file: UploadFile = File(...)):
-    """
-    Analyze food image using AI (Vision Agent).
-    
-    In production, this would:
-    1. Upload image to storage
-    2. Call GPT-4o Vision API
-    3. Call Gemini Vision API
-    4. Cross-validate results
-    5. Generate anxiety-relief label
-    """
-    # Simulate AI processing
-    await asyncio.sleep(1.5)
-    
-    # Mock results based on random selection
-    foods = [
-        {"name": "芝士蛋糕", "calories": 420, "category": "dessert", 
-         "label": "灵魂充电时间 ⚡", "emoji": "🍰", 
-         "colors": ["#F5DEB3", "#FFD700", "#8B4513"]},
-        {"name": "蔬菜沙拉", "calories": 180, "category": "vegetable",
-         "label": "绿色能量满格 🌿", "emoji": "🥗",
-         "colors": ["#90EE90", "#228B22", "#006400"]},
-        {"name": "巧克力", "calories": 550, "category": "dessert",
-         "label": "快乐因子注入中 💫", "emoji": "🍫",
-         "colors": ["#8B4513", "#D2691E", "#FFD700"]},
-        {"name": "水果拼盘", "calories": 150, "category": "fruit",
-         "label": "大自然糖果 🍬", "emoji": "🍎",
-         "colors": ["#FF6347", "#FFD700", "#FFA500"]},
-        {"name": "披萨", "calories": 680, "category": "carb",
-         "label": "尊享犒劳时刻 👑", "emoji": "🍕",
-         "colors": ["#FFD700", "#FF6347", "#8B4513"]},
-    ]
-    
-    result = random.choice(foods)
-    
-    return FoodAnalysisResponse(
-        success=True,
-        food_name=result["name"],
-        calories=result["calories"],
-        category=result["category"],
-        anxiety_relief_label=result["label"],
-        anxiety_relief_emoji=result["emoji"],
-        confidence=0.92,
-        colors_detected=result["colors"]
-    )
 
-@app.get("/api/v1/meals/history")
-async def get_meal_history(limit: int = 10):
-    """Get meal history."""
-    meals = store.meals[-limit:][::-1]
-    return {"meals": meals, "count": len(meals)}
+# ========== 宠物状态 ==========
 
-# ----------------------------------------
-# INTERACTION ENDPOINTS
-# ----------------------------------------
+@app.get("/api/v1/pet/state")
+async def get_pet_state():
+    """获取宠物状态"""
+    return await _get_pet_state()
 
-@app.post("/api/v1/interactions/touch", response_model=TouchResponse)
-async def touch_interaction(request: TouchRequest):
-    """
-    Handle touch interactions with the pet.
-    
-    Animations:
-    - head_pat: bounce
-    - poke_belly: dizzy
-    - shake: spin
-    """
-    user = store.get_user()
-    pet = store.get_pet()
-    
-    interactions = {
-        "head_pat": {
-            "animation": "bounce",
-            "dialogues": ["舒服～", "好开心呀～", "继续摸～", "嘿嘿～"],
-            "coins": 2
-        },
-        "poke_belly": {
-            "animation": "dizzy",
-            "dialogues": ["哎呦！", "别戳我肚子啦～", "痒痒的！"],
-            "coins": 2
-        },
-        "shake": {
-            "animation": "spin",
-            "dialogues": ["呜～头晕了...", "转晕了..."],
-            "coins": 0
-        }
-    }
-    
-    data = interactions.get(request.touch_type, interactions["head_pat"])
-    dialogue = random.choice(data["dialogues"])
-    
-    # Update pet
-    if request.touch_type == "shake":
-        pet["is_dizzy"] = True
-        pet["current_mood"] = "dizzy"
-    else:
-        pet["joy"] = min(100, pet["joy"] + 5)
-        pet["affinity"] = min(100, pet["affinity"] + 1)
-    
-    # Update coins
-    if data["coins"] > 0:
-        user["bitecoins"] += data["coins"]
-    
-    return TouchResponse(
-        animation_trigger=data["animation"],
-        dialogue=dialogue,
-        coins_earned=data["coins"]
-    )
 
-# ----------------------------------------
-# WATER TRACKING ENDPOINTS
-# ----------------------------------------
+@app.post("/api/v1/pet/coins")
+async def add_coins(body: dict):
+    """添加金币"""
+    amount = body.get("amount", 0)
+    state = await _get_pet_state()
+    state["coins"] += amount
+    await _save_pet_state(state)
+    return {"coins": state["coins"]}
 
-@app.post("/api/v1/water", response_model=WaterResponse)
-async def log_water(request: WaterRequest):
-    """Log water intake."""
-    store.water_today += request.amount_ml
+
+@app.post("/api/v1/pet/water")
+async def add_water(body: dict):
+    """添加饮水量"""
+    amount = body.get("amount", 250)
+    state = await _get_pet_state()
+    state["water_intake"] = min(state["water_goal"], state["water_intake"] + amount)
     
-    goal_achieved = store.water_today >= 2000
+    if state["water_intake"] >= state["water_goal"]:
+        state["joy"] = min(100, state["joy"] + 10)
+        state["coins"] += 5
     
-    if goal_achieved and store.water_today - request.amount_ml < 2000:
-        # Just achieved goal
-        pet = store.get_pet()
-        pet["current_mood"] = "excited"
-    
-    return WaterResponse(
-        success=True,
-        amount_ml=request.amount_ml,
-        today_total=store.water_today,
-        goal_achieved=goal_achieved
-    )
+    await _save_pet_state(state)
+    return state
 
-@app.get("/api/v1/water/today")
-async def get_water_today():
-    """Get today's water intake."""
-    return {
-        "today_total": store.water_today,
-        "goal": 2000,
-        "progress": min(100, int(store.water_today / 2000 * 100))
-    }
 
-# ----------------------------------------
-# SHOP ENDPOINTS
-# ----------------------------------------
+# ========== 商店 ==========
 
-SHOP_ITEMS = [
-    {"id": "item_001", "item_key": "basic_hat", "name": "小浣熊帽", 
-     "description": "经典款棒球帽", "item_type": "hat", "price_bitecoins": 50},
-    {"id": "item_002", "item_key": "sunglasses", "name": "酷炫墨镜",
-     "description": "超酷太阳镜", "item_type": "glasses", "price_bitecoins": 80},
-    {"id": "item_003", "item_key": "rainbow_scarf", "name": "彩虹围巾",
-     "description": "七色彩虹围巾", "item_type": "scarf", "price_bitecoins": 100},
-    {"id": "item_004", "item_key": "night_sky_bg", "name": "夜空背景",
-     "description": "璀璨星空背景", "item_type": "background", "price_bitecoins": 150},
-    {"id": "item_005", "item_key": "golden_crown", "name": "金色皇冠",
-     "description": "尊贵皇冠", "item_type": "hat", "price_bitecoins": 500},
-    {"id": "item_006", "item_key": "heart_glasses", "name": "爱心眼镜",
-     "description": "粉红爱心眼镜", "item_type": "glasses", "price_bitecoins": 120},
-]
-
-@app.get("/api/v1/shop/items", response_model=List[ShopItemResponse])
+@app.get("/api/v1/shop/items")
 async def get_shop_items():
-    """Get available shop items."""
-    return [ShopItemResponse(**item) for item in SHOP_ITEMS]
-
-@app.get("/api/v1/shop/items/{item_type}")
-async def get_shop_items_by_type(item_type: str):
-    """Get shop items by type."""
-    items = [item for item in SHOP_ITEMS if item["item_type"] == item_type]
-    return items
-
-@app.post("/api/v1/shop/purchase", response_model=PurchaseResponse)
-async def purchase_item(request: PurchaseRequest):
-    """Purchase an item from the shop."""
-    user = store.get_user()
-    
-    item = next((i for i in SHOP_ITEMS if i["id"] == request.item_id), None)
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
-    if user["bitecoins"] < item["price_bitecoins"]:
-        return PurchaseResponse(
-            success=False,
-            new_balance=user["bitecoins"],
-            item_id=request.item_id,
-            message=f"金币不足！还差 {item['price_bitecoins'] - user['bitecoins']} 金币"
-        )
-    
-    # Deduct coins
-    user["bitecoins"] -= item["price_bitecoins"]
-    
-    # Add to inventory
-    if request.item_id not in store.inventory:
-        store.inventory[request.item_id] = 0
-    store.inventory[request.item_id] += 1
-    
-    return PurchaseResponse(
-        success=True,
-        new_balance=user["bitecoins"],
-        item_id=request.item_id,
-        message=f"购买成功！{item['name']} 已添加到背包"
-    )
-
-@app.get("/api/v1/shop/inventory")
-async def get_inventory():
-    """Get user's inventory."""
-    items = [{"item_id": k, "quantity": v} for k, v in store.inventory.items()]
-    return {"items": items, "count": len(items)}
-
-# ----------------------------------------
-# ANALYTICS ENDPOINTS
-# ----------------------------------------
-
-@app.get("/api/v1/analytics/daily", response_model=DailyStatsResponse)
-async def get_daily_stats():
-    """Get today's statistics."""
-    user = store.get_user()
-    pet = store.get_pet()
-    
-    today_meals = store.meals[-10:]  # Simplified
-    today_calories = sum(m["calories"] for m in today_meals)
-    today_coins = sum(m["coins_earned"] for m in today_meals)
-    
-    return DailyStatsResponse(
-        date=datetime.now().strftime("%Y-%m-%d"),
-        meals_count=len(today_meals),
-        total_calories=today_calories,
-        coins_earned_today=today_coins,
-        water_ml=store.water_today,
-        water_goal=2000,
-        streak=user["current_streak"],
-        pet_state=PetStateResponse(**pet)
-    )
-
-@app.get("/api/v1/analytics/weekly")
-async def get_weekly_stats():
-    """Get weekly statistics."""
+    """获取商店物品"""
     return {
-        "week_start": (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d"),
-        "week_end": datetime.now().strftime("%Y-%m-%d"),
-        "total_meals": 21,
-        "total_calories": 10500,
-        "avg_water": 1800,
-        "streak_days": 7,
-        "pet_evolution_progress": 65
+        "items": [
+            {"id": "glasses_1", "name": "圆框眼镜", "emoji": "👓", "category": "accessories", "price": 100, "description": "文艺小清新"},
+            {"id": "glasses_2", "name": "墨镜", "emoji": "🕶️", "category": "accessories", "price": 200, "description": "酷酷的"},
+            {"id": "bow_1", "name": "粉色蝴蝶结", "emoji": "🎀", "category": "accessories", "price": 150, "description": "可爱满分"},
+            {"id": "bg_1", "name": "莫奈花园", "emoji": "🌸", "category": "backgrounds", "price": 300, "description": "睡莲池畔"},
+            {"id": "bg_2", "name": "星空", "emoji": "✨", "category": "backgrounds", "price": 250, "description": "银河璀璨"},
+            {"id": "bg_3", "name": "海洋", "emoji": "🌊", "category": "backgrounds", "price": 280, "description": "波光粼粼"},
+            {"id": "hat_1", "name": "小浣熊帽子", "emoji": "🎩", "category": "accessories", "price": 180, "description": "同款！"},
+            {"id": "scarf_1", "name": "格子围巾", "emoji": "🧣", "category": "accessories", "price": 120, "description": "英伦风"},
+        ]
     }
 
-# ----------------------------------------
-# AI ENDPOINTS (Vision Agent)
-# ----------------------------------------
 
-@app.post("/api/v1/ai/analyze-food")
-async def ai_analyze_food(
-    image_url: Optional[str] = None,
-    food_name: Optional[str] = None
-):
-    """
-    AI-powered food analysis (Vision Agent).
+@app.post("/api/v1/shop/purchase")
+async def purchase_item(body: dict):
+    """购买物品"""
+    item_id = body.get("itemId")
+    state = await _get_pet_state()
     
-    In production:
-    1. Download image from URL
-    2. Call GPT-4o Vision
-    3. Call Gemini Vision
-    4. Cross-validate
-    5. Return consensus
-    """
-    if not image_url and not food_name:
-        raise HTTPException(status_code=400, detail="Provide image_url or food_name")
-    
-    # Simulate AI processing
-    await asyncio.sleep(2)
-    
-    # Generate mock analysis
-    categories = ["dessert", "vegetable", "fruit", "protein", "carb", "drink", "snack"]
-    
-    return {
-        "analysis_id": str(uuid4()),
-        "timestamp": datetime.now().isoformat(),
-        "food_name": food_name or "分析食物",
-        "estimated_calories": random.randint(100, 800),
-        "nutrients": {
-            "protein": random.randint(5, 40),
-            "carbs": random.randint(20, 100),
-            "fat": random.randint(5, 50)
-        },
-        "category": random.choice(categories),
-        "anxiety_relief_label": "灵魂充电时间 ⚡",
-        "anxiety_relief_emoji": "🍰",
-        "confidence": 0.92,
-        "colors_detected": ["#F5DEB3", "#FFD700"],
-        "gpt4o_result": {"food_name": "蛋糕", "confidence": 0.95},
-        "gemini_result": {"food_name": "芝士蛋糕", "confidence": 0.88},
-        "consensus": {"food_name": "芝士蛋糕", "confidence": 0.92}
-    }
+    # 简化实现
+    return {"success": True, "coins": state["coins"]}
 
-# ============================================
-# STARTUP
-# ============================================
 
-@app.on_event("startup")
-async def startup_event():
-    print("""
-    ╔═══════════════════════════════════════════════╗
-    ║                                               ║
-    ║   🦝 Aura-Pet API Started Successfully!      ║
-    ║                                               ║
-    ║   📍 http://localhost:8000                    ║
-    ║   📚 Docs: http://localhost:8000/docs         ║
-    ║                                               ║
-    ║   Demo: demo@aura-pet.com / demo123          ║
-    ║                                               ║
-    ╚═══════════════════════════════════════════════╝
-    """)
+@app.post("/api/v1/shop/equip")
+async def equip_item(body: dict):
+    """装备物品"""
+    item_id = body.get("itemId")
+    state = await _get_pet_state()
+    state["equipped_item"] = item_id
+    await _save_pet_state(state)
+    return {"success": True}
+
+
+# ========== Redis 辅助 ==========
+
+async def _get_pet_state() -> Dict:
+    """从 Redis 获取宠物状态"""
+    if redis_client:
+        try:
+            data = await redis_client.get("pet_state")
+            if data:
+                return json.loads(data)
+        except Exception:
+            pass
+    return PetState().dict()
+
+async def _save_pet_state(state: Dict):
+    """保存宠物状态到 Redis"""
+    if redis_client:
+        try:
+            await redis_client.set("pet_state", json.dumps(state))
+        except Exception:
+            pass
+
+
+# ========== WebSocket ==========
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # 处理消息并广播
+            await manager.broadcast(data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
 
 if __name__ == "__main__":
     import uvicorn
