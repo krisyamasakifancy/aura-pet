@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'user_metrics_model.dart';
 
 /// ============================================
 /// 全局用户数据
@@ -27,14 +29,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Aura-Pet Onboarding',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
-        useMaterial3: true,
+    return ChangeNotifierProvider(
+      create: (_) => UserMetricsModel(),
+      child: MaterialApp(
+        title: 'Aura-Pet Onboarding',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
+          useMaterial3: true,
+        ),
+        home: const OnboardingNavigator(),
       ),
-      home: const OnboardingNavigator(),
     );
   }
 }
