@@ -112,6 +112,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return PlanReadyScreen(onComplete: _nextPage);
                 case 18:
                   return ReviewsScreen(onComplete: _nextPage);
+                case 19:
+                  return NotificationScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -7260,6 +7262,263 @@ class _ReviewCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// ============================================
+/// P20: Notification Permission Screen
+/// ============================================
+class NotificationScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const NotificationScreen({super.key, required this.onComplete});
+
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bearController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _requestPermission() async {
+    // 模拟触发通知权限请求
+    // 在真实环境中，这里会调用 flutter_local_notifications 或 permission_handler
+    // 无论结果如何，2秒后自动切页
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      widget.onComplete();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+
+              // 标题
+              const Text(
+                'Stay on\ntrack!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 36,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                'Enable notifications to get\nreminders and stay motivated',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+
+              const Spacer(),
+
+              // Canvas小熊拿闹钟
+              AnimatedBuilder(
+                animation: _bearController,
+                builder: (context, child) {
+                  // 轻微摇晃动画
+                  final shake = math.sin(_bearController.value * math.pi * 4) * 3;
+                  return Transform.translate(
+                    offset: Offset(shake, 0),
+                    child: child,
+                  );
+                },
+                child: CustomPaint(
+                  size: const Size(200, 200),
+                  painter: _AlarmBearPainter(),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Enable Notifications 按钮
+              GestureDetector(
+                onTap: _requestPermission,
+                child: Container(
+                  width: double.infinity,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_active,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Enable Notifications',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Skip 文字按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Skip for now',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 拿闹钟呆萌小熊
+class _AlarmBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 20;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.0), width: r * 1.8, height: r * 1.4),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(Offset(c.dx, c.dy - r * 0.3), r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.65, c.dy - r * 1.0), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.65, c.dy - r * 1.0), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 1.0), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 1.0), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy - r * 0.15), width: r * 1.1, height: r * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 呆萌眼睛 - 圆睁
+    _drawCuteEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.35), r * 0.18);
+    _drawCuteEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.35), r * 0.18);
+
+    // 呆萌嘴 (小O)
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.18, height: r * 0.12),
+      Paint()..color = const Color(0xFF8B4513),
+    );
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy - r * 0.05), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy - r * 0.05), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 左手 (扶着闹钟)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 1.1, c.dy + r * 0.2), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+
+    // 右手 (扶着闹钟)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 1.1, c.dy + r * 0.2), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+
+    // 小闹钟
+    _drawAlarmClock(canvas, Offset(c.dx + r * 1.3, c.dy + r * 0.1), r * 0.4);
+  }
+
+  void _drawCuteEye(Canvas canvas, Offset center, double radius) {
+    // 眼白
+    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
+    // 眼眶
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    // 大瞳孔
+    canvas.drawCircle(center, radius * 0.7, Paint()..color = Colors.black);
+    // 高光
+    canvas.drawCircle(center + Offset(-radius * 0.3, -radius * 0.3), radius * 0.25, Paint()..color = Colors.white);
+  }
+
+  void _drawAlarmClock(Canvas canvas, Offset center, double size) {
+    // 闹钟主体
+    canvas.drawCircle(center, size, Paint()..color = const Color(0xFF64B5F6));
+    canvas.drawCircle(center, size, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 3);
+
+    // 数字12
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '🔔',
+        style: TextStyle(fontSize: 16),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+
+    // 铃铛
+    canvas.drawCircle(center + Offset(0, -size - 5), size * 0.3, Paint()..color = const Color(0xFFFFD700));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
