@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'user_metrics_model.dart';
+import 'services/quote_engine.dart';
+import 'services/quote_trigger_manager.dart';
+import 'widgets/quote_bubble.dart';
 
 /// ============================================
 /// 全局用户数据
