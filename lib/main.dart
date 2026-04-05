@@ -162,6 +162,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return DressingRoomScreen(onComplete: _nextPage);
                 case 42:
                   return ProgressReportScreen(onComplete: _nextPage);
+                case 43:
+                  return BadgeDetailScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -18498,6 +18500,538 @@ class _AnalysisBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P44: Badge Detail Screen
+/// ============================================
+class BadgeDetailScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const BadgeDetailScreen({super.key, required this.onComplete});
+
+  @override
+  State<BadgeDetailScreen> createState() => _BadgeDetailScreenState();
+}
+
+class _BadgeDetailScreenState extends State<BadgeDetailScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _rotateController;
+  late Animation<double> _rotateAnim;
+  late AnimationController _floatController;
+  late Animation<double> _floatAnim;
+  bool _showSharePanel = false;
+
+  // 示例勋章数据
+  final _badge = _BadgeData(
+    icon: '⏰',
+    name: 'Early Bird',
+    description: 'Completed 7 consecutive days of logging before 9 AM',
+    unlockedDate: DateTime(2025, 3, 15),
+    reward: '7-day streak badge + 50 coins',
+    color: const Color(0xFFFFE066),
+    glowColor: const Color(0xFFFFD700),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _rotateController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _rotateAnim = Tween<double>(begin: -0.1, end: 0.1).animate(
+      CurvedAnimation(parent: _rotateController, curve: Curves.easeInOut),
+    );
+
+    _floatController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _floatAnim = Tween<double>(begin: -8, end: 8).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotateController.dispose();
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  void _showSharePanel() {
+    setState(() {
+      _showSharePanel = true;
+    });
+  }
+
+  void _hideSharePanel() {
+    setState(() {
+      _showSharePanel = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Badge Detail',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, color: Color(0xFF2D3748)),
+            onPressed: _showSharePanel,
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+
+                  // 勋章展示区
+                  AnimatedBuilder(
+                    animation: Listenable.merge([_rotateAnim, _floatAnim]),
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, _floatAnim.value),
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(_rotateAnim.value),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _BadgeDisplay(badge: _badge),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 勋章名称
+                  Text(
+                    _badge.name,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // 描述
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      _badge.description,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 解锁信息卡片
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _InfoRow(
+                          icon: '📅',
+                          label: 'Unlocked on',
+                          value: _formatDate(_badge.unlockedDate),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(color: Color(0xFFF0F0F0), height: 1),
+                        const SizedBox(height: 16),
+                        _InfoRow(
+                          icon: '🎁',
+                          label: 'Reward',
+                          value: _badge.reward,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Share按钮
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: GestureDetector(
+                      onTap: _showSharePanel,
+                      child: Container(
+                        height: 50,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4ECDC4).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(
+                            color: const Color(0xFF4ECDC4),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.share, color: Color(0xFF4ECDC4), size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Share Achievement',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                color: Color(0xFF4ECDC4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Back胶囊按钮
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: GestureDetector(
+                      onTap: widget.onComplete,
+                      child: Container(
+                        height: 56,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          ),
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Back',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+
+          // 分享面板
+          if (_showSharePanel)
+            GestureDetector(
+              onTap: _hideSharePanel,
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () {}, // 防止点击穿透
+                    child: Container(
+                      margin: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Share to',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Color(0xFF2D3748),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _ShareOption(icon: '📱', name: 'Messages'),
+                              _ShareOption(icon: '📘', name: 'Facebook'),
+                              _ShareOption(icon: '🐦', name: 'Twitter'),
+                              _ShareOption(icon: '📸', name: 'Instagram'),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          GestureDetector(
+                            onTap: _hideSharePanel,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
+/// 勋章数据
+class _BadgeData {
+  final String icon;
+  final String name;
+  final String description;
+  final DateTime unlockedDate;
+  final String reward;
+  final Color color;
+  final Color glowColor;
+
+  _BadgeData({
+    required this.icon,
+    required this.name,
+    required this.description,
+    required this.unlockedDate,
+    required this.reward,
+    required this.color,
+    required this.glowColor,
+  });
+}
+
+/// 勋章展示组件
+class _BadgeDisplay extends StatelessWidget {
+  final _BadgeData badge;
+
+  const _BadgeDisplay({required this.badge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 180,
+      height: 180,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: badge.glowColor.withOpacity(0.4),
+            blurRadius: 40,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              badge.color.withOpacity(0.3),
+              badge.color.withOpacity(0.1),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Center(
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: badge.color.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                badge.icon,
+                style: const TextStyle(fontSize: 64),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 信息行
+class _InfoRow extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4ECDC4).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(icon, style: const TextStyle(fontSize: 20)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 分享选项
+class _ShareOption extends StatelessWidget {
+  final String icon;
+  final String name;
+
+  const _ShareOption({
+    required this.icon,
+    required this.name,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Text(icon, style: const TextStyle(fontSize: 28)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          name,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// 占位页
