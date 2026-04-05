@@ -1,669 +1,354 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aura-Pet</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg-start:#EDF6FA;--bg-end:#C1DDF1;--primary:#4ECDC4;--heart-pink:#FF6B8A;--surface:#fff;--gold:#FFD700;--text:#2D3436}
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aura-Pet</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet"><style>
+:root{--bg:#EDF6FA;--end:#C1DDF1;--primary:#4ECDC4;--pink:#FF6B8A;--surface:#fff;--gold:#FFD700;--text:#2D3436}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Inter,sans-serif;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));min-height:100vh;overflow:hidden}
+body{font-family:'Noto Sans SC',Inter,sans-serif;background:linear-gradient(135deg,var(--bg),var(--end));min-height:100vh;overflow:hidden;touch-action:manipulation}
 .app{width:100vw;height:100vh;position:relative;overflow:hidden}
-.page{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 20px 130px;opacity:0;transform:translateX(100%);transition:all .6s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 20px 140px;opacity:0;transform:translateX(100%);transition:all .6s cubic-bezier(.4,0,.2,1);pointer-events:none}
 .page.active{opacity:1;transform:translateX(0);pointer-events:auto}
-.page.exit-left{transform:translateX(-100%)}
-.btn{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);padding:16px 48px;background:linear-gradient(135deg,#4CAF50,#8BC34A);color:#fff;font-family:Poppins,sans-serif;font-weight:600;font-size:18px;border:none;border-radius:28px;cursor:pointer;box-shadow:0 8px 24px rgba(76,175,80,.3);z-index:100}
-.counter{position:fixed;top:20px;right:20px;padding:8px 16px;background:rgba(255,255,255,0.9);border-radius:20px;font-size:14px;font-weight:600;color:var(--text);z-index:100}
-.card{background:var(--surface);border-radius:24px;padding:32px;margin:12px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.08)}
-.title{font-family:Poppins,sans-serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:12px;text-align:center;line-height:1.3}
-.subtitle{font-size:15px;color:#666;text-align:center;line-height:1.6}
-.bubble{position:fixed;bottom:145px;left:50%;transform:translateX(-50%) scale(.8);background:linear-gradient(135deg,#FFF8E7,#FFE4E1);padding:14px 18px;border-radius:16px;max-width:280px;width:90%;box-shadow:0 8px 32px rgba(255,107,107,.2);opacity:0;transition:all .5s;z-index:200}
+.btn{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);padding:15px 52px;background:linear-gradient(135deg,#4CAF50,#8BC34A);color:#fff;font-family:Poppins,sans-serif;font-weight:700;font-size:17px;border:none;border-radius:28px;cursor:pointer;box-shadow:0 8px 24px rgba(76,175,80,.35);z-index:200;min-width:200px}
+.counter{position:fixed;top:18px;right:18px;padding:7px 16px;background:rgba(255,255,255,.9);border-radius:20px;font-size:13px;font-weight:600;color:var(--text);z-index:200}
+.card{background:var(--surface);border-radius:24px;padding:28px;margin:10px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.title{font-family:Poppins,sans-serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:10px;text-align:center;line-height:1.3}
+.subtitle{font-size:14px;color:#666;text-align:center;line-height:1.6}
+.bubble{position:fixed;bottom:148px;left:50%;transform:translateX(-50%) scale(.8);background:linear-gradient(135deg,#FFF8E7,#FFE4E1);padding:12px 18px;border-radius:18px;max-width:280px;width:90%;box-shadow:0 8px 28px rgba(255,107,107,.22);opacity:0;transition:all .5s;z-index:300;max-height:120px;overflow:hidden}
 .bubble.show{opacity:1;transform:translateX(-50%) scale(1)}
-.bubble-text{font-size:13px;line-height:1.6;color:#2D3748;text-align:center}
-.bubble-cat{display:inline-block;margin-top:8px;padding:3px 8px;background:rgba(255,107,107,.2);border-radius:8px;font-size:9px;font-weight:600;color:#FF6B8A}
-.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);display:flex;justify-content:space-around;padding:12px 0;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:50}
-.tabitem{display:flex;flex-direction:column;align-items:center;gap:4px;color:#999;font-size:10px}
-.tabitem.active{color:var(--primary)}
+.bubble-text{font-size:12px;line-height:1.65;color:#2D3748;text-align:center}
+.bubble-cat{display:inline-block;margin-top:6px;padding:2px 8px;background:rgba(255,107,107,.18);border-radius:8px;font-size:9px;font-weight:600;color:#FF6B8A}
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);display:flex;justify-content:space-around;padding:12px 0 16px;box-shadow:0 -4px 20px rgba(0,0,0,.09);z-index:100}
+.tabitem{display:flex;flex-direction:column;align-items:center;gap:3px;color:#bbb;font-size:10px;transition:color .3s;cursor:pointer}
+.tabitem.active,.tabitem:hover{color:var(--primary)}
 .tabicon{font-size:22px}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-@keyframes heartFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes wave{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(180deg)}}
-@keyframes confettiFall{0%{transform:translateY(-30px) rotate(0);opacity:1}100%{transform:translateY(150px) rotate(360deg);opacity:0}}
-.heart-bubble{position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:22px;animation:heartFloat 2s ease-in-out infinite}
-.confetti{position:absolute;width:8px;height:8px;border-radius:50%;animation:confettiFall 2.5s ease-out forwards}
-.option{background:#fff;border:2px solid #E0E0E0;border-radius:16px;padding:16px 20px;text-align:center;cursor:pointer;font-size:15px;font-weight:500;margin:6px 0;transition:all .3s}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes heartFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes wave{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(180deg)}}
+@keyframes confettiFall{0%{transform:translateY(-40px) rotate(0);opacity:1}100%{transform:translateY(180px) rotate(400deg);opacity:0}}
+@keyframes slideIn{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:translateX(0)}}
+.heart-bubble{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:22px;animation:heartFloat 2s ease-in-out infinite}
+.confetti{position:absolute;width:9px;height:9px;border-radius:50%;animation:confettiFall 2.5s ease-out forwards}
+.option{background:#fff;border:2px solid #E8E8E8;border-radius:14px;padding:14px 18px;text-align:center;cursor:pointer;font-size:14px;font-weight:500;margin:5px 0;transition:all .25s;animation:slideIn .4s ease-out}
 .option:hover{border-color:var(--primary)}
-.input{width:100%;max-width:180px;padding:14px 20px;border:2px solid #E0E0E0;border-radius:14px;font-size:22px;font-weight:600;text-align:center;outline:none}
-.input:focus{border-color:var(--primary)}
+.option.selected{border-color:var(--primary);background:rgba(78,205,196,.12)}
+.slider-wrap{max-width:280px;width:100%;margin:12px 0}
+.slider-label{font-size:12px;color:#888;margin-bottom:6px;text-align:center}
+.slider{width:100%;height:6px;-webkit-appearance:none;background:#E0E0E0;border-radius:3px;outline:none}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;background:linear-gradient(135deg,var(--primary),#38E8D0);border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(78,205,196,.4)}
+.slider-val{font-family:Poppins,sans-serif;font-size:34px;font-weight:700;color:var(--primary);text-align:center;margin:10px 0}
+.slider-unit{font-size:15px;color:#999}
 .progress-ring{position:relative;width:160px;height:160px}
 .progress-ring svg{transform:rotate(-90deg)}
 .progress-ring circle{fill:none;stroke-width:12}
-.progress-ring .bg{stroke:#E0E0E0}
-.progress-ring .progress{stroke:var(--primary);stroke-linecap:round}
+.progress-ring .bg{stroke:#E8E8E8}
+.progress-ring .progress{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset 1s ease}
 .progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.progress-value{font-family:Poppins,sans-serif;font-size:36px;font-weight:700}
-.progress-label{font-size:12px;color:#666}
-.nutrient-bar{width:100%;height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;margin:8px 0}
-.nutrient-fill{height:100%;border-radius:4px}
+.progress-value{font-family:Poppins,sans-serif;font-size:32px;font-weight:700}
+.progress-label{font-size:12px;color:#888}
+.nutrient-bar{width:100%;height:7px;background:#E8E8E8;border-radius:4px;overflow:hidden;margin:7px 0}
+.nutrient-fill{height:100%;border-radius:4px;transition:width 1s ease}
 .nutrient-fill.carbs{background:linear-gradient(90deg,#FFB74D,#FF9800)}
 .nutrient-fill.protein{background:linear-gradient(90deg,#4FC3F7,#29B6F6)}
 .nutrient-fill.fat{background:linear-gradient(90deg,#BA68C8,#9C27B0)}
-.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.mood-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;background:#fff;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
-.mood-emoji{font-size:26px}
-.mood-label{font-size:10px;color:#666}
+.nutrient-fill.calories{background:linear-gradient(90deg,#4ECDC4,#38E8D0)}
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.mood-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:#fff;border-radius:13px;box-shadow:0 3px 12px rgba(0,0,0,.05)}
+.mood-emoji{font-size:24px}
+.mood-label{font-size:9px;color:#888}
 .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.badge-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
-.badge-icon{font-size:32px}
+.badge-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;background:#fff;border-radius:13px;box-shadow:0 3px 14px rgba(0,0,0,.06)}
+.badge-icon{font-size:28px}
 .badge-name{font-size:10px;font-weight:600}
-.setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff;border-radius:12px;margin:6px 0}
-.toggle{width:48px;height:26px;background:#E0E0E0;border-radius:13px;position:relative;cursor:pointer;transition:background .3s}
+.setting-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#fff;border-radius:12px;margin:5px 0}
+.toggle{width:46px;height:24px;background:#E0E0E0;border-radius:12px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0}
 .toggle.on{background:var(--primary)}
-.toggle::after{content:"";position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .3s}
+.toggle::after{content:"";position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .3s;box-shadow:0 2px 4px rgba(0,0,0,.15)}
 .toggle.on::after{left:24px}
 .water-wave{position:relative;width:100px;height:100px;background:linear-gradient(180deg,#64B5F6,#2196F3);border-radius:50%;overflow:hidden}
-.wave{position:absolute;bottom:0;left:-50%;width:200%;height:100%;background:rgba(255,255,255,0.3);border-radius:40%;animation:wave 3s ease-in-out infinite}
+.wave{position:absolute;bottom:0;left:-50%;width:200%;height:100%;background:rgba(255,255,255,.28);border-radius:40%;animation:wave 3s ease-in-out infinite}
 .wave:nth-child(2){animation-delay:-1.5s}
-.chart{width:100%;max-width:300px;height:150px}
-.fasting-phases{display:flex;gap:5px;margin-top:14px}
-.phase-bar{flex:1;height:6px;background:#E0E0E0;border-radius:3px;overflow:hidden}
-.phase-fill{height:100%;border-radius:3px}
-.phase-fill.eating{background:#4CAF50}
-.phase-fill.burning{background:#FF9800}
-.phase-fill.fasting{background:#9C27B0}
-.feature-card{background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
-.feature-icon{font-size:28px;margin-bottom:6px}
+.curve-canvas{width:100%;max-width:300px;height:160px;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.feature-card{background:#fff;border-radius:14px;padding:12px;text-align:center;box-shadow:0 3px 14px rgba(0,0,0,.06)}
+.feature-icon{font-size:26px;margin-bottom:5px}
 .feature-text{font-size:12px;font-weight:500}
-.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
-</style>
-</head>
-<body>
-<div class="app">
-<div class="counter"><span id="pageNum">1</span> / 46</div>
+.spinner{width:42px;height:42px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite}
+.ticker{display:flex;gap:8px;margin-top:8px;overflow:hidden}
+.ticker-item{background:linear-gradient(135deg,var(--primary),#38E8D0);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;animation:pulse 2s ease-in-out infinite}
+.ticker-item.pink{background:linear-gradient(135deg,var(--pink),#FF8BAA)}
+.analysis-row{display:flex;justify-content:space-between;padding:10px 14px;background:#fff;border-radius:11px;margin:5px 0;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.analysis-label{font-size:13px;color:#666}
+.analysis-value{font-size:14px;font-weight:700;color:var(--primary)}
+.teddy-wrap{position:relative;display:inline-block}
+</style></head><body>
+<div class="app"><div class="counter"><span id="pageNum">1</span> / 46</div>
 <div class="bubble" id="bubble"><p class="bubble-text" id="bubbleText"></p><span class="bubble-cat" id="bubbleCat"></span></div>
-<div class="page active" id="page-1" style="background:linear-gradient(135deg,#FFF8F0,#FFE8D6)">
-<div style="position:relative;width:200px;height:220px"><canvas id="t1" width="200" height="220"></canvas></div>
-<div style="font-family:Poppins,sans-serif;font-size:30px;font-weight:700;color:var(--text);margin-top:20px;animation:pulse 2s ease-in-out infinite">Aura-Pet</div>
-<p style="margin-top:10px;font-size:14px;color:#666">你的健康智能伴侣</p>
-</div><div class="page" id="page-2">
-<div class="card"><h1 class="title">Reach Your<br>Weight Goals 🐻</h1><p class="subtitle">与你的可爱小熊一起，开启健康之旅</p></div>
-<div style="position:relative;width:140px;height:160px;margin-top:16px"><canvas id="t2" width="140" height="160"></canvas></div>
-</div><div class="page" id="page-3">
-<div style="font-size:56px;animation:pulse 1.5s ease-in-out infinite">🥗</div>
-<div class="card"><h1 class="title">Track Calories<br>with Ease</h1><p class="subtitle">智能识别食物，一键记录每一餐</p></div>
-<div style="position:relative;width:100px;height:120px;margin-top:12px"><canvas id="t3" width="100" height="120"></canvas></div>
-</div><div class="page" id="page-4" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
-<div style="font-size:56px">🌙</div>
-<div class="card" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px)">
-<h1 class="title" style="color:#fff">Enjoy Fasting<br>Without the Struggle</h1>
-<p class="subtitle" style="color:rgba(255,255,255,0.8)">16:8 间歇性禁食，智能计时</p>
+<div class="page active" id="page-1" style="background:linear-gradient(135deg,#FFF8F0,#FFE8D6)"><div class="teddy-wrap" style="width:200px;height:230px"><canvas id="t1" width="200" height="230"></canvas><div class="heart-bubble">&#x1F495;</div></div><div style="font-family:Poppins,sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-top:18px;animation:pulse 2s ease-in-out infinite">Aura-Pet</div><p style="margin-top:8px;font-size:13px;color:#888">你的健康智能伴侣</p></div>
+<div class="page" id="page-2"><div class="card"><h1 class="title">Reach Your<br>Weight Goals &#x1F43B;</h1><p class="subtitle">与你的可爱小熊一起，开启健康之旅</p></div><div class="teddy-wrap" style="width:130px;height:150px;margin-top:14px"><canvas id="t2" width="130" height="150"></canvas></div></div>
+<div class="page" id="page-3"><div style="font-size:52px;animation:pulse 1.5s ease-in-out infinite">&#x1F957;</div><div class="card"><h1 class="title">Track Calories<br>with Ease</h1><p class="subtitle">智能识别食物，一键记录每一餐</p></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:10px"><canvas id="t3" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-4" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)"><div style="font-size:52px">&#x1F319;</div><div class="card" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px)"><h1 class="title" style="color:#fff">Enjoy Fasting<br>Without the Struggle</h1><p class="subtitle" style="color:rgba(255,255,255,.8)">16:8 间歇性禁食，智能计时</p></div><div style="font-family:Poppins,sans-serif;font-size:40px;font-weight:700;color:#fff;margin:14px 0;letter-spacing:2px">16:00:00</div><div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t4" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-5"><div class="card"><h1 class="title">See Results &#x1F4C8;</h1></div><div style="width:100%;max-width:300px;height:150px;margin:10px 0"><svg viewBox="0 0 300 150" style="width:100%;height:100%"><defs><linearGradient id="cg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:.35"/><stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/></linearGradient></defs><path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32 L280,150 L20,150 Z" fill="url(#cg)"/><path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/></svg></div><div style="display:flex;gap:14px;margin-top:10px"><div class="feature-card"><div style="font-size:17px;font-weight:700;color:var(--primary)">85kg</div><div style="font-size:10px;color:#888">Start</div></div><div class="feature-card"><div style="font-size:17px;font-weight:700;color:var(--pink)">78kg</div><div style="font-size:10px;color:#888">Current</div></div><div class="feature-card"><div style="font-size:17px;font-weight:700;color:#4CAF50">-7kg</div><div style="font-size:10px;color:#888">Lost</div></div></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:10px"><canvas id="t5" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-6"><div class="card"><h1 class="title">Stay Hydrated &#x1F4A7;</h1><p class="subtitle">设置喝水提醒，保持身体水分</p></div><div class="water-wave" style="margin:14px 0"><div class="wave"></div><div class="wave"></div></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:10px"><canvas id="t6" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-7"><div style="font-size:52px;animation:pulse 1.5s ease-in-out infinite">&#x1F951;</div><div class="card"><h1 class="title">Balanced Nutrition</h1><p class="subtitle">碳水 / 蛋白质 / 脂肪，精准配比</p></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:10px"><canvas id="t7" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-8"><div class="card"><h1 class="title">How did you hear<br>about us? &#x1F4E2;</h1></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t8" width="70" height="90"></canvas></div><div style="max-width:300px;width:100%"><div class="option" onclick="selectOption(this,'channel')">Instagram</div><div class="option" onclick="selectOption(this,'channel')">TikTok</div><div class="option" onclick="selectOption(this,'channel')">朋友推荐</div><div class="option" onclick="selectOption(this,'channel')">小红书</div></div></div>
+<div class="page" id="page-9"><div class="card"><h1 class="title">What is your<br>main goal? &#x1F3AF;</h1></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t9" width="70" height="90"></canvas></div><div style="max-width:300px;width:100%"><div class="option" onclick="selectOption(this,'goal')" data-goal="loseWeight">&#x1F4AA; 减重</div><div class="option" onclick="selectOption(this,'goal')" data-goal="maintain">&#x2696;&#xFE0F; 维持体重</div><div class="option" onclick="selectOption(this,'goal')" data-goal="gainMuscle">&#x1F4AA; 增肌</div></div></div>
+<div class="page" id="page-10"><div class="card"><h1 class="title">Select your<br>gender &#x1F464;</h1></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t10" width="70" height="90"></canvas></div><div style="max-width:300px;width:100%"><div class="option" onclick="selectOption(this,'gender')" data-gender="male">&#x1F468; 男性</div><div class="option" onclick="selectOption(this,'gender')" data-gender="female">&#x1F469; 女性</div><div class="option" onclick="selectOption(this,'gender')" data-gender="nonBinary">&#x26A7;&#xFE0F; 非二元</div></div></div>
+<div class="page" id="page-11"><div class="card"><h1 class="title">What's your<br>age? &#x1F382;</h1></div><div class="slider-wrap"><div class="slider-label">年龄</div><div class="slider-val" id="ageVal">25 <span class="slider-unit">岁</span></div><input type="range" class="slider" id="ageSlider" min="13" max="80" value="25" step="1" oninput="onSlider('age',this.value)"></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t11" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-12"><div class="card"><h1 class="title">How tall are<br>you? &#x1F4CF;</h1></div><div class="slider-wrap"><div class="slider-label">身高</div><div class="slider-val" id="heightVal">170 <span class="slider-unit">cm</span></div><input type="range" class="slider" id="heightSlider" min="120" max="220" value="170" step="1" oninput="onSlider('height',this.value)"></div><div class="teddy-wrap" style="width:140px;height:165px;margin-top:10px"><canvas id="t12" width="140" height="165"></canvas></div></div>
+<div class="page" id="page-13"><div class="card"><h1 class="title">Current weight? &#x2696;&#xFE0F;</h1></div><div class="slider-wrap"><div class="slider-label">当前体重</div><div class="slider-val" id="weightVal">70 <span class="slider-unit">kg</span></div><input type="range" class="slider" id="weightSlider" min="30" max="120" value="70" step="0.1" oninput="onSlider('weight',this.value)"></div><div class="teddy-wrap" style="width:140px;height:165px;margin-top:10px"><canvas id="t13" width="140" height="165"></canvas></div></div>
+<div class="page" id="page-14"><div class="card"><h1 class="title">Target weight? &#x1F3AF;</h1></div><div class="slider-wrap"><div class="slider-label">目标体重</div><div class="slider-val" id="goalWeightVal">65 <span class="slider-unit">kg</span></div><input type="range" class="slider" id="goalWeightSlider" min="30" max="120" value="65" step="0.1" oninput="onSlider('goalWeight',this.value)"></div><div class="teddy-wrap" style="width:140px;height:165px;margin-top:10px"><canvas id="t14" width="140" height="165"></canvas></div></div>
+<div class="page" id="page-15"><div class="card"><h1 class="title">Activity level? &#x1F3C3;</h1></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t15" width="70" height="90"></canvas></div><div style="max-width:300px;width:100%"><div class="option" onclick="selectOption(this,'activity')" data-activity="sedentary">&#x1F6CB;&#xFE0F; 久坐（几乎不运动）</div><div class="option" onclick="selectOption(this,'activity')" data-activity="light">&#x1F6B6; 轻度（每周1-3天）</div><div class="option" onclick="selectOption(this,'activity')" data-activity="moderate">&#x1F3C3; 中度（每周3-5天）</div><div class="option" onclick="selectOption(this,'activity')" data-activity="active">&#x1F4AA; 高强度（每周6-7天）</div><div class="option" onclick="selectOption(this,'activity')" data-activity="athlete">&#x1F3C6; 运动员（每天高强度）</div></div></div>
+<div class="page" id="page-16" style="background:linear-gradient(135deg,#667eea,#764ba2)"><div class="spinner" style="border-top-color:#fff;margin-bottom:16px"></div><div class="card" style="background:rgba(255,255,255,.15)"><h1 class="title" style="color:#fff">Analyzing...</h1><div style="margin-top:14px"><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#4ECDC4;font-size:18px">&#x2713;</span><span style="color:#fff">计算 BMI</span></div><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#4ECDC4;font-size:18px">&#x2713;</span><span style="color:#fff">Mifflin-St Jeor 代谢率</span></div><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#4ECDC4;font-size:18px">&#x2713;</span><span style="color:#fff">TDEE 卡路里预算</span></div><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#4ECDC4;font-size:18px">&#x2713;</span><span style="color:#fff">生成减重曲线</span></div></div></div></div>
+<div class="page" id="page-17"><div style="font-size:64px;animation:pulse 1.5s ease-in-out infinite">&#x1F389;</div><div class="card"><h1 class="title">Your plan is ready! &#x2728;</h1><p class="subtitle">基于您的数据，定制专属计划</p></div><div style="display:flex;gap:10px;margin-top:14px"><div class="feature-card"><div class="feature-icon">&#x1F525;</div><div class="feature-text" id="planCalories">1850 kcal</div></div><div class="feature-card"><div class="feature-icon">&#x1F4A7;</div><div class="feature-text">2.5L 水</div></div><div class="feature-card"><div class="feature-icon">&#x23F0;</div><div class="feature-text">16:8</div></div></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t17" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-18"><div class="card"><h1 class="title">What users say &#x1F4AC;</h1></div><div style="max-width:280px;margin-top:10px"><div class="feature-card" style="text-align:left;display:flex;gap:10px;align-items:flex-start"><span style="font-size:28px">&#x1F469;</span><div><div style="color:#FFD700">&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;</div><p style="font-size:12px;color:#777;margin-top:4px">"小熊陪我减肥一点都不孤单"</p></div></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t18" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-19"><div style="font-size:64px">&#x1F514;</div><div class="card"><h1 class="title">Enable notifications? &#x1F4F1;</h1><p class="subtitle">接收喝水、饮食记录提醒</p></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t19" width="70" height="90"></canvas></div><div style="max-width:300px;width:100%"><div class="option" onclick="selectOption(this,'notif')" style="background:var(--primary);color:#fff">开启提醒</div><div class="option" onclick="selectOption(this,'notif')">稍后再说</div></div></div>
+<div class="page" id="page-20" style="background:linear-gradient(180deg,#2D3748,#1A202C)"><div class="spinner" style="margin-bottom:14px"></div><div class="card" style="background:rgba(255,255,255,.1)"><h1 class="title" style="color:#fff">Creating your plan...</h1><div style="margin-top:14px"><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#fff;font-size:12px">&#x25CF;</span><span style="color:rgba(255,255,255,.6);font-size:13px">个性化餐食计划</span></div><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#fff;font-size:12px">&#x25CF;</span><span style="color:rgba(255,255,255,.6);font-size:13px">禁食时间表</span></div><div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span style="color:#fff;font-size:12px">&#x25CF;</span><span style="color:rgba(255,255,255,.6);font-size:13px">成就系统初始化</span></div></div></div></div>
+<div class="page" id="page-21"><div class="card"><h1 class="title">Weight Prediction &#x1F4CA;</h1></div><div class="ticker" id="ticker" style="margin:8px 0"><div class="ticker-item" id="tickerMsg">&#x1F4C8; 实时计算中...</div></div><canvas id="curveCanvas" class="curve-canvas" width="300" height="160"></canvas><div style="display:flex;gap:10px;margin-top:10px"><div class="feature-card"><div style="font-size:14px;font-weight:700;color:var(--primary)" id="predWeeks">--周</div><div style="font-size:10px;color:#888">预计达成</div></div><div class="feature-card"><div style="font-size:14px;font-weight:700;color:var(--pink)" id="predWeight">--kg</div><div style="font-size:10px;color:#888">目标体重</div></div><div class="feature-card"><div style="font-size:14px;font-weight:700;color:#4CAF50" id="predLoss">--kg</div><div style="font-size:10px;color:#888">总变化</div></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t21" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-22"><div class="card"><h1 class="title">Habit Analysis &#x1F4CA;</h1></div><div id="habitBars" style="max-width:280px;margin-top:10px"></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t22" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-23" style="background:linear-gradient(135deg,#11998E,#38EF7D)"><div class="card" style="background:linear-gradient(135deg,#FFD700,#FFA500)"><h1 class="title">&#x2728; Premium &#x2728;</h1><p class="subtitle">解锁全部功能</p></div><div style="max-width:280px;margin-top:14px"><div style="background:rgba(255,255,255,.9);padding:10px 14px;border-radius:11px;margin:5px 0;font-size:13px">&#x2713; AI 食物识别</div><div style="background:rgba(255,255,255,.9);padding:10px 14px;border-radius:11px;margin:5px 0;font-size:13px">&#x2713; 深度分析报告</div><div style="background:rgba(255,255,255,.9);padding:10px 14px;border-radius:11px;margin:5px 0;font-size:13px">&#x2713; 无限装扮</div></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t23" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-24"><div class="card"><h1 class="title">Choose your plan &#x1F48E;</h1></div><div style="display:flex;gap:10px;margin-top:14px;max-width:320px"><div class="feature-card" style="flex:1"><div style="font-size:10px;color:#888">Weekly</div><div style="font-size:22px;font-weight:700;margin:5px 0">$4.99</div><div style="font-size:10px;color:#aaa">/周</div></div><div class="feature-card" style="flex:1;border:2px solid var(--primary);position:relative"><div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:2px 10px;border-radius:8px;font-size:9px">最受欢迎</div><div style="font-size:10px;color:#888">Yearly</div><div style="font-size:22px;font-weight:700;margin:5px 0;color:var(--primary)">$35.99</div><div style="font-size:10px;color:#aaa">/年 省70%</div></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t24" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-25"><div style="font-size:64px">&#x1F91D;</div><div class="card"><h1 class="title">Start your journey! &#x1F680;</h1><p class="subtitle">30天退款保证，无风险尝试</p></div><div style="display:flex;gap:14px;margin-top:14px"><span style="font-size:22px">&#x1F512;</span><span style="font-size:22px">&#x2713;</span><span style="font-size:22px">&#x1F4B3;</span><span style="font-size:22px">&#x1F6E1;</span></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t25" width="90" height="110"></canvas></div></div>
+<div class="page" id="page-26"><div style="font-size:74px">&#x1F38A;</div><div class="card"><h1 class="title">Welcome Back! &#x1F43B;</h1><p class="subtitle">欢迎回来，继续您的健康之旅</p></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t26" width="90" height="110"></canvas></div><div id="confetti1" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden"></div></div>
+<div class="page" id="page-27"><div class="card" style="text-align:center"><h1 class="title">Today &#x1F4C5;</h1><div class="progress-ring" style="margin:14px auto"><svg width="160" height="160"><circle class="bg" cx="80" cy="80" r="65"/><circle class="progress" cx="80" cy="80" r="65" stroke-dasharray="408" stroke-dashoffset="204" id="calorieRing"/></svg><div class="progress-text"><div class="progress-value" id="calorieDisplay">0</div><div class="progress-label" id="calorieBudget">/ 0 kcal</div></div></div><div class="ticker" id="macroDisplay" style="margin-top:10px"></div><div style="display:flex;justify-content:center;gap:18px;margin-top:14px"><div><div style="font-size:22px">&#x1F957;</div><div style="font-size:10px;color:#888">早餐</div><div style="font-size:11px;font-weight:600" id="mealB">0</div></div><div><div style="font-size:22px">&#x1F35C;</div><div style="font-size:10px;color:#888">午餐</div><div style="font-size:11px;font-weight:600" id="mealL">0</div></div><div><div style="font-size:22px">&#x1F37D;&#xFE0F;</div><div style="font-size:10px;color:#888">晚餐</div><div style="font-size:11px;font-weight:600" id="mealD">0</div></div></div></div><div class="teddy-wrap" style="width:90px;height:110px;margin-top:10px"><canvas id="t27" width="90" height="110"></canvas></div><div class="tabbar"><div class="tabitem active"><span class="tabicon">&#x1F3E0;</span><span>首页</span></div><div class="tabitem" onclick="goPage(28)"><span class="tabicon">&#x1F4CA;</span><span>统计</span></div><div class="tabitem" onclick="goPage(38)"><span class="tabicon">&#x1F3C6;</span><span>成就</span></div><div class="tabitem" onclick="goPage(39)"><span class="tabicon">&#x1F464;</span><span>我的</span></div></div></div>
+<div class="page" id="page-28"><div class="card"><h1 class="title">Nutrients &#x1F4CA;</h1></div><div style="max-width:280px;margin-top:10px"><div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>&#x1F951; 碳水</span><span id="carbsPct">0%</span></div><div class="nutrient-bar"><div class="nutrient-fill carbs" id="carbsBar" style="width:0%"></div></div><div style="font-size:10px;color:#aaa;text-align:right" id="carbsG">0g</div></div><div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>&#x1F357; 蛋白质</span><span id="proteinPct">0%</span></div><div class="nutrient-bar"><div class="nutrient-fill protein" id="proteinBar" style="width:0%"></div></div><div style="font-size:10px;color:#aaa;text-align:right" id="proteinG">0g</div></div><div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>&#x1F9C8; 脂肪</span><span id="fatPct">0%</span></div><div class="nutrient-bar"><div class="nutrient-fill fat" id="fatBar" style="width:0%"></div></div><div style="font-size:10px;color:#aaa;text-align:right" id="fatG">0g</div></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t28" width="70" height="90"></canvas></div><div class="tabbar"><div class="tabitem" onclick="goPage(27)"><span class="tabicon">&#x1F3E0;</span><span>首页</span></div><div class="tabitem active"><span class="tabicon">&#x1F4CA;</span><span>统计</span></div><div class="tabitem" onclick="goPage(38)"><span class="tabicon">&#x1F3C6;</span><span>成就</span></div><div class="tabitem" onclick="goPage(39)"><span class="tabicon">&#x1F464;</span><span>我的</span></div></div></div>
+<div class="page" id="page-29" style="">
+<div style="font-size:52px">&#x1F4AD;</div>
+<div class="card"><h1 class="title">How are you feeling? &#x1F4AD;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t29" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-30" style="">
+<div style="font-size:52px">&#x1F50D;</div>
+<div class="card"><h1 class="title">Food Search &#x1F50D;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t30" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-31" style="">
+<div style="font-size:52px">&#x1F37D;&#xFE0F;</div>
+<div class="card"><h1 class="title">Today's meals &#x1F37D;&#xFE0F;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t31" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-32" style="">
+<div style="font-size:52px">&#x1F9EE;</div>
+<div class="card"><h1 class="title">Calculator &#x1F9EE;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t32" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-33" style="">
+<div style="font-size:52px">&#x23F0;</div>
+<div class="card"><h1 class="title">Fasting Plan &#x23F0;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t33" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-34" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:52px">&#x1F319;</div>
+<div class="card"><h1 class="title">Fasting Timer &#x1F319;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t34" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-35" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:52px">&#x1F319;</div>
+<div class="card"><h1 class="title">Fasting Progress &#x1F319;</h1></div>
+<div class="teddy-wrap" style="width:120px;height:140px"><canvas id="t35" width="120" height="140"></canvas></div></div>
+<div class="page" id="page-36"><div class="water-wave" style="width:110px;height:110px;margin:14px 0"><div class="wave"></div><div class="wave"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:22px;font-weight:700" id="waterDisplay">1.5L</div></div><div class="card"><h1 class="title">Water &#x1F4A7;</h1><p class="subtitle">目标: 2.5L</p></div><div style="display:flex;gap:10px;margin-top:10px"><div class="option" onclick="addWater(250)" style="flex:1;padding:12px">+250ml</div><div class="option" onclick="addWater(500)" style="flex:1;padding:12px">+500ml</div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t36" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-37"><div class="card"><h1 class="title">Water History &#x1F4CA;</h1></div><div style="width:100%;max-width:280px;height:120px;margin:10px 0"><svg viewBox="0 0 280 120" style="width:100%;height:100%"><rect x="25" y="75" width="30" height="45" fill="#64B5F6" rx="3"/><rect x="75" y="50" width="30" height="70" fill="#64B5F6" rx="3"/><rect x="125" y="60" width="30" height="60" fill="#64B5F6" rx="3"/><rect x="175" y="30" width="30" height="90" fill="#4FC3F7" rx="3"/><rect x="225" y="12" width="30" height="108" fill="#29B6F6" rx="3"/></svg></div><p style="margin-top:12px;color:var(--primary);font-weight:600;font-size:13px">本周平均: 2.1L / 天</p><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t37" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-38"><div class="card"><h1 class="title">Achievements &#x1F3C6;</h1></div><div class="badge-grid" style="max-width:300px;margin-top:12px"><div class="badge-item"><span class="badge-icon">&#x1F525;</span><span class="badge-name">7天连续</span></div><div class="badge-item"><span class="badge-icon">&#x1F4A7;</span><span class="badge-name">喝水达人</span></div><div class="badge-item"><span class="badge-icon">&#x1F4C9;</span><span class="badge-name">减重5kg</span></div><div class="badge-item"><span class="badge-icon">&#x1F319;</span><span class="badge-name">禁食大师</span></div><div class="badge-item"><span class="badge-icon">&#x1F4F8;</span><span class="badge-name">拍照记录</span></div><div class="badge-item"><span class="badge-icon">&#x2B50;</span><span class="badge-name">VIP会员</span></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t38" width="70" height="90"></canvas></div><div class="tabbar"><div class="tabitem" onclick="goPage(27)"><span class="tabicon">&#x1F3E0;</span><span>首页</span></div><div class="tabitem" onclick="goPage(28)"><span class="tabicon">&#x1F4CA;</span><span>统计</span></div><div class="tabitem active"><span class="tabicon">&#x1F3C6;</span><span>成就</span></div><div class="tabitem" onclick="goPage(39)"><span class="tabicon">&#x1F464;</span><span>我的</span></div></div></div>
+<div class="page" id="page-39"><div class="teddy-wrap" style="width:90px;height:90px;margin:14px 0"><canvas id="t39" width="90" height="90"></canvas></div><div class="card" style="max-width:280px"><div class="analysis-row"><span class="analysis-label">BMI</span><span class="analysis-value" id="bmiDisplay">--</span></div><div class="analysis-row"><span class="analysis-label">BMR 基础代谢</span><span class="analysis-value" id="bmrDisplay">-- kcal</span></div><div class="analysis-row"><span class="analysis-label">TDEE 每日消耗</span><span class="analysis-value" id="tdeeDisplay">-- kcal</span></div><div class="analysis-row"><span class="analysis-label">打卡天数</span><span class="analysis-value" style="color:#4CAF50">28天</span></div><div class="analysis-row"><span class="analysis-label">会员状态</span><span class="analysis-value" style="color:var(--gold)">Premium</span></div></div><div class="tabbar"><div class="tabitem" onclick="goPage(27)"><span class="tabicon">&#x1F3E0;</span><span>首页</span></div><div class="tabitem" onclick="goPage(28)"><span class="tabicon">&#x1F4CA;</span><span>统计</span></div><div class="tabitem" onclick="goPage(38)"><span class="tabicon">&#x1F3C6;</span><span>成就</span></div><div class="tabitem active"><span class="tabicon">&#x1F464;</span><span>我的</span></div></div></div>
+<div class="page" id="page-40" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div style="font-size:74px">&#x1F389;</div>
+<div class="card"><h1 class="title">Goal Reached! &#x1F3AF;</h1>
+<p class="subtitle">恭喜您达成目标！</p>
 </div>
-<div style="font-family:Poppins,sans-serif;font-size:42px;font-weight:700;color:#fff;margin:16px 0;letter-spacing:2px">16:00:00</div>
-<div style="position:relative;width:130px;height:150px"><canvas id="t4" width="130" height="150"></canvas></div>
-</div><div class="page" id="page-5">
-<div class="card"><h1 class="title">See Results 📈</h1></div>
-<div class="chart" style="margin:12px 0">
-<svg viewBox="0 0 300 150" style="width:100%;height:100%">
-<defs><linearGradient id="cg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:0.4"/><stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/></linearGradient></defs>
-<path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32 L280,150 L20,150 Z" fill="url(#cg)"/>
-<path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
-</svg>
+<div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t40" width="90" height="110"></canvas></div>
+<div id="confetti40" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden"></div>
 </div>
-<div style="display:flex;gap:16px;margin-top:12px">
-<div class="feature-card"><div style="font-size:18px;font-weight:700;color:var(--primary)">85kg</div><div style="font-size:10px;color:#666">Start</div></div>
-<div class="feature-card"><div style="font-size:18px;font-weight:700;color:var(--heart-pink)">78kg</div><div style="font-size:10px;color:#666">Current</div></div>
-<div class="feature-card"><div style="font-size:18px;font-weight:700;color:#4CAF50">-7kg</div><div style="font-size:10px;color:#666">Lost</div></div>
+<div class="page" id="page-41" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div style="font-size:74px">&#x1F38A;</div>
+<div class="card"><h1 class="title">Daily Goal Reached! &#x1F389;</h1>
+<p class="subtitle">恭喜你完成了今天的健康目标！</p>
 </div>
-</div><div class="page" id="page-6">
-<div class="card"><h1 class="title">Stay Hydrated 💧</h1><p class="subtitle">设置喝水提醒，保持身体水分</p></div>
-<div class="water-wave" style="margin:16px 0"><div class="wave"></div><div class="wave"></div></div>
-<div style="position:relative;width:100px;height:120px"><canvas id="t6" width="100" height="120"></canvas></div>
-</div><div class="page" id="page-7">
-<div style="font-size:56px;animation:pulse 1.5s ease-in-out infinite">🥑</div>
-<div class="card"><h1 class="title">Balanced Nutrition</h1><p class="subtitle">碳水/蛋白质/脂肪，精准配比</p></div>
-</div><div class="page" id="page-8">
-<div class="card"><h1 class="title">How did you hear<br>about us? 📢</h1></div>
-<div style="max-width:300px;width:100%">
-<div class="option" onclick="selectOption(this)">Instagram</div>
-<div class="option" onclick="selectOption(this)">TikTok</div>
-<div class="option" onclick="selectOption(this)">朋友推荐</div>
-<div class="option" onclick="selectOption(this)">小红书</div>
+<div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t41" width="90" height="110"></canvas></div>
+<div id="confetti41" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden"></div>
 </div>
-</div><div class="page" id="page-9">
-<div class="card"><h1 class="title">What is your<br>main goal? 🎯</h1></div>
-<div style="max-width:300px;width:100%">
-<div class="option" onclick="selectOption(this)">💪 减重</div>
-<div class="option" onclick="selectOption(this)">⚖️ 维持体重</div>
-<div class="option" onclick="selectOption(this)">💪 增肌</div>
+<div class="page" id="page-42" style="">
+<div style="font-size:74px">&#x1F4CA;</div>
+<div class="card"><h1 class="title">Weekly Report &#x1F4CA;</h1>
 </div>
-</div><div class="page" id="page-10">
-<div class="card"><h1 class="title">Select your<br>gender 👤</h1></div>
-<div style="max-width:300px;width:100%">
-<div class="option" onclick="selectOption(this)">👩 女性</div>
-<div class="option" onclick="selectOption(this)">👨 男性</div>
-<div class="option" onclick="selectOption(this)">⚧️ 非二元</div>
+<div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t42" width="90" height="110"></canvas></div>
 </div>
-</div><div class="page" id="page-11">
-<div class="card"><h1 class="title">What's your<br>age? 🎂</h1></div>
-<input type="number" class="input" id="ageInput" placeholder="年龄" min="13" max="120">
-<div style="position:relative;width:80px;height:100px;margin-top:16px"><canvas id="t11" width="80" height="100"></canvas></div>
-</div><div class="page" id="page-12">
-<div class="card"><h1 class="title">How tall are<br>you? 📏</h1></div>
-<input type="number" class="input" id="heightInput" placeholder="cm" min="100" max="250">
-<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t12" width="160" height="180"></canvas></div>
-</div><div class="page" id="page-13">
-<div class="card"><h1 class="title">Current weight? ⚖️</h1></div>
-<input type="number" class="input" id="weightInput" placeholder="kg" min="30" max="300">
-<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t13" width="160" height="180"></canvas></div>
-</div><div class="page" id="page-14">
-<div class="card"><h1 class="title">Target weight? 🎯</h1></div>
-<input type="number" class="input" id="goalWeightInput" placeholder="kg" min="30" max="300">
-<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t14" width="160" height="180"></canvas></div>
-</div><div class="page" id="page-15">
-<div class="card"><h1 class="title">Activity level? 🏃</h1></div>
-<div style="max-width:300px;width:100%">
-<div class="option" onclick="selectOption(this)">🛋️ 久坐</div>
-<div class="option" onclick="selectOption(this)">🚶 轻度</div>
-<div class="option" onclick="selectOption(this)">🏃 中度</div>
-<div class="option" onclick="selectOption(this)">💪 高强度</div>
+<div class="page" id="page-43" style="">
+<div style="font-size:74px">&#x1F525;</div>
+<div class="card"><h1 class="title">7天连续打卡 &#x1F525;</h1>
 </div>
-</div><div class="page" id="page-16" style="background:linear-gradient(135deg,#667eea,#764ba2)">
-<div class="spinner" style="border-top-color:#fff"></div>
-<div class="card" style="background:rgba(255,255,255,0.15);margin-top:24px">
-<h1 class="title" style="color:#fff">Analyzing...</h1>
-<div style="margin-top:16px">
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">计算BMI</span></div>
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">分析代谢率</span></div>
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">生成计划</span></div>
+<div class="teddy-wrap" style="width:90px;height:110px;margin-top:12px"><canvas id="t43" width="90" height="110"></canvas></div>
 </div>
-</div>
-</div><div class="page" id="page-17">
-<div style="font-size:70px;animation:pulse 1.5s ease-in-out infinite">🎉</div>
-<div class="card"><h1 class="title">Your plan is ready! ✨</h1><p class="subtitle">基于您的数据，定制专属计划</p></div>
-<div style="display:flex;gap:12px;margin-top:16px">
-<div class="feature-card"><div class="feature-icon">🔥</div><div class="feature-text">1850 kcal</div></div>
-<div class="feature-card"><div class="feature-icon">💧</div><div class="feature-text">2.5L 水</div></div>
-<div class="feature-card"><div class="feature-icon">⏰</div><div class="feature-text">16:8</div></div>
-</div>
-</div><div class="page" id="page-18">
-<div class="card"><h1 class="title">What users say 💬</h1></div>
-<div style="max-width:280px;margin-top:12px">
-<div class="feature-card" style="text-align:left;display:flex;gap:12px;align-items:flex-start">
-<span style="font-size:32px">👩</span>
-<div><div style="color:#FFD700">★★★★★</div><p style="font-size:13px;color:#666;margin-top:4px">"太可爱了！小熊陪我减肥一点都不孤单"</p></div>
-</div>
-</div>
-</div><div class="page" id="page-19">
-<div style="font-size:70px">🔔</div>
-<div class="card"><h1 class="title">Enable notifications? 📱</h1><p class="subtitle">接收喝水、饮食记录提醒</p></div>
-<div style="max-width:300px;width:100%">
-<div class="option" onclick="selectOption(this)" style="background:var(--primary);color:#fff">开启提醒</div>
-<div class="option" onclick="selectOption(this)">稍后再说</div>
-</div>
-</div><div class="page" id="page-20" style="background:linear-gradient(180deg,#2D3748,#1A202C)">
-<div class="spinner"></div>
-<div class="card" style="background:rgba(255,255,255,0.1);margin-top:24px">
-<h1 class="title" style="color:#fff">Creating your plan...</h1>
-<div style="margin-top:16px">
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">个性化餐食计划</span></div>
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">禁食时间表</span></div>
-<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">成就系统</span></div>
-</div>
-</div>
-</div><div class="page" id="page-21">
-<div class="card"><h1 class="title">Weight Prediction 📊</h1></div>
-<div class="chart" style="margin:12px 0">
-<svg viewBox="0 0 300 150" style="width:100%;height:100%">
-<path d="M20,130 L55,120 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42 L260,150 L20,150 Z" fill="url(#cg)"/>
-<path d="M20,130 L55,120 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42" fill="none" stroke="#4ECDC4" stroke-width="3"/>
-<circle cx="260" cy="42" r="6" fill="#4ECDC4"/>
-</svg>
-</div>
-<p style="margin-top:12px;font-size:14px;color:var(--primary);font-weight:600">预计12周后: <strong>72kg</strong></p>
-<div style="position:relative;width:80px;height:90px;margin-top:8px">
-<canvas id="tend" width="80" height="90"></canvas>
-<div class="heart-bubble">💕</div>
-</div>
-</div><div class="page" id="page-22">
-<div class="card"><h1 class="title">Habit Analysis 📈</h1></div>
-<div style="max-width:280px;margin-top:12px">
-<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#FFF3E0;border-radius:12px"><span>记录习惯</span><span style="font-weight:600;color:#FF9800">78%</span></div>
-<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#E3F2FD;border-radius:12px"><span>喝水达标</span><span style="font-weight:600;color:#2196F3">65%</span></div>
-<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#F3E5F5;border-radius:12px"><span>禁食完成</span><span style="font-weight:600;color:#9C27B0">82%</span></div>
-</div>
-<div style="position:relative;width:80px;height:100px;margin-top:12px"><canvas id="t22" width="80" height="100"></canvas></div>
-</div><div class="page" id="page-23" style="background:linear-gradient(135deg,#11998E,#38EF7D)">
-<div class="card" style="background:linear-gradient(135deg,#FFD700,#FFA500)">
-<h1 class="title">✨ Premium ✨</h1><p class="subtitle">解锁全部功能</p>
-</div>
-<div style="max-width:280px;margin-top:16px">
-<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ AI 食物识别</div>
-<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ 深度分析报告</div>
-<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ 无限装扮</div>
-</div>
-</div><div class="page" id="page-24">
-<div class="card"><h1 class="title">Choose your plan 💎</h1></div>
-<div style="display:flex;gap:12px;margin-top:16px;max-width:320px">
-<div class="feature-card" style="flex:1"><div style="font-size:11px;color:#666">Weekly</div><div style="font-size:24px;font-weight:700;margin:6px 0">$4.99</div><div style="font-size:10px;color:#999">/周</div></div>
-<div class="feature-card" style="flex:1;border:2px solid var(--primary);position:relative">
-<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:2px 10px;border-radius:8px;font-size:10px">最受欢迎</div>
-<div style="font-size:11px;color:#666">Yearly</div><div style="font-size:24px;font-weight:700;margin:6px 0;color:var(--primary)">$35.99</div><div style="font-size:10px;color:#999">/年 (省70%)</div>
-</div>
-</div>
-</div><div class="page" id="page-25">
-<div style="font-size:70px">🤝</div>
-<div class="card"><h1 class="title">Start your journey! 🚀</h1><p class="subtitle">30天退款保证，无风险尝试</p></div>
-<div style="display:flex;gap:16px;margin-top:16px"><span style="font-size:24px">🔒</span><span style="font-size:24px">✓</span><span style="font-size:24px">💳</span><span style="font-size:24px">🛡️</span></div>
-</div><div class="page" id="page-26">
-<div style="font-size:80px">🎊</div>
-<div class="card"><h1 class="title">Welcome Back! 🐻</h1><p class="subtitle">欢迎回来，继续您的健康之旅</p></div>
-<div id="confetti1" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-27">
-<div class="card" style="text-align:center">
-<h1 class="title">Today 📅</h1>
-<div class="progress-ring" style="margin:16px auto">
-<svg width="160" height="160"><circle class="bg" cx="80" cy="80" r="65"/><circle class="progress" cx="80" cy="80" r="65" stroke-dasharray="408" stroke-dashoffset="204"/></svg>
-<div class="progress-text"><div class="progress-value" id="calorieToday">1150</div><div class="progress-label">/ 2000 kcal</div></div>
-</div>
-<div style="display:flex;justify-content:center;gap:20px;margin-top:16px">
-<div><div style="font-size:24px">🥗</div><div style="font-size:11px;color:#666">早餐</div></div>
-<div><div style="font-size:24px">🍜</div><div style="font-size:11px;color:#666">午餐</div></div>
-<div><div style="font-size:24px">🍽️</div><div style="font-size:11px;color:#666">晚餐</div></div>
-</div>
-</div>
-<div class="tabbar"><div class="tabitem active"><span class="tabicon">🏠</span><span>首页</span></div><div class="tabitem"><span class="tabicon">📊</span><span>统计</span></div><div class="tabitem"><span class="tabicon">🏆</span><span>成就</span></div><div class="tabitem"><span class="tabicon">👤</span><span>我的</span></div></div>
-</div><div class="page" id="page-28" style="">
-<div style="font-size:56px"></div>
-<div class="card"><h1 class="title">Nutrients 📊</h1></div>
-</div><div class="page" id="page-29" style="">
-<div style="font-size:56px"></div>
-<div class="card"><h1 class="title">How are you feeling? 💭</h1></div>
-</div><div class="page" id="page-30" style="">
-<div style="font-size:56px"></div>
-<div class="card"><h1 class="title">Food Search 🔍</h1></div>
-</div><div class="page" id="page-31" style="">
-<div style="font-size:56px"></div>
-<div class="card"><h1 class="title">Today's meals 🍽️</h1></div>
-</div><div class="page" id="page-32" style="">
-<div style="font-size:56px"></div>
-<div class="card"><h1 class="title">Calculator 🧮</h1></div>
-</div><div class="page" id="page-33" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
-<div style="font-size:56px">🌙</div>
-<div class="card"><h1 class="title">Fasting Plan ⏰</h1></div>
-</div><div class="page" id="page-34" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
-<div style="font-size:56px">🌙</div>
-<div class="card"><h1 class="title">Fasting Timer 🌙</h1></div>
-</div><div class="page" id="page-35" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
-<div style="font-size:56px">🌙</div>
-<div class="card"><h1 class="title">Fasting Progress 🌙</h1></div>
-</div><div class="page" id="page-36" style="">
-
-<div class="card"><h1 class="title">Water 💧</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-37" style="">
-
-<div class="card"><h1 class="title">Water History 📊</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-38" style="">
-
-<div class="card"><h1 class="title">Achievements 🏆</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-39" style="">
-
-<div class="card"><h1 class="title">Profile 👤</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-40" style="background:linear-gradient(135deg,#667eea,#764ba2)">
-<div style=font-size:90px>🎉</div>
-<div class="card"><h1 class="title">Goal Reached! 🎯</h1><p class=subtitle>恭喜您达成目标！</p></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-41" style="background:linear-gradient(135deg,#667eea,#764ba2)">
-<div style=font-size:90px>🎉</div>
-<div class="card"><h1 class="title">Daily Goal Reached! 🎉</h1><p class=subtitle>恭喜您达成目标！</p></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-42" style="">
-
-<div class="card"><h1 class="title">Weekly Report 📊</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-43" style="">
-<div style=font-size:90px>🏆</div>
-<div class="card"><h1 class="title">7天连续打卡 🔥</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-44" style="">
-
-<div class="card"><h1 class="title">Notifications 🔔</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-45" style="">
-
-<div class="card"><h1 class="title">About Us 📖</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div><div class="page" id="page-46" style="">
-<div style=font-size:90px>💬</div>
-<div class="card"><h1 class="title">Support 💬</h1></div>
-<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
-</div>
+<div class="page" id="page-44"><div class="card"><h1 class="title">Notifications &#x1F514;</h1></div><div style="max-width:300px;margin-top:12px"><div class="setting-item"><span>&#x1F305; 早餐提醒</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div><div class="setting-item"><span>&#x1F4A7; 喝水提醒</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div><div class="setting-item"><span>&#x1F319; 禁食提醒</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div><div class="setting-item"><span>&#x1F4CA; 统计报告</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t44" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-45"><div class="card"><h1 class="title">About Us &#x1F4D6;</h1><p class="subtitle" style="margin-top:12px">Aura-Pet 致力于帮助您建立健康的生活方式。</p></div><div style="max-width:280px"><div class="option" style="text-align:left">&#x1F4E7; 联系我们</div><div class="option" style="text-align:left">&#x1F4DC; 用户协议</div><div class="option" style="text-align:left">&#x1F512; 隐私政策</div></div><div class="teddy-wrap" style="width:70px;height:90px;margin-top:12px"><canvas id="t45" width="70" height="90"></canvas></div></div>
+<div class="page" id="page-46"><div class="card"><h1 class="title">Support &#x1F4AC;</h1></div><div style="max-width:280px"><div class="option" style="text-align:left">&#x2753; 帮助中心</div><div class="option" style="text-align:left">&#x1F41B; 报告问题</div><div class="option" style="text-align:left">&#x1F4A1; 功能建议</div><div class="option" style="text-align:left">&#x2B50; 给我们评分</div></div><p style="margin-top:30px;font-size:11px;color:#bbb">Version 1.0.0</p><div class="teddy-wrap" style="width:70px;height:90px;margin-top:10px"><canvas id="t46" width="70" height="90"></canvas></div></div>
 <button class="btn" id="nextBtn" onclick="nextPage()">Next</button>
-</div>
-<script>
-// 🧸 ClassicTeddyBear - Pure Brown #8B4513 | 眯眯眼 | 安静陪伴
-class Teddy {
-  constructor(c, m) {
-    this.c = c;
-    this.x = c.getContext('2d');
-    this.w = c.width;
-    this.h = c.height;
-    this.m = m;
-    this.t = 0;
-    this.start();
-  }
-  start() {
-    const a = () => { this.t += 0.016; this.draw(); requestAnimationFrame(a); };
-    a();
-  }
-  bg(x, y, r) {
-    const g = this.x.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
-    g.addColorStop(0, '#A0522D');
-    g.addColorStop(0.5, '#8B4513');
-    g.addColorStop(1, '#6B3410');
-    return g;
-  }
-  sh(cx, cy, r, i = 0.12) {
-    const g = this.x.createRadialGradient(cx, cy - r * 0.3, r * 0.1, cx, cy, r);
-    g.addColorStop(0, 'rgba(255,255,255,0)');
-    g.addColorStop(0.6, 'rgba(255,255,255,0)');
-    g.addColorStop(1, `rgba(0,0,0,${i})`);
-    this.x.beginPath();
-    this.x.arc(cx, cy, r, 0, Math.PI * 2);
-    this.x.fillStyle = g;
-    this.x.fill();
-  }
-  eyes(cx, cy, s, h = false) {
-    const ctx = this.x;
-    ctx.strokeStyle = '#2D1810';
-    ctx.lineWidth = h ? 3 : 2.5;
-    ctx.lineCap = 'round';
-    const a = h ? 0.1 : 0.2;
-    const e = h ? 0.9 : 0.8;
-    ctx.beginPath();
-    ctx.arc(cx - s, cy, s * (h ? 0.7 : 0.6), a * Math.PI, e * Math.PI);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx + s, cy, s * (h ? 0.7 : 0.6), a * Math.PI, e * Math.PI);
-    ctx.stroke();
-  }
-  nose(cx, cy, s) {
-    this.x.beginPath();
-    this.x.ellipse(cx, cy, s, s * 0.7, 0, 0, Math.PI * 2);
-    this.x.fillStyle = '#4A2810';
-    this.x.fill();
-    this.x.beginPath();
-    this.x.ellipse(cx - s * 0.3, cy - s * 0.3, s * 0.3, s * 0.2, 0, 0, Math.PI * 2);
-    this.x.fillStyle = 'rgba(255,255,255,0.2)';
-    this.x.fill();
-  }
-  smile(cx, cy, s) {
-    const ctx = this.x;
-    ctx.strokeStyle = '#4A2810';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(cx - s, cy - s * 0.5);
-    ctx.lineTo(cx - s * 0.3, cy);
-    ctx.lineTo(cx - s * 0.6, cy + s * 0.8);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx + s, cy - s * 0.5);
-    ctx.lineTo(cx + s * 0.3, cy);
-    ctx.lineTo(cx + s * 0.6, cy + s * 0.8);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx - s * 0.3, cy);
-    ctx.quadraticCurveTo(cx, cy + s * 0.3, cx + s * 0.3, cy);
-    ctx.stroke();
-  }
-  ear(cx, cy, s) {
-    this.x.beginPath();
-    this.x.arc(cx, cy, s, 0, Math.PI * 2);
-    this.x.fillStyle = this.bg(cx, cy, s);
-    this.x.fill();
-  }
-  body(cx, cy, w, h) {
-    const b = 1 + Math.sin(this.t * 1.5) * 0.03;
-    this.x.beginPath();
-    this.x.ellipse(cx, cy, w * b, h * b, 0, 0, Math.PI * 2);
-    this.x.fillStyle = this.bg(cx, cy, Math.max(w * b, h * b));
-    this.x.fill();
-    this.sh(cx, cy, Math.max(w * b, h * b));
-  }
-  legs(cy, s) {
-    this.x.fillStyle = '#8B4513';
-    this.x.beginPath();
-    this.x.ellipse(this.w / 2 - 28, cy, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
-    this.x.fill();
-    this.x.beginPath();
-    this.x.ellipse(this.w / 2 + 28, cy, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
-    this.x.fill();
-  }
-  arms(cy, s, la = -0.3, ra = 0.3) {
-    const ctx = this.x;
-    ctx.fillStyle = '#8B4513';
-    ctx.save();
-    ctx.translate(this.w / 2 - 48, cy);
-    ctx.rotate(la);
-    ctx.beginPath();
-    ctx.ellipse(0, s * 0.5, s * 0.9, s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.translate(this.w / 2 + 48, cy);
-    ctx.rotate(ra);
-    ctx.beginPath();
-    ctx.ellipse(0, s * 0.5, s * 0.9, s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-  raised(cy, s) { this.arms(cy, s, -1.2, 1.2); }
-  hat(cx, cy, s) {
-    const ctx = this.x;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - s * 1.4);
-    ctx.quadraticCurveTo(cx - s * 0.7, cy - s * 0.4, cx - s * 0.5, cy + s * 0.2);
-    ctx.lineTo(cx + s * 0.5, cy + s * 0.2);
-    ctx.quadraticCurveTo(cx + s * 0.7, cy - s * 0.4, cx, cy - s * 1.4);
-    ctx.closePath();
-    ctx.fillStyle = '#8B4513';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(cx, cy + s * 0.15, s * 0.7, s * 0.2, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#6B3410';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy - s * 1.5, s * 0.3, 0, Math.PI * 2);
-    ctx.fillStyle = '#8B4513';
-    ctx.fill();
-  }
-  nb(cx, cy, w, h) {
-    const ctx = this.x;
-    ctx.beginPath();
-    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 6);
-    ctx.fillStyle = '#8B4513';
-    ctx.fill();
-    ctx.strokeStyle = '#6B3410';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath();
-      ctx.arc(cx - w / 2 - 2, cy - h / 2 + 12 + i * 16, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#5A2D0A';
-      ctx.fill();
-    }
-    ctx.beginPath();
-    ctx.roundRect(cx - w / 2 + 8, cy - h / 2 + 8, w - 16, h - 16, 3);
-    ctx.fillStyle = '#F5F0E8';
-    ctx.fill();
-  }
-  head(cx, cy, s, h = false) {
-    this.ear(cx - s * 0.85, cy - s * 0.65, s * 0.35);
-    this.ear(cx + s * 0.85, cy - s * 0.65, s * 0.35);
-    this.x.beginPath();
-    this.x.arc(cx, cy, s, 0, Math.PI * 2);
-    this.x.fillStyle = this.bg(cx, cy, s);
-    this.x.fill();
-    this.sh(cx, cy, s, 0.1);
-    this.eyes(cx, cy - s * 0.08, s * 0.18, h);
-    this.nose(cx, cy + s * 0.2, s * 0.12);
-    this.smile(cx, cy + s * 0.38, s * 0.18);
-  }
-  sleepyHead(cx, cy, s) {
-    this.hat(cx, cy - s * 0.85, s * 0.4);
-    this.ear(cx - s * 0.85, cy - s * 0.6, s * 0.32);
-    this.ear(cx + s * 0.85, cy - s * 0.6, s * 0.32);
-    this.x.beginPath();
-    this.x.arc(cx, cy, s, 0, Math.PI * 2);
-    this.x.fillStyle = this.bg(cx, cy, s);
-    this.x.fill();
-    const ctx = this.x;
-    ctx.strokeStyle = '#2D1810';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(cx - s * 0.5, cy - s * 0.05, s * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx + s * 0.5, cy - s * 0.05, s * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
-    ctx.stroke();
-    this.nose(cx, cy + s * 0.2, s * 0.12);
-    this.smile(cx, cy + s * 0.38, s * 0.18);
-  }
-  draw() {
-    const ctx = this.x;
-    ctx.clearRect(0, 0, this.w, this.h);
-    const cx = this.w / 2;
-    const cy = this.h / 2;
-    const by = cy + 25 + Math.sin(this.t * 1.5) * 3;
-    if (this.m === 'notebook') {
-      this.body(cx, by, 60, 48);
-      this.legs(by + 32, 12);
-      this.head(cx, cy - 12 + Math.sin(this.t * 1.5) * 3, 48);
-      this.arms(by + 5, 10, 0.8, -0.8);
-      this.nb(cx + 50, cy + 8, 38, 52);
-    } else if (this.m === 'sleepy') {
-      const bb = Math.sin(this.t * 1.2) * 4;
-      ctx.save();
-      ctx.translate(cx, by + 28);
-      ctx.scale(1, 1 + bb * 0.025);
-      ctx.translate(-cx, -(by + 28));
-      this.body(cx, by + 28, 68, 50);
-      ctx.restore();
-      this.legs(by + 36, 14);
-      this.sleepyHead(cx, cy - 15 + Math.sin(this.t * 1.5) * 1.5, 50);
-    } else if (this.m === 'celebrate') {
-      this.body(cx, by, 65, 50);
-      this.legs(by + 35, 13);
-      this.head(cx, cy - 18 + Math.sin(this.t * 1.5) * 3, 52, true);
-      this.raised(by - 5, 11);
-    } else {
-      this.body(cx, by, 65, 50);
-      this.legs(by + 35, 13);
-      this.head(cx, cy - 18 + Math.sin(this.t * 1.5) * 3, 52);
-      this.arms(by + 8, 11);
-    }
-  }
-}
+</div><script>
+// 🧸 CLASSIC TEDDY BEAR
+class Teddy{constructor(c,m){this.c=c;this.x=c.getContext('2d');this.w=c.width;this.h=c.height;this.m=m||'default';this.t=0;this.start()}start(){const a=()=>{this.t+=0.016;this.draw();requestAnimationFrame(a)};a()}bg(x,y,r){const g=this.x.createRadialGradient(x-r*.28,y-r*.28,0,x,y,r);g.addColorStop(0,'#A0522D');g.addColorStop(.5,'#8B4513');g.addColorStop(1,'#6B3410');return g}sh(cx,cy,r,i=.11){const g=this.x.createRadialGradient(cx,cy-r*.3,r*.1,cx,cy,r);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.6,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(0,0,0,'+i+')');this.x.beginPath();this.x.arc(cx,cy,r,0,Math.PI*2);this.x.fillStyle=g;this.x.fill()}eyes(cx,cy,s,h){const ctx=this.x;ctx.strokeStyle='#2D1810';ctx.lineWidth=h?3:2.5;ctx.lineCap='round';const a=h?.1:.2,e=h?.9:.8;ctx.beginPath();ctx.arc(cx-s,cy,s*(h?.7:.6),a*Math.PI,e*Math.PI);ctx.stroke();ctx.beginPath();ctx.arc(cx+s,cy,s*(h?.7:.6),a*Math.PI,e*Math.PI);ctx.stroke()}nose(cx,cy,s){this.x.beginPath();this.x.ellipse(cx,cy,s,s*.7,0,0,Math.PI*2);this.x.fillStyle='#4A2810';this.x.fill();this.x.beginPath();this.x.ellipse(cx-s*.3,cy-s*.3,s*.3,s*.2,0,0,Math.PI*2);this.x.fillStyle='rgba(255,255,255,.2)';this.x.fill()}smile(cx,cy,s){const ctx=this.x;ctx.strokeStyle='#4A2810';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(cx-s,cy-s*.5);ctx.lineTo(cx-s*.3,cy);ctx.lineTo(cx-s*.6,cy+s*.8);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+s,cy-s*.5);ctx.lineTo(cx+s*.3,cy);ctx.lineTo(cx+s*.6,cy+s*.8);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-s*.3,cy);ctx.quadraticCurveTo(cx,cy+s*.3,cx+s*.3,cy);ctx.stroke()}ear(cx,cy,s){this.x.beginPath();this.x.arc(cx,cy,s,0,Math.PI*2);this.x.fillStyle=this.bg(cx,cy,s);this.x.fill()}body(cx,cy,w,h){const b=1+Math.sin(this.t*1.5)*.03;this.x.beginPath();this.x.ellipse(cx,cy,w*b,h*b,0,0,Math.PI*2);this.x.fillStyle=this.bg(cx,cy,Math.max(w,h));this.x.fill();this.sh(cx,cy,Math.max(w,h))}legs(cy,s){this.x.fillStyle='#8B4513';this.x.beginPath();this.x.ellipse(this.w/2-28,cy,s*1.1,s*.9,0,0,Math.PI*2);this.x.fill();this.x.beginPath();this.x.ellipse(this.w/2+28,cy,s*1.1,s*.9,0,0,Math.PI*2);this.x.fill()}arms(cy,s,la,ra){const ctx=this.x;ctx.fillStyle='#8B4513';ctx.save();ctx.translate(this.w/2-48,cy);ctx.rotate(la||-.3);ctx.beginPath();ctx.ellipse(0,s*.5,s*.9,s,0,0,Math.PI*2);ctx.fill();ctx.restore();ctx.save();ctx.translate(this.w/2+48,cy);ctx.rotate(ra||.3);ctx.beginPath();ctx.ellipse(0,s*.5,s*.9,s,0,0,Math.PI*2);ctx.fill();ctx.restore()}raised(cy,s){this.arms(cy,s,-1.2,1.2)}hat(cx,cy,s){const ctx=this.x;ctx.beginPath();ctx.moveTo(cx,cy-s*1.4);ctx.quadraticCurveTo(cx-s*.7,cy-s*.4,cx-s*.5,cy+s*.2);ctx.lineTo(cx+s*.5,cy+s*.2);ctx.quadraticCurveTo(cx+s*.7,cy-s*.4,cx,cy-s*1.4);ctx.closePath();ctx.fillStyle='#8B4513';ctx.fill();ctx.beginPath();ctx.ellipse(cx,cy+s*.15,s*.7,s*.2,0,0,Math.PI*2);ctx.fillStyle='#6B3410';ctx.fill();ctx.beginPath();ctx.arc(cx,cy-s*1.5,s*.3,0,Math.PI*2);ctx.fillStyle='#8B4513';ctx.fill()}nb(cx,cy,w,h){const ctx=this.x;ctx.beginPath();ctx.roundRect(cx-w/2,cy-h/2,w,h,6);ctx.fillStyle='#8B4513';ctx.fill();ctx.strokeStyle='#6B3410';ctx.lineWidth=2;ctx.stroke();for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(cx-w/2-2,cy-h/2+12+i*16,3,0,Math.PI*2);ctx.fillStyle='#5A2D0A';ctx.fill()}ctx.beginPath();ctx.roundRect(cx-w/2+8,cy-h/2+8,w-16,h-16,3);ctx.fillStyle='#F5F0E8';ctx.fill()}head(cx,cy,s,h){this.ear(cx-s*.85,cy-s*.65,s*.35);this.ear(cx+s*.85,cy-s*.65,s*.35);this.x.beginPath();this.x.arc(cx,cy,s,0,Math.PI*2);this.x.fillStyle=this.bg(cx,cy,s);this.x.fill();this.sh(cx,cy,s,.1);this.eyes(cx,cy-s*.08,s*.18,h);this.nose(cx,cy+s*.2,s*.12);this.smile(cx,cy+s*.38,s*.18)}sleepyHead(cx,cy,s){this.hat(cx,cy-s*.85,s*.4);this.ear(cx-s*.85,cy-s*.6,s*.32);this.ear(cx+s*.85,cy-s*.6,s*.32);this.x.beginPath();this.x.arc(cx,cy,s,0,Math.PI*2);this.x.fillStyle=this.bg(cx,cy,s);this.x.fill();const ctx=this.x;ctx.strokeStyle='#2D1810';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();ctx.arc(cx-s*.5,cy-s*.05,s*.25,.2*Math.PI,.8*Math.PI);ctx.stroke();ctx.beginPath();ctx.arc(cx+s*.5,cy-s*.05,s*.25,.2*Math.PI,.8*Math.PI);ctx.stroke();this.nose(cx,cy+s*.2,s*.12);this.smile(cx,cy+s*.38,s*.18)}draw(){const ctx=this.x;ctx.clearRect(0,0,this.w,this.h);const cx=this.w/2;const cy=this.h/2;const by=cy+25+Math.sin(this.t*1.5)*3;if(this.m==='notebook'){this.body(cx,by,55,45);this.legs(by+30,11);this.head(cx,cy-10+Math.sin(this.t*1.5)*3,44);this.arms(by+5,9,.8,-.8);this.nb(cx+42,cy+6,35,48)}else if(this.m==='sleepy'){const bb=Math.sin(this.t*1.2)*4;ctx.save();ctx.translate(cx,by+26);ctx.scale(1,1+bb*.025);ctx.translate(-cx,-(by+26));this.body(cx,by+26,62,46);ctx.restore();this.legs(by+34,13);this.sleepyHead(cx,cy-12+Math.sin(this.t*1.5)*1.5,46)}else if(this.m==='celebrate'){this.body(cx,by,60,46);this.legs(by+32,12);this.head(cx,cy-16+Math.sin(this.t*1.5)*3,48,true);this.raised(by-4,10)}else{this.body(cx,by,60,46);this.legs(by+32,12);this.head(cx,cy-16+Math.sin(this.t*1.5)*3,48);this.arms(by+8,10)}}}
 
-// Initialize teddies
-const teddies = [
-  {id: 't1', mode: 'default'},
-  {id: 't2', mode: 'default'},
-  {id: 't3', mode: 'default'},
-  {id: 't4', mode: 'sleepy'},
-  {id: 't6', mode: 'default'},
-  {id: 't11', mode: 'default'},
-  {id: 't12', mode: 'notebook'},
-  {id: 't13', mode: 'notebook'},
-  {id: 't14', mode: 'notebook'},
-  {id: 'tend', mode: 'default'},
-  {id: 't22', mode: 'celebrate'},
-  {id: 't35', mode: 'sleepy'},
-  {id: 't41', mode: 'celebrate'},
+// 🧠 LOGIC ENGINE
+const ACT={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,athlete:1.9};
+const GOFF={loseWeight:-500,maintain:0,gainMuscle:300};
+const ST={save(k,v){localStorage.setItem('ap_'+k,JSON.stringify(v))},load(k,d){const v=localStorage.getItem('ap_'+k);return v===null?d:JSON.parse(v)}};
+let U={gender:ST.load('gender','male'),age:ST.load('age',25),height:ST.load('height',170),weight:ST.load('weight',70),goalWeight:ST.load('goalWeight',65),activity:ST.load('activity','moderate'),goalType:ST.load('goalType','loseWeight'),bmr:0,tdee:0,budget:0,bmi:0,macros:{},
+compute(){const base=10*this.weight+6.25*this.height-5*this.age;this.bmr=this.gender==='male'?base+5:base-161;this.tdee=this.bmr*(ACT[this.activity]||1.55);this.budget=Math.round(this.tdee+(GOFF[this.goalType]||0));const h2=this.height/100;this.bmi=Math.round(this.weight/(h2*h2)*10)/10;const cC=this.budget*.45,pC=this.budget*.30,fC=this.budget*.25;this.macros={carbs:Math.round(cC/4),protein:Math.round(pC/4),fat:Math.round(fC/9)}},
+save(){['gender','age','height','weight','goalWeight','activity','goalType'].forEach(k=>ST.save(k,this[k]))}};
+U.compute();
+
+function genProj(){const diff=Math.abs(U.weight-U.goalWeight);if(diff<.1)return[{d:0,w:U.weight,l:'今天'},{d:7,w:U.goalWeight,l:'达成'}];const type=U.goalType;let wr=type==='loseWeight'?(diff>20?1:diff>10?.8:.5):(type==='gainMuscle'?.35:0);const weeks=Math.max(1,Math.ceil(diff/wr));const rates=[];for(let i=1;i<=weeks;i++)rates.push(wr*(1-(i/weeks)*(i/weeks)*.4));const pts=[{d:0,w:U.weight,l:'今天'}];let cur=U.weight,rem=diff;for(let ww=1;ww<=weeks&&rem>.01;ww++){const wr2=ww<=rates.length?rates[ww-1]:rates[rates.length-1]*.7;const ch=rem<wr2?rem:wr2;rem-=ch;const daily=ch/7;for(let d=1;d<=7&&rem>=0;d++){cur=type==='loseWeight'?cur-daily:(type==='gainMuscle'?cur+daily:cur);const day=(ww-1)*7+d;pts.push({d:day,w:Math.round(cur*100)/100,l:(ww===1&&d===1)?'第1周':((ww===weeks&&d===7)?'达成!':null)})}}return pts}
+function drawCurve(){const c=document.getElementById('curveCanvas');if(!c)return;const ctx=c.getContext('2d');const W=c.width,H=c.height,PX=30,PY=18,DW=W-PX*2,DH=H-PY*2;ctx.clearRect(0,0,W,H);ctx.strokeStyle='#F0F0F0';ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=PY+(DH/4)*i;ctx.beginPath();ctx.moveTo(PX,y);ctx.lineTo(PX+DW,y);ctx.stroke()}const pts=genProj();if(!pts.length)return;const minW=Math.floor(Math.min(...pts.map(p=>p.w))-2);const maxW=Math.ceil(Math.max(...pts.map(p=>p.w))+2);const maxD=pts[pts.length-1].d;const toX=d=>PX+(d/maxD)*DW;const toY=w=>PY+(1-(w-minW)/(maxW-minW))*DH;ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(toX(p.d),toY(p.w)):ctx.lineTo(toX(p.d),toY(p.w)));ctx.lineTo(toX(maxD),PY+DH);ctx.lineTo(PX,PY+DH);ctx.closePath();const g=ctx.createLinearGradient(0,PY,0,PY+DH);g.addColorStop(0,'rgba(78,205,196,.35)');g.addColorStop(1,'rgba(78,205,196,0)');ctx.fillStyle=g;ctx.fill();ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(toX(p.d),toY(p.w)):ctx.lineTo(toX(p.d),toY(p.w)));ctx.strokeStyle='#4ECDC4';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();pts.forEach(p=>{ctx.beginPath();ctx.arc(toX(p.d),toY(p.w),4.5,0,Math.PI*2);ctx.fillStyle='#4ECDC4';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();if(p.l){ctx.fillStyle='#666';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(p.l,toX(p.d),toY(p.w)-12)}});ctx.fillStyle='#ccc';ctx.font='9px Inter,sans-serif';ctx.textAlign='right';for(let i=0;i<=4;i++){const v=Math.round(maxW-(maxW-minW)*i/4);ctx.fillText(v+'kg',PX-4,PY+(DH/4)*i+4)}ctx.textAlign='center';ctx.fillText('今天',toX(0),PY+DH+14);ctx.fillText('达成',toX(maxD),PY+DH+14);const goalPts=pts.filter(p=>p.l==='达成!');if(goalPts.length){const totalD=goalPts[0].d;document.getElementById('predWeeks').textContent=Math.ceil(totalD/7)+'周';document.getElementById('predWeight').textContent=U.goalWeight+'kg';const loss=(U.weight-U.goalWeight);document.getElementById('predLoss').textContent=(loss>0?'-':'+')+Math.abs(loss).toFixed(1)+'kg'}}
+
+// 🎭 VOICE - 100句语料
+const VOICE=[
+["onboarding","欢迎欢迎！让我先了解一下你，这样我才能更好地陪伴你变健康哦～ 🐻"],
+["onboarding","填完这些，我就能为你量身定制健康计划啦！"],
+["onboarding","别紧张，就几个小问题，让我更好地了解你～"],
+["onboarding","你的信息越准确，我帮你计算的结果就越靠谱！"],
+["onboarding","每一个数字都是为了更懂你，加油！💪"],
+["input","这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨"],
+["input","咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊"],
+["input","刚才你在忙吗？我偷偷在你的屏幕里种了一朵玫瑰，只为你一个人盛开。🌹"],
+["input","叮！恭喜你获得'光之追随者'徽章。你的生命力已经溢出屏幕啦！✨"],
+["input","卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～"],
+["input","我刚算了一下，你今天的代谢率刚好够点亮三颗星星！⭐⭐⭐"],
+["input","嘘...我帮你把昨天的汗水都存进了星星罐里。明天继续发光吧！"],
+["input","你滑动标尺的样子好认真，像在给自己画一条通往星星的路。"],
+["input","每一个数字都是你的一部分，我都收好了，帮我记住它们好吗？"],
+["input","我感应到你在认真填写！这让我很安心，因为你在乎自己。"],
+["analysis","你的曲线正在成形，像一条通向新自己的路。很美。"],
+["analysis","数据显示你离目标越来越近了，我的小熊心脏也跟着跳动！"],
+["analysis","BMI不是评判你的标准，但它可以帮你更了解自己的身体。"],
+["analysis","你的基础代谢率刚刚出炉——这意味着躺着也能燃烧卡路里哦。"],
+["analysis","根据Mifflin-St Jeor公式，你的身体每天需要这么多能量来维持运转。"],
+["analysis","肝脏在分解脂肪，心脏在跳动，细胞在更新——你正在蜕变。"],
+["analysis","这条曲线不是终点，是起点。你的每一次选择都在改写它。"],
+["analysis","预测不是预言，是我们一起画出来的可能性。"],
+["motivation","减重不是惩罚自己，而是给自己一个更好的容器。"],
+["motivation","今天流的每一滴汗，都在浇灌明天更轻盈的你。"],
+["motivation","别着急，身体有自己的节奏。慢慢来，比较快。"],
+["motivation","你已经比昨天的自己更好了，这本身就值得庆祝。"],
+["motivation","小熊相信你，就像你相信自己一样。每一步都算数。"],
+["motivation","瓶颈期不是退步，是在为下一次突破积蓄能量。"],
+["motivation","健康是一种能力，你正在培养它。"],
+["habit","连续记录才是真正的习惯，一个人坚持很难，但我陪着你。"],
+["habit","喝水不只是为了身体，也是为了让我看到你在照顾自己。"],
+["habit","今天你记录了吗？哪怕只是一小步，也比站在原地强。"],
+["habit","习惯的魔力在于重复。每一次重复都在重塑你的大脑。"],
+["habit","我注意到你每天都很规律。这种稳定性，是健康的基石。"],
+["habit","好习惯就像存款，零存整取，积少成多。"],
+["food","食物不是敌人，是燃料。选择对的燃料，你会跑得更远。"],
+["food","碳水是能量，蛋白质是建材，脂肪是储备——缺一不可。"],
+["food","今天吃什么？我帮你算好了，每一餐都是对自己的投资。"],
+["food","吃是一种享受，不需要有罪恶感。学会欣赏食物，也学会欣赏自己。"],
+["food","蔬菜的颜色就是营养的颜色，你的盘子里有彩虹吗？"],
+["food","我不需要你戒掉零食，只需要你多一个选择——比如今天多喝一杯水。"],
+["fasting","禁食不是饿肚子，是给身体时间去做深度清洁。"],
+["fasting","16小时不进食，剩下的8小时可以好好吃。这是身体的节奏。"],
+["fasting","禁食期间，你的身体正在燃烧储备的脂肪。这是一件很酷的事。"],
+["fasting","别着急，禁食不需要一步到位。从14小时开始，慢慢来。"],
+["fasting","我陪着你度过禁食期，时间会变得很快。"],
+["fasting","禁食结束后第一餐吃什么？记得给自己准备一份营养均衡的餐。"],
+["sleep","睡眠是最好的恢复，比任何补品都有效。"],
+["sleep","昨晚睡得好吗？睡眠不足会影响代谢，让减重变得更难。"],
+["sleep","身体在睡眠中修复，在休息中成长。给自己足够的睡眠。"],
+["sleep","睡前少看手机，多看我。我不会发蓝光，只会发萌光。"],
+["sleep","深度睡眠时，身体会分泌生长激素。这是减重的黄金时间。"],
+["sleep","你的生物钟正在调整，继续保持规律的作息。"],
+["exercise","运动不只是燃烧卡路里，更是释放压力、提升心情。"],
+["exercise","哪怕只是散步30分钟，也比坐着强。动起来吧！"],
+["exercise","力量训练可以增加肌肉，肌肉可以提高代谢。这是一笔稳赚的投资。"],
+["exercise","运动后肌肉酸痛是正常的，说明肌肉在生长。"],
+["exercise","HIIT很高效，但要注意休息。过度训练会适得其反。"],
+["exercise","找到你喜欢运动方式，这样更容易坚持下去。"],
+["emotion","减肥路上，心情和体重一样重要。学会和自己和解。"],
+["emotion","偶尔吃多了没关系，重要的是第二天继续前进。"],
+["emotion","不要因为一次失误就放弃。完美主义是最大的敌人。"],
+["emotion","我理解你的焦虑。身体的变化需要时间，给自己一些耐心。"],
+["emotion","今天是糟糕的一天吗？没关系，小熊会在这里等你。"],
+["emotion","情绪性进食很正常。试着找到其他方式安慰自己。"],
+["social","和家人朋友分享你的健康目标，他们的支持会让你更有动力。"],
+["social","不需要向所有人解释你的饮食选择。这是你的旅程。"],
+["social","如果有人质疑你，记住：你在为自己而改变，不是为了别人。"],
+["social","一个人的自律叫坚持，一家人的自律叫传承。"],
+["social","社交场合也可以健康饮食，只需要做出聪明的选择。"],
+["social","你的改变也在影响身边的人。这是最好的示范。"],
+["achievement","恭喜你！这个徽章代表你又前进了一步。"],
+["achievement","7天连续记录达成！这就是习惯的力量。"],
+["achievement","减重5kg不是终点，是新旅程的起点。继续加油！"],
+["achievement","喝水达人称号GET！继续保持，让身体喝饱水。"],
+["achievement","每一次打卡都在积累。回头看，你会惊讶于自己的进步。"],
+["achievement","你是自己故事的作者，每一章都值得被记录。"],
+["milestone","你达成了第一个里程碑！这证明坚持是有回报的。"],
+["milestone","目标体重不是梦想，是计划。一步步来，它会实现的。"],
+["milestone","BMI进入正常范围了！这是你努力的证明。"],
+["milestone","连续30天健康饮食打卡。这不是运气，是坚持。"],
+["milestone","今天比30天前轻了多少？来看看你的蜕变吧。"],
+["milestone","你已经不再是当初的自己了。新的你正在诞生。"],
+["celebrate","撒花撒花！你值得被庆祝！🎉🎉🎉"],
+["celebrate","今天的你比昨天更接近目标了。每一天都在赢。"],
+["celebrate","我为你骄傲！你做到了！"],
+["celebrate","这一刻属于你。享受它，然后继续前进。"],
+["celebrate","达成目标的感觉怎么样？是不是比任何美食都爽？"],
+["celebrate","小熊已经准备好和你一起庆祝了！来个大大的拥抱！🤗"],
+["gentle","不要太苛责自己。你已经在路上了，这就够了。"],
+["gentle","偶尔的放纵不是失败，是为了更好地继续。"],
+["gentle","身体不是你需要征服的敌人，而是需要合作的伙伴。"],
+["gentle","休息也是进步的一部分。给自己放个假吧。"],
+["gentle","我在这里，不管你今天做得怎么样。明天又是新的一天。"],
+["gentle","你不需要完美，只需要坚持。"],
+["curiosity","你知道吗？身体的细胞每7年就会全部更新。你早就是一个全新的自己了。"],
+["curiosity","有趣的是，肠道菌群也会影响体重。这是一门很新的科学。"],
+["curiosity","肌肉比脂肪燃烧的热量多得多。所以力量训练是值得的。"],
+["curiosity","喝水可以提升代谢3%。所以，多喝一杯水吧。"],
+["curiosity","睡眠不足会让人更想吃高热量食物。所以，好好睡觉也是一种减肥。"],
+["curiosity","压力激素皮质醇会让脂肪堆积在腹部。所以学会放松也是健康的一部分。"]
 ];
+let usedIdx=[];
 
-teddies.forEach(t => {
-  const c = document.getElementById(t.id);
-  if (c) new Teddy(c, t.mode);
-});
-
-// Navigation
-let currentPage = 1;
-const totalPages = 46;
-const quotes = [
-  {text: "这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨", cat: "美食和解"},
-  {text: "咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊", cat: "自律之美"},
-  {text: "刚才你在忙吗？我偷偷在你的屏幕里种了一朵玫瑰，只为你一个人盛开。🌹", cat: "日常撒娇"},
-  {text: "叮！恭喜你获得'光之追随者'徽章。你的生命力已经溢出屏幕啦！✨", cat: "激励赞美"},
-  {text: "卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～", cat: "美食和解"}
+// Teddy config
+const TEDDY_MAP=[
+{id:'t1',m:'default'},{id:'t2',m:'default'},{id:'t3',m:'default'},{id:'t4',m:'sleepy'},{id:'t5',m:'default'},{id:'t6',m:'default'},{id:'t7',m:'default'},
+{id:'t8',m:'default'},{id:'t9',m:'default'},{id:'t10',m:'default'},{id:'t11',m:'default'},
+{id:'t12',m:'notebook'},{id:'t13',m:'notebook'},{id:'t14',m:'notebook'},
+{id:'t15',m:'default'},{id:'t17',m:'default'},{id:'t18',m:'default'},{id:'t19',m:'default'},
+{id:'t21',m:'default'},{id:'t22',m:'celebrate'},
+{id:'t23',m:'default'},{id:'t24',m:'default'},{id:'t25',m:'default'},{id:'t26',m:'celebrate'},{id:'t27',m:'default'},{id:'t28',m:'default'},
+{id:'t29',m:'default'},{id:'t30',m:'default'},{id:'t31',m:'default'},{id:'t32',m:'default'},{id:'t33',m:'default'},
+{id:'t34',m:'sleepy'},{id:'t35',m:'sleepy'},
+{id:'t36',m:'default'},{id:'t37',m:'default'},{id:'t38',m:'default'},{id:'t39',m:'default'},
+{id:'t40',m:'celebrate'},{id:'t41',m:'celebrate'},{id:'t42',m:'default'},{id:'t43',m:'default'},
+{id:'t44',m:'default'},{id:'t45',m:'default'},{id:'t46',m:'default'},
 ];
-let usedIdx = [];
+let teddyInstances=[];
+function initTeddies(){TEDDY_MAP.forEach(t=>{const c=document.getElementById(t.id);if(c)teddyInstances.push(new Teddy(c,t.m))})}
 
-function nextPage() {
-  if (currentPage < totalPages) {
-    document.getElementById('page-' + currentPage).classList.remove('active');
-    document.getElementById('page-' + currentPage).classList.add('exit-left');
-    currentPage++;
-    document.getElementById('page-' + currentPage).classList.add('active');
-    document.getElementById('pageNum').textContent = currentPage;
-    if (currentPage % 3 === 0) showQuote();
-    const btn = document.getElementById('nextBtn');
-    if (currentPage === totalPages) {
-      btn.textContent = 'Done!';
-      btn.onclick = () => alert('🎉 感谢体验 Aura-Pet！');
-    }
-    if (currentPage === 26) createConfetti('confetti1');
-    if (currentPage === 40) createConfetti('confetti2');
-  }
-}
+// Page Navigation
+let curPage=1,totalPages=46,quoteTimer=null;
+function nextPage(){if(curPage<totalPages){document.getElementById('page-'+curPage).classList.remove('active');curPage++;document.getElementById('page-'+curPage).classList.add('active');document.getElementById('pageNum').textContent=curPage;onPageChange(curPage);if(curPage===totalPages){document.getElementById('nextBtn').textContent='Done!';document.getElementById('nextBtn').onclick=()=>alert('🎉 感谢体验 Aura-Pet！');}}else{alert('🎉 感谢体验 Aura-Pet！');}}
+function goPage(n){if(n<1||n>totalPages||n===curPage)return;document.getElementById('page-'+curPage).classList.remove('active');curPage=n;document.getElementById('page-'+curPage).classList.add('active');document.getElementById('pageNum').textContent=curPage;onPageChange(curPage)}
+function onPageChange(p){if(p===21||p===22)drawCurve();if(p===21||p===22)drawHabit();if(p===27)updateHome();if(p===28)updateNutrients();if(p===39)updateProfile();if(p%3===0)showQuote(p);if(p===26||p===40||p===41)createConfetti(p);syncSliders()}
 
-function showQuote() {
-  let idx;
-  if (usedIdx.length >= quotes.length) usedIdx = [];
-  do { idx = Math.floor(Math.random() * quotes.length); } while (usedIdx.includes(idx));
-  usedIdx.push(idx);
-  const q = quotes[idx];
-  document.getElementById('bubbleText').textContent = q.text;
-  document.getElementById('bubbleCat').textContent = q.cat;
-  document.getElementById('bubble').classList.add('show');
-  setTimeout(() => document.getElementById('bubble').classList.remove('show'), 4000);
-}
+// Voice System
+function getVoiceCat(p){if(p<=15)return'onboarding';if(p<=20)return'input';if(p<=22)return'analyse';if(p<=27)return'habit';return'emotion'}
+function showQuote(p){let cat=getVoiceCat(p);let pool=VOICE.filter(q=>q[0]===cat||q[0]==='gentle'||q[0]==='motivation');if(pool.length===0)pool=VOICE;let idx;do{idx=Math.floor(Math.random()*pool.length)}while(usedIdx.includes(idx)&&usedIdx.length<pool.length);if(usedIdx.length>=pool.length)usedIdx=[];usedIdx.push(idx);const q=pool[idx];document.getElementById('bubbleText').textContent=q[1];document.getElementById('bubbleCat').textContent=q[0];document.getElementById('bubble').classList.add('show');clearTimeout(quoteTimer);quoteTimer=setTimeout(()=>document.getElementById('bubble').classList.remove('show'),4000)}
 
-function selectOption(el) {
-  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
+// Slider binding
+function onSlider(key,val){const el=document.getElementById(key+'Val');const unit={'age':'岁','height':'cm','weight':'kg','goalWeight':'kg'}[key]||'';if(el)el.innerHTML=val+' <span class="slider-unit">'+unit+'</span>';U[key]=parseFloat(val);U.compute();U.save();if(key==='weight'||key==='goalWeight'||key==='gender'||key==='activity'||key==='goalType'){drawCurve();drawHabit()}updatePlanInfo();updateHome();updateNutrients();updateProfile()}
+function syncSliders(){['age','height','weight','goalWeight'].forEach(k=>{const sl=document.getElementById(k+'Slider');const vl=document.getElementById(k+'Val');if(sl&&vl){sl.value=U[k];const unit={'age':'岁','height':'cm','weight':'kg','goalWeight':'kg'}[k]||'';vl.innerHTML=U[k]+' <span class="slider-unit">'+unit+'</span>'}})}
 
-function createConfetti(id) {
-  const c = document.getElementById(id);
-  if (!c) return;
-  const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#FFD700'];
-  for (let i = 0; i < 15; i++) {
-    const d = document.createElement('div');
-    d.className = 'confetti';
-    d.style.left = Math.random() * 100 + '%';
-    d.style.top = '0';
-    d.style.background = colors[Math.floor(Math.random() * colors.length)];
-    d.style.animationDelay = Math.random() * 0.5 + 's';
-    c.appendChild(d);
-    setTimeout(() => d.remove(), 3000);
-  }
-}
+// Options
+function selectOption(el,type){document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');const data=el.dataset;if(type==='goal'){U.goalType=data.goal||'maintain';U.save();drawCurve();drawHabit()}else if(type==='gender'){U.gender=data.gender||'male';U.compute();U.save();drawCurve();drawHabit()}else if(type==='activity'){U.activity=data.activity||'moderate';U.compute();U.save();drawCurve();drawHabit();updatePlanInfo();updateHome();updateNutrients();updateProfile()}}
 
-let touchX = 0;
-document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
-document.addEventListener('touchend', e => {
-  if (touchX - e.changedTouches[0].clientX > 50) nextPage();
-});
+// Update UI
+function updatePlanInfo(){document.getElementById('planCalories').textContent=U.budget+' kcal'}
+function updateHome(){const pct=Math.min(100,Math.round(0/U.budget*100));const offset=408*(1-pct/100);const ring=document.getElementById('calorieRing');if(ring)ring.style.strokeDashoffset=offset;document.getElementById('calorieDisplay').textContent='0';document.getElementById('calorieBudget').textContent='/ '+U.budget+' kcal';const m=U.macros;const macroDisplay=document.getElementById('macroDisplay');if(macroDisplay)macroDisplay.innerHTML='<div class="ticker-item">碳水 '+m.carbs+'g</div><div class="ticker-item pink">蛋白质 '+m.protein+'g</div><div class="ticker-item">脂肪 '+m.fat+'g</div>';document.getElementById('tickerMsg').textContent='目标: '+U.goalWeight+'kg | 每日: '+U.budget+'kcal'}
+function updateNutrients(){const m=U.macros;const total=m.carbs*4+m.protein*4+m.fat*9||1;document.getElementById('carbsBar').style.width='45%';document.getElementById('carbsBarPct').textContent='45%';document.getElementById('carbsBarG').textContent=m.carbs+'g';document.getElementById('proteinBar').style.width='30%';document.getElementById('proteinBarPct').textContent='30%';document.getElementById('proteinBarG').textContent=m.protein+'g';document.getElementById('fatBar').style.width='25%';document.getElementById('fatBarPct').textContent='25%';document.getElementById('fatBarG').textContent=m.fat+'g'}
+function updateProfile(){document.getElementById('bmiDisplay').textContent=U.bmi+' ('+getBMICat()+')';document.getElementById('bmrDisplay').textContent=Math.round(U.bmr)+' kcal';document.getElementById('tdeeDisplay').textContent=Math.round(U.tdee)+' kcal'}
+function getBMICat(){if(U.bmi<18.5)return'偏瘦';if(U.bmi<24)return'正常';if(U.bmi<28)return'偏胖';return'肥胖'}
+function drawHabit(){const bars=document.getElementById('habitBars');if(!bars)return;const diff=Math.abs(U.weight-U.goalWeight);const habitScore=Math.max(60,Math.min(98,100-diff*2));const waterScore=65;const fastingScore=82;bars.innerHTML='<div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>记录习惯</span><span style="font-weight:600;color:#FF9800">'+habitScore+'%</span></div><div class="nutrient-bar"><div class="nutrient-fill calories" style="width:'+habitScore+'%"></div></div></div><div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>喝水达标</span><span style="font-weight:600;color:#2196F3">'+waterScore+'%</span></div><div class="nutrient-bar"><div class="nutrient-fill protein" style="width:'+waterScore+'%"></div></div></div><div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>禁食完成</span><span style="font-weight:600;color:#9C27B0">'+fastingScore+'%</span></div><div class="nutrient-bar"><div class="nutrient-fill fat" style="width:'+fastingScore+'%"></div></div></div>';document.getElementById('tickerMsg').textContent='BMI:'+U.bmi+' | BMR:'+Math.round(U.bmr)+'kcal | 目标:'+U.goalWeight+'kg'}
 
-setTimeout(() => { if (currentPage === 1) nextPage(); }, 2500);
+// Water
+let waterML=1500;
+function addWater(ml){waterML+=ml;const L=(waterML/1000).toFixed(1);document.getElementById('waterDisplay').textContent=L+'L';if(waterML>=2500){createConfetti(36)}}
+
+// Confetti
+function createConfetti(pid){const id=pid?('confetti'+pid):'confetti1';const c=document.getElementById(id);if(!c)return;const colors=['#FFB5B5','#B5D8FF','#FFE5B5','#E5B5FF','#FFD700'];for(let i=0;i<15;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'%';d.style.top='0';d.style.background=colors[Math.floor(Math.random()*colors.length)];d.style.animationDelay=Math.random()*.5+'s';c.appendChild(d);setTimeout(()=>d.remove(),3000)}}
+
+// Touch swipe
+let touchX=0;document.addEventListener('touchstart',e=>touchX=e.touches[0].clientX);document.addEventListener('touchend',e=>{if(touchX-e.changedTouches[0].clientX>50)nextPage()});
+
+// Init
+document.addEventListener('DOMContentLoaded',()=>{initTeddies();syncSliders();U.compute();drawCurve();drawHabit();updateHome();updateNutrients();updateProfile();updatePlanInfo();setTimeout(()=>{if(curPage===1)nextPage()},2500)});
 </script>
 </body>
 </html>
