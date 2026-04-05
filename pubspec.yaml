@@ -1,5 +1,5 @@
 name: splash_screen
-description: Aura-Pet Splash Screen
+description: Aura-Pet Onboarding Screens
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -17,3 +17,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
