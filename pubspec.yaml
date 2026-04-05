@@ -1,5 +1,5 @@
-name: splash_screen
-description: Aura-Pet Onboarding Screens
+name: aura_pet
+description: Aura-Pet - Your AI Health Companion
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,8 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: ^2.2.2
-  provider: ^6.1.1
+  provider: ^6.0.0
+  shared_preferences: ^2.0.0
+  google_fonts: ^4.0.0  # 用于载入 Poppins 和 Inter
 
 dev_dependencies:
   flutter_test:
@@ -20,4 +21,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/images/
+    - assets/data/aura_quotes.json  # 100句语料库位置
