@@ -134,6 +134,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return NutrientsScreen(onComplete: _nextPage);
                 case 29:
                   return MoodScreen(onComplete: _nextPage);
+                case 30:
+                  return FoodSearchScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -12278,6 +12280,533 @@ class _MoodBearPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MoodBearPainter oldDelegate) =>
       oldDelegate.mood != mood;
+}
+
+
+/// ============================================
+/// P31: Food Search Screen
+/// ============================================
+class FoodSearchScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const FoodSearchScreen({super.key, required this.onComplete});
+
+  @override
+  State<FoodSearchScreen> createState() => _FoodSearchScreenState();
+}
+
+class _FoodSearchScreenState extends State<FoodSearchScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bearController;
+  late Animation<double> _bearAnim;
+  late Animation<double> _eyeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _bearAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 5.0, end: -5.0), weight: 50),
+    ]).animate(_bearController);
+
+    _eyeAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.15), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 0.15, end: 0.0), weight: 50),
+    ]).animate(_bearController);
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Add Food',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              // Canvas探头大熊
+              AnimatedBuilder(
+                animation: Listenable.merge([_bearAnim, _eyeAnim]),
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _bearAnim.value),
+                    child: child,
+                  );
+                },
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // 身体在屏幕外
+                    const SizedBox(height: 60),
+                    // 头部
+                    CustomPaint(
+                      size: const Size(120, 120),
+                      painter: _PeekingBearPainter(eyeOpenness: _eyeAnim.value),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 搜索框
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey.shade400, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Search for food',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.mic,
+                        color: Color(0xFF4CAF50),
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 快速扫描选项
+              const Text(
+                'Or try these',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Quick Scan 卡片
+              _ScanCard(
+                icon: '📸',
+                title: 'Quick Scan',
+                description: 'AI-powered photo recognition',
+                color: const Color(0xFF4ECDC4),
+                onTap: () {
+                  // TODO: 相机扫描
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Scan Barcode 卡片
+              _ScanCard(
+                icon: '📊',
+                title: 'Scan Barcode',
+                description: 'Scan food product barcode',
+                color: const Color(0xFFFF6B6B),
+                onTap: () {
+                  // TODO: 条码扫描
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // 最近扫描
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Recent Scans',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: Color(0xFF2D3748),
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'See all',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Color(0xFF4CAF50),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _RecentScanItem(
+                      icon: '🥗',
+                      name: 'Caesar Salad',
+                      calories: 320,
+                      time: '2h ago',
+                    ),
+                    const Divider(height: 16),
+                    _RecentScanItem(
+                      icon: '🍎',
+                      name: 'Organic Apple',
+                      calories: 95,
+                      time: '4h ago',
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 扫描卡片
+class _ScanCard extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String description;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ScanCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Text(icon, style: const TextStyle(fontSize: 28)),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey.shade400,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 最近扫描项
+class _RecentScanItem extends StatelessWidget {
+  final String icon;
+  final String name;
+  final int calories;
+  final String time;
+
+  const _RecentScanItem({
+    required this.icon,
+    required this.name,
+    required this.calories,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(child: Text(icon, style: const TextStyle(fontSize: 22))),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          '$calories kcal',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Color(0xFF4CAF50),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Canvas: 探头大熊 (期待眼神)
+class _PeekingBearPainter extends CustomPainter {
+  final double eyeOpenness;
+
+  _PeekingBearPainter({required this.eyeOpenness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2;
+
+    // 身体 (部分在屏幕外)
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.3), width: r * 2.0, height: r * 1.8),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.2), width: r * 1.0, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 期待大眼睛
+    final eyeHeight = r * 0.22 * (1 + eyeOpenness);
+    // 左眼
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx - r * 0.3, c.dy), width: r * 0.28, height: eyeHeight),
+      Paint()..color = Colors.white,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx - r * 0.3, c.dy), width: r * 0.28, height: eyeHeight),
+      Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2,
+    );
+    canvas.drawCircle(Offset(c.dx - r * 0.3, c.dy), r * 0.1, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx - r * 0.35, c.dy - r * 0.05), r * 0.03, Paint()..color = Colors.white);
+
+    // 右眼
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx + r * 0.3, c.dy), width: r * 0.28, height: eyeHeight),
+      Paint()..color = Colors.white,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx + r * 0.3, c.dy), width: r * 0.28, height: eyeHeight),
+      Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2,
+    );
+    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy), r * 0.1, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.25, c.dy - r * 0.05), r * 0.03, Paint()..color = Colors.white);
+
+    // 期待嘴 (小圆形)
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.4), width: r * 0.15, height: r * 0.12),
+      Paint()..color = const Color(0xFF8B4513),
+    );
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.25), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.25), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 举起的双手 (期待)
+    _drawRaisingArm(canvas, Offset(c.dx - r * 1.0, c.dy + r * 0.3), r * 0.3, -0.3);
+    _drawRaisingArm(canvas, Offset(c.dx + r * 1.0, c.dy + r * 0.3), r * 0.3, 0.3);
+  }
+
+  void _drawRaisingArm(Canvas canvas, Offset center, double size, double angle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -size * 0.3), width: size * 0.5, height: size * 0.7), Paint()..color = const Color(0xFFD4A574));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _PeekingBearPainter oldDelegate) =>
+      oldDelegate.eyeOpenness != eyeOpenness;
 }
 
 /// 占位页
