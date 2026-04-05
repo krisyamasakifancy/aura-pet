@@ -5,231 +5,186 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aura-Pet - 智能宠物养成</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Digital Impressionism - Monet/Van Gogh HSL Palette */
             --monet-rose: #E8B4B8;
             --monet-lavender: #C9B8E0;
             --monet-peach: #F5D0C5;
-            --monet-mint: #B8E0D2;
-            
-            --van-gogh-night: #1A1A2E;
-            --van-gogh-twilight: #16213E;
-            --van-gogh-purple: #0F3460;
-            
-            --accent-primary: #FF6B9D;
-            --accent-secondary: #C44CFF;
-            --accent-tertiary: #4C9AFF;
-            --accent-success: #4ADE80;
-            
-            /* HSL Dynamic Colors */
-            --dynamic-hue: 320;
-            --dynamic-saturation: 70%;
-            --dynamic-lightness: 65%;
-            
-            /* Glassmorphism */
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shadow: rgba(0, 0, 0, 0.25);
-            
-            /* Fluid Background */
-            --fluid-color-1: hsla(var(--dynamic-hue), var(--dynamic-saturation), var(--dynamic-lightness), 0.4);
-            --fluid-color-2: hsla(calc(var(--dynamic-hue) + 30), 60%, 70%, 0.3);
-            --fluid-color-3: hsla(calc(var(--dynamic-hue) + 60), 50%, 60%, 0.25);
+            --accent-pink: #FF6B9D;
+            --accent-purple: #A855F7;
+            --accent-green: #4ADE80;
+            --accent-gold: #FBBF24;
+            --van-gogh-night: #0D1117;
+            --van-gogh-twilight: #161B22;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --primary-hue: 320;
+            --font-display: 'Quicksand', 'Noto Sans SC', sans-serif;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
-            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            font-family: var(--font-display);
             min-height: 100vh;
             overflow: hidden;
             background: var(--van-gogh-night);
             color: white;
+            -webkit-font-smoothing: antialiased;
         }
         
-        /* Dynamic Fluid Background */
-        .fluid-background {
+        .monet-bg {
             position: fixed;
             inset: 0;
             z-index: 0;
             overflow: hidden;
         }
         
-        .fluid-orb {
+        .gradient-orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
-            animation: fluidFloat 20s ease-in-out infinite;
-            transition: all 3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: blur(100px);
         }
         
-        .fluid-orb:nth-child(1) {
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, hsla(var(--primary-hue), 70%, 65%, 0.5) 0%, transparent 70%);
+            top: -150px;
+            left: -150px;
+            animation: orbFloat1 25s ease-in-out infinite;
+        }
+        
+        .orb-2 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, hsla(calc(var(--primary-hue) + 40), 60%, 70%, 0.4) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+            animation: orbFloat2 30s ease-in-out infinite;
+        }
+        
+        .orb-3 {
             width: 400px;
             height: 400px;
-            background: var(--fluid-color-1);
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-        
-        .fluid-orb:nth-child(2) {
-            width: 350px;
-            height: 350px;
-            background: var(--fluid-color-2);
-            bottom: -80px;
-            right: -80px;
-            animation-delay: -5s;
-        }
-        
-        .fluid-orb:nth-child(3) {
-            width: 300px;
-            height: 300px;
-            background: var(--fluid-color-3);
-            top: 50%;
-            left: 50%;
+            background: radial-gradient(circle, hsla(calc(var(--primary-hue) + 80), 50%, 60%, 0.35) 0%, transparent 70%);
+            top: 40%;
+            left: 60%;
             transform: translate(-50%, -50%);
-            animation-delay: -10s;
+            animation: orbFloat3 20s ease-in-out infinite;
         }
         
-        @keyframes fluidFloat {
+        @keyframes orbFloat1 {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -40px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.95); }
-            75% { transform: translate(40px, 30px) scale(1.05); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 50px) scale(0.95); }
+            75% { transform: translate(40px, 20px) scale(1.05); }
         }
         
-        /* Main App Container */
+        @keyframes orbFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 60px) scale(1.15); }
+            66% { transform: translate(60px, -40px) scale(0.9); }
+        }
+        
+        @keyframes orbFloat3 {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-40%, -60%) scale(1.2); }
+        }
+        
         .app-container {
             position: relative;
             z-index: 10;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+            padding: env(safe-area-inset-top, 24px) 20px env(safe-area-inset-bottom, 20px);
+            max-width: 480px;
+            margin: 0 auto;
         }
         
-        /* Header */
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
+            padding: 12px 0;
         }
         
-        .header-left {
+        .header-brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 10px;
         }
         
-        .app-logo {
-            font-size: 1.5rem;
+        .brand-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+        }
+        
+        .brand-name {
+            font-size: 18px;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            background: linear-gradient(135deg, white, rgba(255,255,255,0.7));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -0.02em;
         }
         
-        .user-coins {
+        .header-coins {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            gap: 8px;
+            padding: 8px 16px;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            font-weight: 600;
+            border-radius: 20px;
         }
         
-        .coin-icon {
-            font-size: 1.2rem;
-        }
+        .coin-amount { font-size: 16px; font-weight: 700; color: var(--accent-gold); }
         
-        /* Main Content */
-        .main-content {
+        .pet-stage {
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-        
-        /* Pet View */
-        .pet-container {
-            flex: 1;
-            display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
         }
         
-        .pet-character {
+        .pet-wrapper {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 260px;
+            height: 260px;
             cursor: pointer;
             touch-action: manipulation;
         }
         
-        /* Spring Physics Animation */
-        .pet-sprite {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-origin: center bottom;
-            transition: transform 0.1s ease-out;
+        .pet-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, hsla(var(--primary-hue), 70%, 65%, 0.2) 0%, transparent 70%);
+            animation: glowPulse 3s ease-in-out infinite;
         }
         
-        .pet-sprite.bounce {
-            animation: springBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
         }
         
-        .pet-sprite.spin {
-            animation: spinAround 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .pet-sprite.hug {
-            animation: hugMotion 1s ease-out;
-        }
-        
-        .pet-sprite.jump {
-            animation: jumpUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        @keyframes springBounce {
-            0%, 100% { transform: scale(1); }
-            30% { transform: scale(1.3); }
-            60% { transform: scale(0.9); }
-            80% { transform: scale(1.1); }
-        }
-        
-        @keyframes spinAround {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(360deg) scale(1.2); }
-            100% { transform: rotate(720deg) scale(1); }
-        }
-        
-        @keyframes hugMotion {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.2) translateY(-10px); }
-            60% { transform: scale(1.1) translateY(5px); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes jumpUp {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-60px); }
-        }
-        
-        /* Pet Avatar (Canvas) */
         #pet-canvas {
             width: 100%;
             height: 100%;
@@ -238,56 +193,83 @@
             left: 0;
         }
         
-        /* Pet Mood Indicator */
-        .pet-mood-badge {
+        .mood-badge {
             position: absolute;
-            bottom: -20px;
+            bottom: -10px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 0.4rem 1rem;
+            padding: 8px 20px;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            white-space: nowrap;
+            border-radius: 24px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
+            white-space: nowrap;
         }
         
-        .mood-dot {
-            width: 8px;
-            height: 8px;
+        .mood-indicator {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--accent-success);
-            animation: pulse 2s infinite;
+            background: var(--accent-green);
+            animation: moodPulse 2s ease-in-out infinite;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.2); }
+        @keyframes moodPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
         }
         
-        /* Touch Hint Particles */
-        .touch-particle {
-            position: absolute;
-            pointer-events: none;
-            animation: particleFade 0.8s ease-out forwards;
+        .mood-text { font-size: 13px; font-weight: 600; }
+        
+        .pet-identity { text-align: center; margin-top: 16px; }
+        .pet-name { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+        
+        .pet-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
         }
         
-        @keyframes particleFade {
-            0% { opacity: 1; transform: scale(0); }
-            50% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.5) translateY(-50px); }
+        .xp-section {
+            margin-top: 16px;
+            width: 100%;
+            max-width: 180px;
         }
         
-        /* Stats Cards */
-        .stats-section {
+        .xp-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+            border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .xp-text {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 6px;
+            text-align: center;
+        }
+        
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            padding: 1rem 0;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 16px 0;
         }
         
         .stat-card {
@@ -295,131 +277,104 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            padding: 1rem;
+            padding: 12px 8px;
             text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+        .stat-card:active { transform: scale(0.97); }
+        .stat-icon { font-size: 22px; margin-bottom: 6px; }
+        .stat-value { font-size: 16px; font-weight: 700; }
+        .stat-label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        
+        .primary-action {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(255, 107, 157, 0.35);
             transition: all 0.3s ease;
         }
         
-        .stat-card:active {
-            transform: scale(0.95);
-        }
+        .primary-action:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255, 107, 157, 0.45); }
+        .primary-action:active { transform: scale(0.98); }
         
-        .stat-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-        
-        .stat-label {
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.6);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        
-        .stat-bar {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-        
-        .stat-bar-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        /* Action Buttons */
-        .action-buttons {
+        .secondary-actions {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            padding: 1rem 0;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
         }
         
-        .action-btn {
+        .secondary-btn {
+            padding: 14px 8px;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 1rem;
+            border-radius: 16px;
             color: white;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .action-btn:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .action-btn.primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border: none;
-            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.4);
-        }
-        
-        .action-btn-icon {
-            font-size: 1.5rem;
-        }
-        
-        .action-btn-text {
+            font-family: var(--font-display);
+            font-size: 12px;
             font-weight: 600;
-            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
         }
         
-        /* Bottom Navigation */
+        .secondary-btn:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .secondary-btn:active { transform: scale(0.95); }
+        .secondary-btn-icon { font-size: 24px; }
+        
         .bottom-nav {
             display: flex;
             justify-content: space-around;
-            padding: 1rem 0;
+            padding: 16px 8px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
             border-top: 1px solid var(--glass-border);
             border-radius: 24px 24px 0 0;
+            margin: 0 -20px;
+            padding-left: max(20px, calc(50vw - 220px));
+            padding-right: max(20px, calc(50vw - 220px));
         }
         
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.25rem;
-            padding: 0.5rem 1rem;
-            color: rgba(255, 255, 255, 0.5);
+            gap: 4px;
+            padding: 8px 16px;
+            color: rgba(255,255,255,0.4);
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        .nav-item.active {
-            color: var(--accent-primary);
-        }
+        .nav-item:hover { color: rgba(255,255,255,0.6); }
+        .nav-item.active { color: var(--accent-pink); }
+        .nav-icon { font-size: 24px; }
+        .nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; }
         
-        .nav-item-icon {
-            font-size: 1.5rem;
-        }
-        
-        .nav-item-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        /* Dialog Overlay */
         .dialog-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -428,341 +383,421 @@
             transition: opacity 0.3s ease;
         }
         
-        .dialog-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
+        .dialog-overlay.active { opacity: 1; pointer-events: all; }
         
-        .dialog-content {
+        .dialog-card {
             background: var(--van-gogh-twilight);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 1.5rem;
-            max-width: 90%;
-            width: 320px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .dialog-overlay.active .dialog-content {
-            transform: scale(1);
-        }
-        
-        .dialog-emoji {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .dialog-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .dialog-message {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-            margin-bottom: 1.5rem;
-        }
-        
-        .dialog-btn {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border: none;
-            border-radius: 24px;
-            padding: 0.875rem 2rem;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .dialog-btn:active {
-            transform: scale(0.95);
-        }
-        
-        /* Camera/Meal Dialog */
-        .meal-dialog {
+            border-radius: 28px;
+            padding: 28px;
             max-width: 90%;
             width: 360px;
+            text-align: center;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
         }
         
-        .camera-preview {
+        .dialog-overlay.active .dialog-card { transform: scale(1) translateY(0); }
+        
+        .camera-frame {
             width: 100%;
             aspect-ratio: 4/3;
-            background: var(--van-gogh-night);
-            border-radius: 16px;
-            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--van-gogh-night), var(--van-gogh-twilight));
+            border-radius: 20px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            border: 2px solid var(--glass-border);
         }
         
-        .camera-placeholder {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.5);
+        .camera-placeholder { text-align: center; color: rgba(255,255,255,0.5); }
+        .camera-icon { font-size: 48px; margin-bottom: 8px; animation: cameraPulse 2s ease-in-out infinite; }
+        
+        @keyframes cameraPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
         
-        .camera-placeholder-icon {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
+        .food-result { padding: 20px; background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); }
+        .food-emoji { font-size: 56px; margin-bottom: 12px; }
+        .food-name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .food-calories { font-size: 14px; color: var(--accent-pink); margin-bottom: 8px; }
+        
+        .food-label {
+            display: inline-block;
+            padding: 6px 16px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
         
-        /* Ripple Effect for Water */
-        .ripple-container {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
+        .dialog-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .dialog-message { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 24px; }
+        
+        .dialog-actions { display: flex; gap: 12px; }
+        
+        .dialog-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 16px;
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
         }
         
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(74, 222, 128, 0.3);
-            animation: rippleExpand 2s ease-out forwards;
+        .dialog-btn.primary {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.3);
         }
         
-        @keyframes rippleExpand {
-            0% { width: 0; height: 0; opacity: 1; }
-            100% { width: 200px; height: 200px; opacity: 0; margin: -100px; }
-        }
-        
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--van-gogh-twilight);
+        .dialog-btn.secondary {
+            background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 0.875rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 200;
+            color: rgba(255,255,255,0.8);
         }
         
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .dialog-btn:hover { transform: translateY(-2px); }
+        .dialog-btn:active { transform: scale(0.97); }
         
-        .toast-icon {
-            font-size: 1.25rem;
-        }
-        
-        .toast-text {
-            font-weight: 500;
-        }
-        
-        /* Loading Spinner */
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--accent-primary);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-pink);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .toast-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
         }
         
-        /* Coin Animation */
+        .toast-container.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        .toast {
+            padding: 14px 24px;
+            background: var(--van-gogh-twilight);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            white-space: nowrap;
+        }
+        
+        .toast-icon { font-size: 20px; }
+        .toast-text { font-size: 14px; font-weight: 600; }
+        
         .coin-float {
             position: fixed;
             pointer-events: none;
-            font-size: 1.5rem;
-            animation: coinFloat 1.5s ease-out forwards;
-            z-index: 150;
+            font-size: 28px;
+            animation: coinRise 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 1500;
         }
         
-        @keyframes coinFloat {
+        @keyframes coinRise {
             0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-100px) scale(0.5); }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.5); }
+        }
+        
+        .touch-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            animation: particleFloat 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 100;
+        }
+        
+        @keyframes particleFloat {
+            0% { opacity: 1; transform: scale(0); }
+            20% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.3); }
+        }
+        
+        .speech-bubble {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 16px;
+            background: white;
+            border-radius: 16px;
+            color: var(--van-gogh-night);
+            font-size: 13px;
+            font-weight: 600;
+            max-width: 200px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid white;
+        }
+        
+        .speech-bubble.show { opacity: 1; top: -60px; }
+        
+        /* Pet Animations */
+        .pet-bounce { animation: petBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pet-spin { animation: petSpin 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pet-jump { animation: petJump 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pet-hug { animation: petHug 1s ease-out; }
+        
+        @keyframes petBounce {
+            0%, 100% { transform: scale(1); }
+            20% { transform: scale(1.35); }
+            40% { transform: scale(0.9); }
+            60% { transform: scale(1.15); }
+        }
+        
+        @keyframes petSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(360deg) scale(1.25); }
+            100% { transform: rotate(720deg) scale(1); }
+        }
+        
+        @keyframes petJump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-80px); }
+        }
+        
+        @keyframes petHug {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.2) translateY(-15px); }
+            60% { transform: scale(1.1) translateY(8px); }
         }
     </style>
 </head>
 <body>
-    <!-- Fluid Background -->
-    <div class="fluid-background" id="fluidBackground">
-        <div class="fluid-orb"></div>
-        <div class="fluid-orb"></div>
-        <div class="fluid-orb"></div>
+    <div class="monet-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
     </div>
     
-    <!-- App Container -->
     <div class="app-container">
-        <!-- Header -->
         <div class="app-header">
-            <div class="header-left">
-                <div class="app-logo">Aura-Pet</div>
+            <div class="header-brand">
+                <div class="brand-avatar">🦝</div>
+                <div class="brand-name">Aura-Pet</div>
             </div>
-            <div class="user-coins">
-                <span class="coin-icon">🪙</span>
-                <span id="coinCount">150</span>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Pet View -->
-            <div class="pet-container">
-                <div class="pet-character" id="petCharacter">
-                    <canvas id="pet-canvas"></canvas>
-                    <div class="pet-mood-badge">
-                        <div class="mood-dot"></div>
-                        <span id="petMoodText">开心</span>
-                    </div>
-                </div>
-                <div class="ripple-container" id="rippleContainer"></div>
-            </div>
-            
-            <!-- Stats Section -->
-            <div class="stats-section">
-                <div class="stat-card" onclick="showToast('🍽️ 今日已记录 3 餐')">
-                    <div class="stat-icon">🍽️</div>
-                    <div class="stat-value" id="mealsToday">3</div>
-                    <div class="stat-label">今日餐食</div>
-                    <div class="stat-bar">
-                        <div class="stat-bar-fill" style="width: 60%; background: linear-gradient(90deg, #FF6B9D, #C44CFF);"></div>
-                    </div>
-                </div>
-                
-                <div class="stat-card" onclick="showToast('💧 水分补给完成！')">
-                    <div class="stat-icon">💧</div>
-                    <div class="stat-value" id="waterIntake">1200</div>
-                    <div class="stat-label">ml</div>
-                    <div class="stat-bar">
-                        <div class="stat-bar-fill" id="waterBar" style="width: 60%; background: linear-gradient(90deg, #4C9AFF, #4ADE80);"></div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-value" id="streakCount">5</div>
-                    <div class="stat-label">连续天数</div>
-                    <div class="stat-bar">
-                        <div class="stat-bar-fill" style="width: 83%; background: linear-gradient(90deg, #FF6B9D, #FFD700);"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="action-btn primary" onclick="openMealDialog()">
-                    <span class="action-btn-icon">📸</span>
-                    <span class="action-btn-text">拍照记录</span>
-                </button>
-                
-                <button class="action-btn" onclick="addWater()">
-                    <span class="action-btn-icon">🥤</span>
-                    <span class="action-btn-text">喝水 +250ml</span>
-                </button>
-                
-                <button class="action-btn" onclick="petInteraction('head')">
-                    <span class="action-btn-icon">👋</span>
-                    <span class="action-btn-text">摸摸头</span>
-                </button>
-                
-                <button class="action-btn" onclick="petInteraction('poke')">
-                    <span class="action-btn-icon">😺</span>
-                    <span class="action-btn-text">戳戳肚子</span>
-                </button>
+            <div class="header-coins">
+                <span>🪙</span>
+                <span class="coin-amount" id="coinDisplay">280</span>
             </div>
         </div>
         
-        <!-- Bottom Navigation -->
+        <div class="pet-stage">
+            <div class="pet-wrapper" id="petWrapper">
+                <div class="pet-glow"></div>
+                <canvas id="pet-canvas"></canvas>
+                <div class="speech-bubble" id="speechBubble"></div>
+                <div class="mood-badge">
+                    <div class="mood-indicator" id="moodIndicator"></div>
+                    <span class="mood-text" id="moodText">超开心</span>
+                </div>
+            </div>
+            
+            <div class="pet-identity">
+                <div class="pet-name" id="petName">小浣熊 · 毛毛</div>
+                <div class="pet-level">
+                    <span>⭐</span>
+                    <span id="petLevel">Lv.3 幼年期</span>
+                </div>
+            </div>
+            
+            <div class="xp-section">
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xpFill" style="width: 65%"></div>
+                </div>
+                <div class="xp-text"><span id="xpCurrent">130</span> / <span id="xpMax">200</span> XP</div>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card" onclick="showToast('🍽️ 今日已记录 3 餐')">
+                <div class="stat-icon">🍽️</div>
+                <div class="stat-value" id="mealsCount">3</div>
+                <div class="stat-label">餐食</div>
+            </div>
+            <div class="stat-card" onclick="showToast('💧 水分充足！')">
+                <div class="stat-icon">💧</div>
+                <div class="stat-value" id="waterCount">1500</div>
+                <div class="stat-label">ml</div>
+            </div>
+            <div class="stat-card" onclick="showToast('🔥 连续 7 天！')">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value" id="streakCount">7</div>
+                <div class="stat-label">天</div>
+            </div>
+            <div class="stat-card" onclick="showToast('💖 饱腹度 85%')">
+                <div class="stat-icon">💖</div>
+                <div class="stat-value" id="fullnessCount">85</div>
+                <div class="stat-label">饱腹</div>
+            </div>
+        </div>
+        
+        <div class="actions-section">
+            <button class="primary-action" onclick="openMealDialog()">
+                <span>📸</span>
+                <span>拍照记录餐食</span>
+            </button>
+            
+            <div class="secondary-actions">
+                <button class="secondary-btn" onclick="addWater()">
+                    <span class="secondary-btn-icon">🥤</span>
+                    <span>喝水</span>
+                </button>
+                <button class="secondary-btn" onclick="petAction('headpat')">
+                    <span class="secondary-btn-icon">👋</span>
+                    <span>摸摸</span>
+                </button>
+                <button class="secondary-btn" onclick="petAction('poke')">
+                    <span class="secondary-btn-icon">😺</span>
+                    <span>戳戳</span>
+                </button>
+            </div>
+        </div>
+        
         <div class="bottom-nav">
             <div class="nav-item active">
-                <span class="nav-item-icon">🏠</span>
-                <span class="nav-item-label">首页</span>
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">首页</span>
             </div>
-            <div class="nav-item" onclick="showToast('📊 数据看板开发中...')">
-                <span class="nav-item-icon">📊</span>
-                <span class="nav-item-label">看板</span>
+            <div class="nav-item" onclick="showToast('📊 数据看板')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">看板</span>
             </div>
-            <div class="nav-item" onclick="showToast('🛒 商店开发中...')">
-                <span class="nav-item-icon">🛒</span>
-                <span class="nav-item-label">商店</span>
+            <div class="nav-item" onclick="showToast('🛒 商店')">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">商店</span>
             </div>
-            <div class="nav-item" onclick="showToast('👤 个人中心...')">
-                <span class="nav-item-icon">👤</span>
-                <span class="nav-item-label">我的</span>
+            <div class="nav-item" onclick="showToast('👤 个人中心')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
             </div>
         </div>
     </div>
     
-    <!-- Meal Dialog -->
     <div class="dialog-overlay" id="mealDialog">
-        <div class="dialog-content meal-dialog">
-            <div class="camera-preview" id="cameraPreview">
-                <div class="camera-placeholder">
-                    <div class="camera-placeholder-icon">📸</div>
-                    <div>点击模拟拍照</div>
+        <div class="dialog-card">
+            <div class="camera-frame" id="cameraFrame">
+                <div class="camera-placeholder" id="cameraPlaceholder">
+                    <div class="camera-icon">📸</div>
+                    <div>点击拍照</div>
                 </div>
+                <div class="food-result" id="foodResult" style="display: none;">
+                    <div class="food-emoji" id="foodEmoji">🍰</div>
+                    <div class="food-name" id="foodName">芝士蛋糕</div>
+                    <div class="food-calories" id="foodCalories">420 kcal</div>
+                    <div class="food-label" id="foodLabel">灵魂充电时间 ⚡</div>
+                </div>
+                <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
             </div>
-            <div class="dialog-title">🍰 记录餐食</div>
-            <div class="dialog-message" id="mealDialogMessage">
-                拍下你的餐食，AI 会帮你分析并喂养小浣熊～
-            </div>
-            <div style="display: flex; gap: 0.75rem;">
-                <button class="dialog-btn" style="flex: 1; background: var(--glass-bg);" onclick="closeMealDialog()">取消</button>
-                <button class="dialog-btn" style="flex: 1;" onclick="simulateMealCapture()">拍照</button>
+            <div class="dialog-title" id="mealDialogTitle">🍰 记录餐食</div>
+            <div class="dialog-message" id="mealDialogMessage">拍下你的餐食，AI 会帮你分析并喂养小浣熊～</div>
+            <div class="dialog-actions">
+                <button class="dialog-btn secondary" onclick="closeMealDialog()">取消</button>
+                <button class="dialog-btn primary" id="mealConfirmBtn" onclick="captureMeal()">拍照</button>
             </div>
         </div>
     </div>
     
-    <!-- Toast -->
-    <div class="toast" id="toast">
-        <span class="toast-icon" id="toastIcon">✨</span>
-        <span class="toast-text" id="toastText">操作成功</span>
+    <div class="toast-container" id="toastContainer">
+        <div class="toast">
+            <span class="toast-icon" id="toastIcon">✨</span>
+            <span class="toast-text" id="toastText">操作成功</span>
+        </div>
     </div>
 
     <script>
         // ============================================
+        // SEED DATA - 50+ Conversation Corpus
+        // ============================================
+        const ConversationCorpus = {
+            dessert: [
+                { emoji: '🍰', name: '芝士蛋糕', cal: 420, label: '灵魂充电时间 ⚡', phrases: ['哇！是你最爱的甜点诶！！', '生活已经这么苦了当然要对自己好一点呀～', '吃吧吃吧，小浣熊批准了！👑✨'] },
+                { emoji: '🍫', name: '巧克力', cal: 550, label: '快乐因子注入中 💫', phrases: ['哦～是巧克力呀！', '研究表明黑巧克力含有抗氧化物质哦～', '科学认证的养生甜点！📚💪'] },
+                { emoji: '🍦', name: '冰淇淋', cal: 320, label: '夏日快乐源泉 🌞', phrases: ['夏天的快乐来啦！', '卡路里什么的先放一边～', '这一刻的满足感才是真正的财富呀～'] },
+                { emoji: '🍩', name: '甜甜圈', cal: 380, label: '快乐圈循环 🔄', phrases: ['甜甜圈！快乐圈！', '甜食会刺激多巴胺分泌呢～', '这是科学让你开心的！🤪✨'] },
+                { emoji: '🧁', name: '杯子蛋糕', cal: 350, label: '精致小确幸 ✨', phrases: ['好精致的蛋糕！', '一口一个刚刚好～', '小浣熊也想咬一口呢！'] }
+            ],
+            main: [
+                { emoji: '🍕', name: '披萨', cal: 680, label: '尊享犒劳时刻 👑', phrases: ['披萨！永远的经典！', '碳水+脂肪的完美组合，怪不得叫 comfort food！', '大口吃起来！🤤'] },
+                { emoji: '🍔', name: '汉堡', cal: 550, label: '能量补给站 ⚡', phrases: ['汉堡侠出击！', '牛肉饼提供蛋白质，面包提供能量～', '这可是正经的一顿营养餐呢！'] },
+                { emoji: '🍜', name: '拉面', cal: 450, label: '暖心治愈系 💕', phrases: ['热腾腾的拉面！', '碳水化合物的快乐～', '吃完浑身都暖和了！'] },
+                { emoji: '🍛', name: '咖喱饭', cal: 520, label: '元气充电中 🔋', phrases: ['咖喱的香气！', '浓郁的味道正在唤醒味蕾～', '好满足的一餐呀！'] }
+            ],
+            fast: [
+                { emoji: '🍗', name: '炸鸡', cal: 620, label: '快乐炸裂 ✨', phrases: ['酥脆的外皮，多汁的鸡肉...', '今天的你看起来需要一点酥脆的治愈感～', '卡路里什么的不存在的，只有快乐！'] },
+                { emoji: '🍟', name: '薯条', cal: 380, label: '黄金能量棒 💛', phrases: ['薯条！薯条！薯条！', '黄金酥脆的外表下是满满的土豆能量～', '偶尔放纵一下也是生活的一部分嘛！'] },
+                { emoji: '🌭', name: '热狗', cal: 290, label: '轻量快乐 🎉', phrases: ['简单又美味！', '小浣熊的标准快餐选择～', '刚刚好的分量！'] }
+            ],
+            healthy: [
+                { emoji: '🥗', name: '蔬菜沙拉', cal: 180, label: '绿色能量满格 🌿', phrases: ['蔬菜侠出击！🧑‍🌾', '今天的你又在为身体健康投资啦～', '小浣熊给你点一个大大的赞！'] },
+                { emoji: '🥑', name: '牛油果', cal: 160, label: '健身达人之选 💪', phrases: ['牛油果！健身达人的最爱！', '单不饱和脂肪酸，对心脏超友好～', '小浣熊也想来一片呢（悄悄流口水）'] },
+                { emoji: '🍎', name: '水果拼盘', cal: 150, label: '大自然糖果 🍬', phrases: ['新鲜的水果！', '天然的甜味最健康啦～', '维生素满满！'] },
+                { emoji: '🥚', name: '水煮蛋', cal: 140, label: '蛋白质仓库 💎', phrases: ['简单却营养！', '蛋白质是生命的基础呀～', '小浣熊的早餐常客！'] }
+            ],
+            drinks: [
+                { emoji: '☕', name: '咖啡', cal: 50, label: '清醒模式启动 ⚡', phrases: ['早安咖啡时间到！☕', '咖啡因正在唤醒你的每一个脑细胞～', '今天的效率一定超高！'] },
+                { emoji: '🧋', name: '奶茶', cal: 350, label: '快乐肥宅水 🥤', phrases: ['奶茶侠来啦！', '珍珠+奶茶=双重快乐组合！', '糖分警告...但是好喝就完事了！🧋💕'] },
+                { emoji: '🥛', name: '牛奶', cal: 150, label: '成长助推器 📈', phrases: ['牛奶时间到！', '钙质和蛋白质双管齐下～', '喝了会变得更强壮哦！'] },
+                { emoji: '🫖', name: '水果茶', cal: 120, label: '清爽无负担 🌊', phrases: ['清爽的水果茶！', '好喝又健康的选择～', '小浣熊也喜欢这种清新感！'] }
+            ]
+        };
+        
+        const MoodPhrases = {
+            happy: ['好开心呀～', '嘿嘿～', '我们是好朋友！', '喜欢你！'],
+            excited: ['哇！！', '太棒了！！', '好幸福呀！！', '转圈圈～'],
+            sleepy: ['困困的...', '想睡觉了...', '打个哈欠...', 'zzZ...'],
+            hungry: ['肚子饿了...', '想吃东西...', '可以喂我嘛？', '咕噜咕噜...'],
+            loved: ['好喜欢你！', '我们永远在一起！', '最爱你了！', '抱抱～']
+        };
+        
+        // ============================================
         // APP STATE
         // ============================================
         const AppState = {
-            coins: 150,
+            coins: 280,
             mealsToday: 3,
-            waterIntake: 1200,
+            waterIntake: 1500,
             waterGoal: 2000,
-            streak: 5,
+            streak: 7,
+            fullness: 85,
+            xp: 130,
+            xpToNext: 200,
+            level: 3,
             petMood: 'happy',
-            petJoy: 80,
-            petHunger: 70,
-            petVigor: 65,
-            evolutionXp: 120,
-            evolutionLevel: 2
+            petJoy: 90
         };
-
-        // ============================================
-        // DIGITAL IMPRESSIONISM COLORS
-        // ============================================
-        const ColorPalettes = {
-            happy: { hue: 320, saturation: '70%', lightness: '65%' },
-            neutral: { hue: 200, saturation: '50%', lightness: '60%' },
-            sad: { hue: 220, saturation: '60%', lightness: '55%' },
-            excited: { hue: 45, saturation: '80%', lightness: '65%' },
-            sleepy: { hue: 260, saturation: '40%', lightness: '50%' }
-        };
-
-        function updateDynamicColors(mood) {
-            const palette = ColorPalettes[mood] || ColorPalettes.neutral;
-            document.documentElement.style.setProperty('--dynamic-hue', palette.hue);
-            document.documentElement.style.setProperty('--dynamic-saturation', palette.saturation);
-            document.documentElement.style.setProperty('--dynamic-lightness', palette.lightness);
-        }
-
+        
         // ============================================
         // PET RENDERER
         // ============================================
@@ -772,15 +807,15 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.breathPhase = 0;
                 this.blinkTimer = 0;
-                this.isBlinking = false;
+                this.blinkDuration = 0;
                 this.eyeOpenness = 1;
-                this.animationClass = '';
                 this.currentEmotion = 'happy';
-                
+                this.floatY = 0;
+                this.tailWag = 0;
+                this.earTwitch = 0;
                 this.resize();
                 window.addEventListener('resize', () => this.resize());
-                
-                this.startRenderLoop();
+                this.startLoop();
             }
             
             resize() {
@@ -789,206 +824,250 @@
                 this.canvas.height = container.clientHeight;
             }
             
-            startRenderLoop() {
-                this.render();
-            }
-            
-            playAnimation(type) {
-                const sprite = this.canvas.previousElementSibling;
-                if (!sprite) return;
-                
-                // Remove existing animations
-                sprite.classList.remove('bounce', 'spin', 'hug', 'jump');
-                void sprite.offsetWidth; // Force reflow
-                
-                // Add new animation
-                sprite.classList.add(type);
-                
-                setTimeout(() => {
-                    sprite.classList.remove(type);
-                }, 2000);
-            }
-            
-            render() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 2;
-                
-                // Breathing
-                this.breathPhase += 0.02;
-                const breathScale = 1 + Math.sin(this.breathPhase) * 0.03;
-                const floatY = Math.sin(this.breathPhase * 0.7) * 5;
-                
-                this.ctx.save();
-                this.ctx.translate(centerX, centerY + floatY);
-                this.ctx.scale(breathScale, breathScale);
-                
-                // Glow
-                const glowGradient = this.ctx.createRadialGradient(0, 0, 30, 0, 0, 100);
-                glowGradient.addColorStop(0, 'rgba(255, 107, 157, 0.4)');
-                glowGradient.addColorStop(1, 'transparent');
-                this.ctx.fillStyle = glowGradient;
-                this.ctx.beginPath();
-                this.ctx.arc(0, 0, 100, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Body
-                const bodyGradient = this.ctx.createRadialGradient(-15, -20, 0, 0, 0, 80);
-                bodyGradient.addColorStop(0, '#FFE4EC');
-                bodyGradient.addColorStop(0.7, '#E8B4B8');
-                bodyGradient.addColorStop(1, '#C9A0A8');
-                
-                this.ctx.fillStyle = bodyGradient;
-                this.ctx.beginPath();
-                this.ctx.ellipse(0, 10, 60, 70, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Face
-                const faceGradient = this.ctx.createRadialGradient(-5, -10, 0, 0, 0, 50);
-                faceGradient.addColorStop(0, '#FFFFFF');
-                faceGradient.addColorStop(1, '#FFE8F0');
-                
-                this.ctx.fillStyle = faceGradient;
-                this.ctx.beginPath();
-                this.ctx.arc(0, -15, 50, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Blinking
-                this.blinkTimer++;
-                if (this.blinkTimer > 150 && !this.isBlinking) {
-                    this.isBlinking = true;
-                    this.blinkTimer = 0;
-                }
-                if (this.isBlinking) {
-                    this.eyeOpenness = Math.max(0.1, this.eyeOpenness - 0.3);
-                    if (this.eyeOpenness <= 0.1) {
-                        this.isBlinking = false;
-                    }
-                } else {
-                    this.eyeOpenness = Math.min(1, this.eyeOpenness + 0.2);
-                }
-                
-                // Eyes
-                const eyeY = -20;
-                const eyeSpacing = 18;
-                
-                // Eye masks
-                this.ctx.fillStyle = '#2D1B4E';
-                this.ctx.beginPath();
-                this.ctx.ellipse(-eyeSpacing, eyeY, 6, 8 * this.eyeOpenness, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.beginPath();
-                this.ctx.ellipse(eyeSpacing, eyeY, 6, 8 * this.eyeOpenness, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Eye highlights
-                if (this.eyeOpenness > 0.3) {
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(-eyeSpacing - 1, eyeY - 2, 2.5, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    this.ctx.beginPath();
-                    this.ctx.arc(eyeSpacing - 1, eyeY - 2, 2.5, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                
-                // Nose
-                this.ctx.fillStyle = '#D4A5A5';
-                this.ctx.beginPath();
-                this.ctx.ellipse(0, -5, 4, 3, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Mouth based on mood
-                this.ctx.strokeStyle = '#D4A5A5';
-                this.ctx.lineWidth = 2;
-                this.ctx.lineCap = 'round';
-                
-                if (this.currentEmotion === 'happy' || this.currentEmotion === 'excited') {
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, -8, 10, 0.2 * Math.PI, 0.8 * Math.PI);
-                    this.ctx.stroke();
-                } else if (this.currentEmotion === 'sad') {
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, 8, 1.2 * Math.PI, 1.8 * Math.PI);
-                    this.ctx.stroke();
-                } else {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(-6, -2);
-                    this.ctx.lineTo(6, -2);
-                    this.ctx.stroke();
-                }
-                
-                // Blush
-                this.ctx.fillStyle = 'rgba(255, 150, 150, 0.3)';
-                this.ctx.beginPath();
-                this.ctx.ellipse(-35, -8, 12, 6, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.beginPath();
-                this.ctx.ellipse(35, -8, 12, 6, 0, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Ears
-                this.ctx.fillStyle = '#E8B4B8';
-                this.ctx.beginPath();
-                this.ctx.moveTo(-35, -55);
-                this.ctx.quadraticCurveTo(-45, -80, -30, -70);
-                this.ctx.quadraticCurveTo(-25, -60, -35, -55);
-                this.ctx.fill();
-                
-                this.ctx.beginPath();
-                this.ctx.moveTo(35, -55);
-                this.ctx.quadraticCurveTo(45, -80, 30, -70);
-                this.ctx.quadraticCurveTo(25, -60, 35, -55);
-                this.ctx.fill();
-                
-                // Inner ears
-                this.ctx.fillStyle = '#FFB6C1';
-                this.ctx.beginPath();
-                this.ctx.moveTo(-33, -58);
-                this.ctx.quadraticCurveTo(-40, -72, -32, -67);
-                this.ctx.fill();
-                
-                this.ctx.beginPath();
-                this.ctx.moveTo(33, -58);
-                this.ctx.quadraticCurveTo(40, -72, 32, -67);
-                this.ctx.fill();
-                
-                // Raccoon mask (eyes mask)
-                this.ctx.strokeStyle = '#4A4A4A';
-                this.ctx.lineWidth = 3;
-                this.ctx.beginPath();
-                this.ctx.ellipse(-eyeSpacing, eyeY, 12, 10, -0.2, 0, Math.PI * 2);
-                this.ctx.stroke();
-                this.ctx.beginPath();
-                this.ctx.ellipse(eyeSpacing, eyeY, 12, 10, 0.2, 0, Math.PI * 2);
-                this.ctx.stroke();
-                
-                // Tail (cute fluffy)
-                this.ctx.fillStyle = '#C9A0A8';
-                this.ctx.beginPath();
-                this.ctx.ellipse(-50, 40, 20, 15, 0.3, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Stripes on tail
-                this.ctx.fillStyle = '#8B7B7B';
-                for (let i = 0; i < 3; i++) {
-                    this.ctx.beginPath();
-                    this.ctx.ellipse(-50 + i * 8, 40, 3, 8, 0.3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                
-                this.ctx.restore();
-                
-                requestAnimationFrame(() => this.render());
+            startLoop() {
+                const loop = () => {
+                    this.render();
+                    requestAnimationFrame(loop);
+                };
+                loop();
             }
             
             setEmotion(emotion) {
                 this.currentEmotion = emotion;
-                updateDynamicColors(emotion);
+                const hueMap = { happy: 320, excited: 45, sleepy: 260, hungry: 30, loved: 340 };
+                document.documentElement.style.setProperty('--primary-hue', hueMap[emotion] || 320);
+            }
+            
+            render() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                
+                const centerX = w / 2;
+                const centerY = h / 2;
+                
+                this.breathPhase += 0.025;
+                const breathScale = 1 + Math.sin(this.breathPhase) * 0.025;
+                this.floatY = Math.sin(this.breathPhase * 0.6) * 6;
+                this.tailWag = Math.sin(this.breathPhase * 2) * 0.15;
+                this.earTwitch = Math.sin(this.breathPhase * 3) * 0.05;
+                
+                this.blinkTimer++;
+                if (this.blinkDuration > 0) {
+                    this.blinkDuration--;
+                    this.eyeOpenness = Math.max(0.1, this.eyeOpenness - 0.4);
+                } else if (this.eyeOpenness < 1) {
+                    this.eyeOpenness = Math.min(1, this.eyeOpenness + 0.2);
+                }
+                
+                if (this.blinkTimer > 180 + Math.random() * 60 && this.blinkDuration === 0) {
+                    this.blinkDuration = 5;
+                    this.blinkTimer = 0;
+                }
+                
+                ctx.save();
+                ctx.translate(centerX, centerY + this.floatY);
+                ctx.scale(breathScale, breathScale);
+                
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.beginPath();
+                ctx.ellipse(0, 75, 50, 15, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Tail
+                ctx.save();
+                ctx.translate(-55, 45);
+                ctx.rotate(-0.3 + this.tailWag);
+                ctx.fillStyle = '#D4A5A5';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 25, 18, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#A08080';
+                for (let i = -1; i <= 1; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(i * 10, 0, 4, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                
+                // Body
+                const bodyGrad = ctx.createRadialGradient(-20, -30, 0, 0, 0, 90);
+                bodyGrad.addColorStop(0, '#FFE8F0');
+                bodyGrad.addColorStop(0.5, '#F5D0C5');
+                bodyGrad.addColorStop(1, '#E8B4B8');
+                ctx.fillStyle = bodyGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, 25, 70, 80, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(-25, 5, 25, 40, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Face
+                const faceGrad = ctx.createRadialGradient(-10, -25, 0, 0, -10, 65);
+                faceGrad.addColorStop(0, '#FFFFFF');
+                faceGrad.addColorStop(0.7, '#FFF5F8');
+                faceGrad.addColorStop(1, '#FFE8F0');
+                ctx.fillStyle = faceGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, -20, 58, 55, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Ears
+                ctx.save();
+                ctx.translate(-40, -65);
+                ctx.rotate(-0.2 + this.earTwitch);
+                ctx.fillStyle = '#E8B4B8';
+                ctx.beginPath();
+                ctx.moveTo(-5, 10);
+                ctx.quadraticCurveTo(-20, -35, 0, -25);
+                ctx.quadraticCurveTo(10, -15, -5, 10);
+                ctx.fill();
+                ctx.fillStyle = '#FFB6C1';
+                ctx.beginPath();
+                ctx.moveTo(-3, 5);
+                ctx.quadraticCurveTo(-12, -20, 0, -15);
+                ctx.quadraticCurveTo(5, -8, -3, 5);
+                ctx.fill();
+                ctx.restore();
+                
+                ctx.save();
+                ctx.translate(40, -65);
+                ctx.rotate(0.2 - this.earTwitch);
+                ctx.fillStyle = '#E8B4B8';
+                ctx.beginPath();
+                ctx.moveTo(5, 10);
+                ctx.quadraticCurveTo(20, -35, 0, -25);
+                ctx.quadraticCurveTo(-10, -15, 5, 10);
+                ctx.fill();
+                ctx.fillStyle = '#FFB6C1';
+                ctx.beginPath();
+                ctx.moveTo(3, 5);
+                ctx.quadraticCurveTo(12, -20, 0, -15);
+                ctx.quadraticCurveTo(-5, -8, 3, 5);
+                ctx.fill();
+                ctx.restore();
+                
+                // Raccoon mask
+                ctx.strokeStyle = '#5A5A5A';
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.ellipse(-22, -22, 16, 13, -0.15, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(22, -22, 16, 13, 0.15, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(-8, -28);
+                ctx.quadraticCurveTo(0, -32, 8, -28);
+                ctx.stroke();
+                
+                // Eyes
+                const eyeY = -22;
+                const eyeSpacing = 22;
+                
+                ctx.fillStyle = '#2D1B4E';
+                ctx.beginPath();
+                ctx.ellipse(-eyeSpacing, eyeY, 8, 10 * this.eyeOpenness, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(eyeSpacing, eyeY, 8, 10 * this.eyeOpenness, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (this.eyeOpenness > 0.3) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.beginPath();
+                    ctx.arc(-eyeSpacing - 2, eyeY - 3, 3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(eyeSpacing - 2, eyeY - 3, 3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Nose
+                const noseGrad = ctx.createRadialGradient(-2, -8, 0, 0, -6, 8);
+                noseGrad.addColorStop(0, '#FFB6C1');
+                noseGrad.addColorStop(1, '#D4A5A5');
+                ctx.fillStyle = noseGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, -6, 5, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Mouth
+                ctx.strokeStyle = '#D4A5A5';
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                
+                if (this.currentEmotion === 'happy' || this.currentEmotion === 'excited') {
+                    ctx.beginPath();
+                    ctx.arc(0, -8, 12, 0.15 * Math.PI, 0.85 * Math.PI);
+                    ctx.stroke();
+                    if (this.currentEmotion === 'excited') {
+                        ctx.fillStyle = '#FFB6C1';
+                        ctx.beginPath();
+                        ctx.ellipse(0, -2, 5, 4, 0, 0, Math.PI);
+                        ctx.fill();
+                    }
+                } else if (this.currentEmotion === 'sleepy') {
+                    ctx.strokeStyle = '#5A5A5A';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(-eyeSpacing - 6, eyeY);
+                    ctx.quadraticCurveTo(-eyeSpacing, eyeY + 3, -eyeSpacing + 6, eyeY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(eyeSpacing - 6, eyeY);
+                    ctx.quadraticCurveTo(eyeSpacing, eyeY + 3, eyeSpacing + 6, eyeY);
+                    ctx.stroke();
+                    ctx.strokeStyle = '#D4A5A5';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-5, -2);
+                    ctx.lineTo(5, -2);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(-7, -2);
+                    ctx.lineTo(7, -2);
+                    ctx.stroke();
+                }
+                
+                // Blush
+                ctx.fillStyle = 'rgba(255, 150, 150, 0.35)';
+                ctx.beginPath();
+                ctx.ellipse(-40, -10, 14, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(40, -10, 14, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Belly
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.beginPath();
+                ctx.ellipse(0, 40, 30, 25, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            triggerAnimation(type) {
+                const wrapper = document.getElementById('petWrapper');
+                if (!wrapper) return;
+                
+                wrapper.classList.remove('pet-bounce', 'pet-spin', 'pet-jump', 'pet-hug');
+                void wrapper.offsetWidth;
+                wrapper.classList.add(`pet-${type}`);
+                
+                setTimeout(() => wrapper.classList.remove(`pet-${type}`), 2000);
             }
         }
-
+        
         // ============================================
         // INITIALIZE
         // ============================================
@@ -997,210 +1076,215 @@
         document.addEventListener('DOMContentLoaded', () => {
             petRenderer = new PetRenderer('pet-canvas');
             
-            // Touch interactions
-            const petCharacter = document.getElementById('petCharacter');
-            
-            petCharacter.addEventListener('click', (e) => {
-                spawnTouchParticles(e.clientX, e.clientY);
-                petInteraction('tap');
+            const petWrapper = document.getElementById('petWrapper');
+            petWrapper.addEventListener('click', (e) => {
+                spawnParticles(e.clientX, e.clientY);
+                petAction('tap');
             });
             
-            // Prevent double-tap zoom
-            petCharacter.addEventListener('touchend', (e) => {
+            petWrapper.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 const touch = e.changedTouches[0];
-                spawnTouchParticles(touch.clientX, touch.clientY);
-                petInteraction('tap');
+                spawnParticles(touch.clientX, touch.clientY);
+                petAction('tap');
             });
+            
+            updateUI();
         });
-
+        
         // ============================================
         // INTERACTIONS
         // ============================================
-        function petInteraction(type) {
-            const animations = {
-                'head': 'bounce',
-                'poke': 'bounce',
-                'tap': 'hug',
-                'shake': 'spin'
-            };
+        function petAction(type) {
+            const animations = { headpat: 'bounce', poke: 'bounce', tap: 'hug', water: 'jump' };
+            petRenderer.triggerAnimation(animations[type] || 'bounce');
             
-            const messages = {
-                'head': ['舒服～', '好开心呀～', '继续摸～', '嘿嘿～'],
-                'poke': ['哎呦！', '别戳我肚子啦～', '痒痒的！'],
-                'tap': ['谢谢你～', '好喜欢你！', '我们是好朋友！'],
-                'shake': ['呜～头晕了...', '转晕了...']
-            };
-            
-            const animation = animations[type] || 'bounce';
-            const message = messages[type][Math.floor(Math.random() * messages[type].length)];
-            
-            petRenderer.playAnimation(animation);
-            
-            if (type === 'shake') {
-                petRenderer.setEmotion('dizzy');
-                setTimeout(() => petRenderer.setEmotion('happy'), 2000);
+            if (type === 'water') {
+                petRenderer.setEmotion('excited');
+                showSpeechBubble('好清爽呀～💦');
+            } else if (type === 'headpat') {
+                petRenderer.setEmotion('loved');
+                showSpeechBubble(MoodPhrases.loved[Math.floor(Math.random() * MoodPhrases.loved.length)]);
+            } else if (type === 'poke') {
+                petRenderer.setEmotion('excited');
+                showSpeechBubble(MoodPhrases.excited[Math.floor(Math.random() * MoodPhrases.excited.length)]);
+            } else {
+                petRenderer.setEmotion('happy');
+                showSpeechBubble(MoodPhrases.happy[Math.floor(Math.random() * MoodPhrases.happy.length)]);
             }
             
-            showToast(`🐾 ${message}`);
+            addCoins(2);
+            showToast(`🦝 +2 硬币`);
             
-            // Add coins for interaction
-            if (type !== 'shake') {
-                addCoins(2);
-                AppState.petJoy = Math.min(100, AppState.petJoy + 5);
+            setTimeout(() => {
+                petRenderer.setEmotion('happy');
+                hideSpeechBubble();
+            }, 2500);
+        }
+        
+        function spawnParticles(x, y) {
+            const emojis = ['💕', '✨', '💗', '⭐', '🌸', '💫'];
+            for (let i = 0; i < 6; i++) {
+                const p = document.createElement('div');
+                p.className = 'touch-particle';
+                p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.setProperty('--tx', (Math.random() - 0.5) * 100 + 'px');
+                p.style.setProperty('--ty', -Math.random() * 80 - 40 + 'px');
+                p.style.animationDelay = (Math.random() * 0.2) + 's';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1500);
             }
         }
-
-        function spawnTouchParticles(x, y) {
-            const emojis = ['💕', '✨', '💗', '⭐'];
-            const container = document.getElementById('petCharacter');
-            
-            for (let i = 0; i < 5; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'touch-particle';
-                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                particle.style.left = (x + (Math.random() - 0.5) * 60) + 'px';
-                particle.style.top = (y + (Math.random() - 0.5) * 60) + 'px';
-                particle.style.fontSize = (16 + Math.random() * 12) + 'px';
-                particle.style.animationDelay = (Math.random() * 0.3) + 's';
-                
-                document.body.appendChild(particle);
-                
-                setTimeout(() => particle.remove(), 1000);
-            }
+        
+        function showSpeechBubble(text) {
+            const bubble = document.getElementById('speechBubble');
+            bubble.textContent = text;
+            bubble.classList.add('show');
         }
-
+        
+        function hideSpeechBubble() {
+            document.getElementById('speechBubble').classList.remove('show');
+        }
+        
         // ============================================
         // MEAL TRACKING
         // ============================================
         function openMealDialog() {
             document.getElementById('mealDialog').classList.add('active');
+            document.getElementById('cameraPlaceholder').style.display = 'flex';
+            document.getElementById('foodResult').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('mealDialogTitle').textContent = '🍰 记录餐食';
             document.getElementById('mealDialogMessage').textContent = '拍下你的餐食，AI 会帮你分析并喂养小浣熊～';
+            document.getElementById('mealConfirmBtn').textContent = '拍照';
+            document.getElementById('mealConfirmBtn').onclick = captureMeal;
         }
-
+        
         function closeMealDialog() {
             document.getElementById('mealDialog').classList.remove('active');
         }
-
-        async function simulateMealCapture() {
-            const messages = document.getElementById('mealDialogMessage');
-            messages.textContent = '🔄 AI 正在分析中...';
+        
+        async function captureMeal() {
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const spinner = document.getElementById('loadingSpinner');
+            const result = document.getElementById('foodResult');
+            const confirmBtn = document.getElementById('mealConfirmBtn');
             
-            // Simulate AI analysis
-            await sleep(1500);
+            placeholder.style.display = 'none';
+            spinner.style.display = 'block';
+            confirmBtn.style.display = 'none';
             
-            // Random food result
-            const foods = [
-                { name: '芝士蛋糕', calories: 420, emoji: '🍰', label: '灵魂充电时间 ⚡' },
-                { name: '蔬菜沙拉', calories: 180, emoji: '🥗', label: '绿色能量满格 🌿' },
-                { name: '巧克力', calories: 550, emoji: '🍫', label: '快乐因子注入中 💫' },
-                { name: '水果拼盘', calories: 150, emoji: '🍎', label: '大自然糖果 🍬' },
-                { name: '披萨', calories: 680, emoji: '🍕', label: '尊享犒劳时刻 👑' }
-            ];
+            await sleep(1800);
             
-            const food = foods[Math.floor(Math.random() * foods.length)];
+            const categories = ['dessert', 'main', 'fast', 'healthy', 'drinks'];
+            const category = categories[Math.floor(Math.random() * categories.length)];
+            const food = ConversationCorpus[category][Math.floor(Math.random() * ConversationCorpus[category].length)];
             
-            messages.innerHTML = `
-                <div style="font-size: 3rem; margin-bottom: 0.5rem;">${food.emoji}</div>
-                <strong>${food.name}</strong><br>
-                <span style="color: var(--accent-primary);">${food.calories} kcal</span><br>
-                <span style="color: var(--accent-success);">${food.label}</span>
-            `;
+            spinner.style.display = 'none';
+            result.style.display = 'block';
+            document.getElementById('foodEmoji').textContent = food.emoji;
+            document.getElementById('foodName').textContent = food.name;
+            document.getElementById('foodCalories').textContent = food.cal + ' kcal';
+            document.getElementById('foodLabel').textContent = food.label;
             
-            // Rewards
-            const coins = 10 + Math.floor(Math.random() * 10);
-            addCoins(coins);
+            document.getElementById('mealDialogTitle').textContent = '🦝 小浣熊说...';
+            document.getElementById('mealDialogMessage').textContent = food.phrases[Math.floor(Math.random() * food.phrases.length)];
             
-            AppState.mealsToday++;
-            document.getElementById('mealsToday').textContent = AppState.mealsToday;
-            
-            // Animate pet
-            petRenderer.playAnimation('spin');
-            petRenderer.setEmotion('excited');
-            setTimeout(() => petRenderer.setEmotion('happy'), 2000);
-            
-            // Update streak
-            AppState.streak++;
-            document.getElementById('streakCount').textContent = AppState.streak;
-            
-            showToast(`🎉 +${coins} 金币！连续 ${AppState.streak} 天`);
-            
-            await sleep(2000);
-            closeMealDialog();
+            confirmBtn.style.display = 'block';
+            confirmBtn.textContent = '完成';
+            confirmBtn.onclick = () => {
+                const coins = 10 + Math.floor(food.cal / 50);
+                addCoins(coins);
+                addXP(Math.floor(food.cal / 30));
+                AppState.mealsToday++;
+                AppState.fullness = Math.min(100, AppState.fullness + Math.floor(food.cal / 20));
+                AppState.streak++;
+                
+                petRenderer.setEmotion('excited');
+                petRenderer.triggerAnimation('spin');
+                
+                setTimeout(() => {
+                    petRenderer.setEmotion('happy');
+                    closeMealDialog();
+                    showToast(`🎉 +${coins} 硬币！`);
+                    updateUI();
+                }, 1500);
+            };
         }
-
-        // ============================================
-        // WATER TRACKING
-        // ============================================
+        
         function addWater() {
-            const amount = 250;
-            AppState.waterIntake += amount;
-            
-            document.getElementById('waterIntake').textContent = AppState.waterIntake;
-            
-            const percentage = Math.min(100, (AppState.waterIntake / AppState.waterGoal) * 100);
-            document.getElementById('waterBar').style.width = percentage + '%';
-            
-            // Ripple effect
-            const container = document.getElementById('rippleContainer');
-            const ripple = document.createElement('div');
-            ripple.className = 'ripple';
-            ripple.style.left = '50%';
-            ripple.style.top = '50%';
-            container.appendChild(ripple);
-            
-            setTimeout(() => ripple.remove(), 2000);
+            AppState.waterIntake += 250;
             
             if (AppState.waterIntake >= AppState.waterGoal) {
+                AppState.waterIntake = AppState.waterGoal;
                 showToast('💧 今日水分目标达成！');
-                petRenderer.playAnimation('jump');
+                petRenderer.setEmotion('excited');
+                petRenderer.triggerAnimation('jump');
+                addCoins(5);
             } else {
-                showToast(`💧 +${amount}ml`);
+                showToast(`💧 +250ml`);
+                petAction('water');
             }
-            
-            // Small reward
-            addCoins(2);
+            updateUI();
         }
-
+        
         // ============================================
-        // UTILITIES
+        // UI UPDATES
         // ============================================
+        function updateUI() {
+            document.getElementById('coinDisplay').textContent = AppState.coins;
+            document.getElementById('mealsCount').textContent = AppState.mealsToday;
+            document.getElementById('waterCount').textContent = AppState.waterIntake;
+            document.getElementById('streakCount').textContent = AppState.streak;
+            document.getElementById('fullnessCount').textContent = AppState.fullness;
+            document.getElementById('xpCurrent').textContent = AppState.xp;
+            document.getElementById('xpMax').textContent = AppState.xpToNext;
+            document.getElementById('xpFill').style.width = (AppState.xp / AppState.xpToNext * 100) + '%';
+            
+            const moodText = { happy: '超开心', excited: '兴奋', sleepy: '困困', hungry: '饿了', loved: '被爱着' };
+            document.getElementById('moodText').textContent = moodText[AppState.petMood] || '开心';
+        }
+        
         function addCoins(amount) {
             AppState.coins += amount;
-            document.getElementById('coinCount').textContent = AppState.coins;
+            document.getElementById('coinDisplay').textContent = AppState.coins;
             
-            // Float animation
             const coinFloat = document.createElement('div');
             coinFloat.className = 'coin-float';
             coinFloat.textContent = `+${amount}`;
             coinFloat.style.left = '50%';
-            coinFloat.style.top = '40%';
+            coinFloat.style.top = '35%';
+            coinFloat.style.transform = 'translateX(-50%)';
             document.body.appendChild(coinFloat);
-            
             setTimeout(() => coinFloat.remove(), 1500);
         }
-
-        function showToast(message, duration = 2500) {
-            const toast = document.getElementById('toast');
-            const [icon, ...textParts] = message.split(' ');
-            const text = textParts.join(' ');
-            
-            document.getElementById('toastIcon').textContent = icon;
-            document.getElementById('toastText').textContent = text;
-            
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
+        
+        function addXP(amount) {
+            AppState.xp += amount;
+            if (AppState.xp >= AppState.xpToNext) {
+                AppState.level++;
+                AppState.xp = AppState.xp - AppState.xpToNext;
+                AppState.xpToNext = Math.floor(AppState.xpToNext * 1.5);
+                document.getElementById('petLevel').textContent = `Lv.${AppState.level} 幼年期`;
+                showToast(`🎊 升级了！现在是 Lv.${AppState.level}！`);
+            }
+            updateUI();
         }
-
+        
+        function showToast(message, duration = 2500) {
+            const container = document.getElementById('toastContainer');
+            const [icon, ...textParts] = message.split(' ');
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastText').textContent = textParts.join(' ');
+            container.classList.add('show');
+            setTimeout(() => container.classList.remove('show'), duration);
+        }
+        
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-
-        // Initial color
-        updateDynamicColors('happy');
     </script>
 </body>
 </html>
