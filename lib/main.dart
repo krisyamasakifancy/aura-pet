@@ -114,6 +114,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return ReviewsScreen(onComplete: _nextPage);
                 case 19:
                   return NotificationScreen(onComplete: _nextPage);
+                case 20:
+                  return CreatingPlanScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -7515,6 +7517,441 @@ class _AlarmBearPainter extends CustomPainter {
 
     // 铃铛
     canvas.drawCircle(center + Offset(0, -size - 5), size * 0.3, Paint()..color = const Color(0xFFFFD700));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P21: Creating Plan Loading Screen
+/// ============================================
+class CreatingPlanScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const CreatingPlanScreen({super.key, required this.onComplete});
+
+  @override
+  State<CreatingPlanScreen> createState() => _CreatingPlanScreenState();
+}
+
+class _CreatingPlanScreenState extends State<CreatingPlanScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _spiralController;
+  late AnimationController _checkController;
+  
+  final List<_CheckItem> _checkItems = [
+    _CheckItem(text: 'Analyzing BMI...', completed: false),
+    _CheckItem(text: 'Optimizing calorie intake...', completed: false),
+    _CheckItem(text: 'Creating meal plan...', completed: false),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _spiralController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+
+    _checkController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..forward();
+
+    // 逐条显示检查项
+    _animateChecks();
+    
+    // 3秒后自动切页
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        widget.onComplete();
+      }
+    });
+  }
+
+  void _animateChecks() async {
+    for (int i = 0; i < _checkItems.length; i++) {
+      await Future.delayed(Duration(milliseconds: 600 + i * 800));
+      if (mounted) {
+        setState(() {
+          _checkItems[i] = _CheckItem(text: _checkItems[i].text.replaceAll('...', ''), completed: true);
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _spiralController.dispose();
+    _checkController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF2D3748), // 深色背景
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 螺旋粒子背景
+            AnimatedBuilder(
+              animation: _spiralController,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: Size.infinite,
+                  painter: _SpiralParticlesPainter(progress: _spiralController.value),
+                );
+              },
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+
+                  // 标题
+                  AnimatedBuilder(
+                    animation: _checkController,
+                    builder: (context, child) {
+                      final opacity = 0.7 + _checkController.value * 0.3;
+                      return Opacity(
+                        opacity: opacity,
+                        child: child,
+                      );
+                    },
+                    child: const Text(
+                      'Your plan is being\ncreated...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 28,
+                        height: 1.2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas思考小熊
+                  AnimatedBuilder(
+                    animation: _spiralController,
+                    builder: (context, child) {
+                      final floatY = math.sin(_spiralController.value * math.pi * 2) * 5;
+                      final glow = 0.5 + _spiralController.value * 0.5;
+                      return Transform.translate(
+                        offset: Offset(0, floatY),
+                        child: Opacity(
+                          opacity: glow,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(160, 160),
+                      painter: _ThinkingBearPainter(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
+
+                  // 检查项列表
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: _checkItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        return _CheckItemWidget(
+                          text: item.text,
+                          completed: item.completed,
+                          delay: index * 0.2,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const Spacer(flex: 2),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 检查项数据
+class _CheckItem {
+  final String text;
+  final bool completed;
+  _CheckItem({required this.text, required this.completed});
+}
+
+/// 检查项组件
+class _CheckItemWidget extends StatefulWidget {
+  final String text;
+  final bool completed;
+  final double delay;
+
+  const _CheckItemWidget({
+    required this.text,
+    required this.completed,
+    required this.delay,
+  });
+
+  @override
+  State<_CheckItemWidget> createState() => _CheckItemWidgetState();
+}
+
+class _CheckItemWidgetState extends State<_CheckItemWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _checkAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _checkAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    );
+
+    Future.delayed(Duration(milliseconds: (widget.delay * 1000).toInt() + 300), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            // 勾选框
+            AnimatedBuilder(
+              animation: _checkAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.completed
+                        ? const Color(0xFF4CAF50)
+                        : Colors.white.withOpacity(0.2),
+                    border: Border.all(
+                      color: widget.completed
+                          ? const Color(0xFF4CAF50)
+                          : Colors.white.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  child: widget.completed
+                      ? Transform.scale(
+                          scale: _checkAnimation.value,
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        )
+                      : null,
+                );
+              },
+            ),
+
+            const SizedBox(width: 16),
+
+            // 文字
+            Text(
+              widget.text,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                color: widget.completed
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.7),
+                fontWeight:
+                    widget.completed ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 螺旋粒子
+class _SpiralParticlesPainter extends CustomPainter {
+  final double progress;
+
+  _SpiralParticlesPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFF4ECDC4),
+      const Color(0xFFFF6B6B),
+      const Color(0xFFFFE66D),
+      const Color(0xFFA8E6CF),
+      const Color(0xFFDDA0DD),
+    ];
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = math.Random(42);
+
+    // 绘制螺旋粒子
+    for (int i = 0; i < 25; i++) {
+      final baseAngle = i * 0.3;
+      final spiralAngle = baseAngle + progress * math.pi * 4;
+      final radius = 50 + i * 12 + math.sin(progress * math.pi * 2 + i) * 20;
+
+      final x = center.dx + radius * math.cos(spiralAngle);
+      final y = center.dy + radius * math.sin(spiralAngle);
+
+      final particleSize = 4.0 + random.nextDouble() * 8;
+      final color = colors[i % colors.length];
+      final opacity = 0.3 + 0.4 * math.sin(progress * math.pi * 2 + i * 0.5);
+
+      final paint = Paint()
+        ..color = color.withOpacity(opacity)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(Offset(x, y), particleSize, paint);
+
+      // 绘制连接线
+      if (i > 0) {
+        final prevAngle = baseAngle - 0.3 + progress * math.pi * 4;
+        final prevRadius = 50 + (i - 1) * 12 + math.sin(progress * math.pi * 2 + i - 1) * 20;
+        final prevX = center.dx + prevRadius * math.cos(prevAngle);
+        final prevY = center.dy + prevRadius * math.sin(prevAngle);
+
+        canvas.drawLine(
+          Offset(prevX, prevY),
+          Offset(x, y),
+          Paint()
+            ..color = color.withOpacity(opacity * 0.3)
+            ..strokeWidth = 1.5,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpiralParticlesPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// Canvas: 思考计算小熊
+class _ThinkingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.9), width: r * 1.6, height: r * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 思考眼睛 - 一边眯
+    _drawThinkingEye(canvas, Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.15, isLeft: true);
+    _drawThinkingEye(canvas, Offset(c.dx + r * 0.3, c.dy - r * 0.1), r * 0.15, isLeft: false);
+
+    // 思考嘴
+    final mouthPath = Path();
+    mouthPath.moveTo(c.dx - r * 0.1, c.dy + r * 0.4);
+    mouthPath.quadraticBezierTo(c.dx, c.dy + r * 0.35, c.dx + r * 0.1, c.dy + r * 0.4);
+    canvas.drawPath(mouthPath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 思考手势 (托腮)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.85, c.dy + r * 0.25), width: r * 0.35, height: r * 0.4), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.85, c.dy + r * 0.25), width: r * 0.35, height: r * 0.4), Paint()..color = const Color(0xFFD4A574));
+
+    // 头顶问号
+    _drawQuestionMark(canvas, Offset(c.dx + r * 0.5, c.dy - r * 1.3), r * 0.2);
+  }
+
+  void _drawThinkingEye(Canvas canvas, Offset center, double size, {required bool isLeft}) {
+    if (isLeft) {
+      // 左眼眯着
+      final path = Path();
+      path.moveTo(center.dx - size, center.dy);
+      path.quadraticBezierTo(center.dx, center.dy - size * 0.5, center.dx + size, center.dy);
+      canvas.drawPath(path, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    } else {
+      // 右眼圆睁
+      canvas.drawCircle(center, size, Paint()..color = Colors.white);
+      canvas.drawCircle(center, size, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+      canvas.drawCircle(center, size * 0.6, Paint()..color = Colors.black);
+      canvas.drawCircle(center + Offset(-size * 0.25, -size * 0.25), size * 0.2, Paint()..color = Colors.white);
+    }
+  }
+
+  void _drawQuestionMark(Canvas canvas, Offset center, double size) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '?',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: size * 2,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFFFFE66D),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
   }
 
   @override
