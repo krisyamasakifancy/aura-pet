@@ -69,6 +69,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return FastingFeatureScreen(onComplete: _nextPage);
                 case 4:
                   return WeightTrendScreen(onComplete: _nextPage);
+                case 5:
+                  return HydrationScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -1933,6 +1935,449 @@ class _WeightChartPainter extends CustomPainter {
   }
   @override
   bool shouldRepaint(covariant _WeightChartPainter oldDelegate) => oldDelegate.progress != progress;
+}
+
+/// ============================================
+/// P6: Hydration Feature Screen
+/// ============================================
+class HydrationScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const HydrationScreen({super.key, required this.onComplete});
+
+  @override
+  State<HydrationScreen> createState() => _HydrationScreenState();
+}
+
+class _HydrationScreenState extends State<HydrationScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _waveController;
+  late AnimationController _bubbleController;
+  late AnimationController _diverController;
+
+  double _waterLevel = 0.25; // 初始25%
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _waveController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+    
+    _bubbleController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+    
+    _diverController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    _bubbleController.dispose();
+    _diverController.dispose();
+    super.dispose();
+  }
+
+  void _addWater() {
+    setState(() {
+      _waterLevel = (_waterLevel + 0.15).clamp(0.0, 1.0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF87CEEB), // 天蓝色
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // ========== 水位背景 ==========
+            Positioned.fill(
+              bottom: 0,
+              child: AnimatedBuilder(
+                animation: _waveController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    size: Size.infinite,
+                    painter: _WaterLevelPainter(
+                      level: _waterLevel,
+                      wavePhase: _waveController.value,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // ========== 主内容 ==========
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+
+                  // 标题
+                  const Text(
+                    'Stay hydrated\neffortlessly',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 副标题
+                  Text(
+                    'Easily track your\nwater intake',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                      height: 1.4,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas潜水小熊 + 心形气泡
+                  Center(
+                    child: AnimatedBuilder(
+                      animation: _diverController,
+                      builder: (context, child) {
+                        // 轻微上下浮动
+                        final floatY = math.sin(_diverController.value * math.pi) * 8;
+                        return Transform.translate(
+                          offset: Offset(0, floatY),
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 心形气泡
+                          AnimatedBuilder(
+                            animation: _bubbleController,
+                            builder: (context, _) {
+                              return CustomPaint(
+                                size: const Size(200, 250),
+                                painter: _HeartBubblesPainter(
+                                  progress: _bubbleController.value,
+                                ),
+                              );
+                            },
+                          ),
+                          // 潜水小熊
+                          CustomPaint(
+                            size: const Size(160, 180),
+                            painter: _DivingBearPainter(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // + 按钮
+                  Center(
+                    child: GestureDetector(
+                      onTap: _addWater,
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '+',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 36,
+                              color: Color(0xFF2196F3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 水量显示
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${(_waterLevel * 8).toInt()} / 8 glasses',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 胶囊按钮
+                  GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2196F3).withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Next',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// Canvas: 潜水小熊 (泳镜+呼吸管)
+/// ============================================
+class _DivingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 + 20);
+    final radius = size.width / 2 - 25;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.8), width: radius * 2, height: radius * 1.5),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头部
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.7), radius * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.7), radius * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.7), radius * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.7), radius * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.12), width: radius * 1.1, height: radius * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 泳镜
+    _drawGoggles(canvas, center, radius);
+
+    // 嘴 (开心)
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - radius * 0.15, center.dy + radius * 0.45);
+    smilePath.quadraticBezierTo(center.dx, center.dy + radius * 0.6, center.dx + radius * 0.15, center.dy + radius * 0.45);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx - radius * 0.45, center.dy + radius * 0.1), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx + radius * 0.45, center.dy + radius * 0.1), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 呼吸管
+    _drawSnorkel(canvas, Offset(center.dx + radius * 0.3, center.dy - radius * 0.3), radius * 0.6);
+
+    // 小翅膀/手
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx - radius * 1.0, center.dy + radius * 0.3), width: radius * 0.5, height: radius * 0.25), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx + radius * 1.0, center.dy + radius * 0.3), width: radius * 0.5, height: radius * 0.25), Paint()..color = const Color(0xFFD4A574));
+  }
+
+  void _drawGoggles(Canvas canvas, Offset center, double radius) {
+    // 左眼泳镜
+    canvas.drawCircle(Offset(center.dx - radius * 0.32, center.dy - radius * 0.1), radius * 0.25, Paint()..color = const Color(0xFF2196F3));
+    canvas.drawCircle(Offset(center.dx - radius * 0.32, center.dy - radius * 0.1), radius * 0.25, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 3);
+    canvas.drawCircle(Offset(center.dx - radius * 0.38, center.dy - radius * 0.18), radius * 0.08, Paint()..color = Colors.white.withOpacity(0.8));
+
+    // 右眼泳镜
+    canvas.drawCircle(Offset(center.dx + radius * 0.32, center.dy - radius * 0.1), radius * 0.25, Paint()..color = const Color(0xFF2196F3));
+    canvas.drawCircle(Offset(center.dx + radius * 0.32, center.dy - radius * 0.1), radius * 0.25, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 3);
+    canvas.drawCircle(Offset(center.dx + radius * 0.26, center.dy - radius * 0.18), radius * 0.08, Paint()..color = Colors.white.withOpacity(0.8));
+
+    // 泳镜带
+    canvas.drawLine(Offset(center.dx - radius * 0.6, center.dy - radius * 0.1), Offset(center.dx + radius * 0.6, center.dy - radius * 0.1), Paint()..color = const Color(0xFF333333)..strokeWidth = 4);
+  }
+
+  void _drawSnorkel(Canvas canvas, Offset start, double length) {
+    final path = Path();
+    path.moveTo(start.dx, start.dy);
+    path.quadraticBezierTo(start.dx + length * 0.3, start.dy + length * 0.5, start.dx, start.dy + length);
+    canvas.drawPath(path, Paint()..color = const Color(0xFFFF6B6B)..style = PaintingStyle.stroke..strokeWidth = 6..strokeCap = StrokeCap.round);
+
+    // 咬嘴
+    canvas.drawOval(Rect.fromCenter(center: Offset(start.dx + 5, start.dy + length - 5), width: 15, height: 10), Paint()..color = const Color(0xFFFF6B6B));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+/// Canvas: 心形气泡
+/// ============================================
+class _HeartBubblesPainter extends CustomPainter {
+  final double progress;
+  _HeartBubblesPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 生成多个心形气泡
+    final hearts = [
+      _HeartBubble(x: 0.15, y: 0.7, size: 15, speed: 1.0, phase: 0),
+      _HeartBubble(x: 0.3, y: 0.75, size: 12, speed: 1.3, phase: 0.3),
+      _HeartBubble(x: 0.75, y: 0.65, size: 18, speed: 0.8, phase: 0.6),
+      _HeartBubble(x: 0.85, y: 0.8, size: 10, speed: 1.1, phase: 0.9),
+      _HeartBubble(x: 0.5, y: 0.85, size: 14, speed: 0.9, phase: 1.2),
+    ];
+
+    for (final heart in hearts) {
+      final animProgress = (progress * heart.speed + heart.phase) % 1.0;
+      final y = size.height * (1 - animProgress);
+      final opacity = (1 - animProgress) * 0.7;
+      final scale = 0.5 + animProgress * 0.5;
+
+      _drawHeart(canvas, Offset(size.width * heart.x, y), heart.size * scale, opacity);
+    }
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, double opacity) {
+    final paint = Paint()..color = const Color(0xFFFF6B6B).withOpacity(opacity);
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(center.dx - size * 1.2, center.dy - size * 0.3, center.dx - size * 1.2, center.dy - size * 1.2, center.dx, center.dy - size * 0.3);
+    path.cubicTo(center.dx + size * 1.2, center.dy - size * 1.2, center.dx + size * 1.2, center.dy - size * 0.3, center.dx, center.dy + size * 0.3);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeartBubblesPainter oldDelegate) => oldDelegate.progress != progress;
+}
+
+class _HeartBubble {
+  final double x;
+  final double y;
+  final double size;
+  final double speed;
+  final double phase;
+  _HeartBubble({required this.x, required this.y, required this.size, required this.speed, required this.phase});
+}
+
+/// ============================================
+/// Canvas: 水位
+/// ============================================
+class _WaterLevelPainter extends CustomPainter {
+  final double level;
+  final double wavePhase;
+  _WaterLevelPainter({required this.level, required this.wavePhase});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (level <= 0) return;
+
+    final waterHeight = size.height * level;
+
+    // 波浪路径
+    final wavePath = Path();
+    wavePath.moveTo(0, size.height - waterHeight);
+
+    for (double x = 0; x <= size.width; x += 5) {
+      final y = size.height - waterHeight + math.sin((x / size.width * 4 * math.pi) + wavePhase * 2 * math.pi) * 8;
+      wavePath.lineTo(x, y);
+    }
+
+    wavePath.lineTo(size.width, size.height);
+    wavePath.lineTo(0, size.height);
+    wavePath.close();
+
+    // 水渐变
+    canvas.drawPath(
+      wavePath,
+      Paint()..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF64B5F6).withOpacity(0.7),
+          const Color(0xFF2196F3),
+          const Color(0xFF1565C0),
+        ],
+      ).createShader(Rect.fromLTWH(0, size.height - waterHeight, size.width, waterHeight)),
+    );
+
+    // 水面高光
+    final highlightPath = Path();
+    highlightPath.moveTo(0, size.height - waterHeight);
+    for (double x = 0; x <= size.width; x += 5) {
+      final y = size.height - waterHeight + math.sin((x / size.width * 4 * math.pi) + wavePhase * 2 * math.pi) * 8;
+      highlightPath.lineTo(x, y);
+    }
+    canvas.drawPath(highlightPath, Paint()..color = Colors.white.withOpacity(0.3)..style = PaintingStyle.stroke..strokeWidth = 3);
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaterLevelPainter oldDelegate) => oldDelegate.level != level || oldDelegate.wavePhase != wavePhase;
 }
 
 /// ============================================
