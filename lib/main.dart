@@ -146,6 +146,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return FastingTimerScreen(onComplete: _nextPage);
                 case 35:
                   return WaterTrackerScreen(onComplete: _nextPage);
+                case 36:
+                  return WaterHistoryScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -14968,6 +14970,480 @@ class _WaterWavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _WaterWavePainter oldDelegate) =>
       oldDelegate.progress != progress || oldDelegate.wavePhase != wavePhase;
+}
+
+
+/// ============================================
+/// P37: Water History Screen
+/// ============================================
+class WaterHistoryScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const WaterHistoryScreen({super.key, required this.onComplete});
+
+  @override
+  State<WaterHistoryScreen> createState() => _WaterHistoryScreenState();
+}
+
+class _WaterHistoryScreenState extends State<WaterHistoryScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  int? _selectedDay;
+  String? _feedbackMessage;
+
+  final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final List<double> _waterData = [2.1, 1.8, 2.4, 1.9, 2.2, 1.5, 2.0];
+  final double _goal = 2.5;
+
+  final Map<String, String> _feedbacks = {
+    'Mon': 'Great start on Monday! 💪',
+    'Tue': 'Amazing work on Tuesday! 🌟',
+    'Wed': 'Wonderful on Wednesday! 🎉',
+    'Thu': 'Keep it up on Thursday! ✨',
+    'Fri': 'Fantastic Friday effort! 🌈',
+    'Sat': 'Super Saturday! 🏆',
+    'Sun': 'Relaxing Sunday vibes! 🧘',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _selectDay(int index) {
+    setState(() {
+      _selectedDay = _selectedDay == index ? null : index;
+      _feedbackMessage = _feedbacks[_days[index]];
+    });
+    _animController.reset();
+    _animController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Water History',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // 标题
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Weekly Water\nIntake',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    height: 1.1,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 小熊反馈
+            AnimatedBuilder(
+              animation: _animController,
+              builder: (context, child) {
+                if (_selectedDay == null) return const SizedBox.shrink();
+                final bounce = math.sin(_animController.value * math.pi * 2) * 5;
+                return Transform.translate(
+                  offset: Offset(0, bounce),
+                  child: Opacity(
+                    opacity: _animController.value,
+                    child: child,
+                  ),
+                );
+              },
+              child: _selectedDay != null
+                  ? Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF64B5F6).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          CustomPaint(
+                            size: const Size(40, 40),
+                            painter: _HappyWaterBearPainter(),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _feedbackMessage ?? '',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF64B5F6),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 柱状图
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: AnimatedBuilder(
+                  animation: _animController,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      size: Size.infinite,
+                      painter: _WaterBarChartPainter(
+                        data: _waterData,
+                        days: _days,
+                        goal: _goal,
+                        progress: _animController.value,
+                        selectedDay: _selectedDay,
+                        onBarTap: _selectDay,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // 图例
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF64B5F6),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Water intake',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Goal: ${_goal}L',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Next胶囊按钮
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 饮水柱状图
+class _WaterBarChartPainter extends CustomPainter {
+  final List<double> data;
+  final List<String> days;
+  final double goal;
+  final double progress;
+  final int? selectedDay;
+  final Function(int) onBarTap;
+
+  _WaterBarChartPainter({
+    required this.data,
+    required this.days,
+    required this.goal,
+    required this.progress,
+    required this.selectedDay,
+    required this.onBarTap,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final barWidth = (size.width - 60) / data.length - 10;
+    final maxValue = data.reduce((a, b) => a > b ? a : b) * 1.2;
+    final chartHeight = size.height - 60;
+    final chartBottom = size.height - 30;
+
+    // 绘制目标线
+    final goalY = chartBottom - (goal / maxValue) * chartHeight;
+    final goalPaint = Paint()
+      ..color = Colors.grey.shade400
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeDashArray = [6, 4];
+
+    canvas.drawLine(
+      Offset(30, goalY),
+      Offset(size.width - 10, goalY),
+      goalPaint,
+    );
+
+    // 绘制柱子
+    for (int i = 0; i < data.length; i++) {
+      final barHeight = (data[i] / maxValue) * chartHeight * progress;
+      final x = 35 + i * ((size.width - 60) / data.length) + 5;
+      final y = chartBottom - barHeight;
+
+      final isSelected = selectedDay == i;
+      final isAboveGoal = data[i] >= goal;
+
+      // 柱子颜色
+      Color barColor;
+      if (isSelected) {
+        barColor = const Color(0xFF64B5F6);
+      } else if (isAboveGoal) {
+        barColor = const Color(0xFF64B5F6).withOpacity(0.7);
+      } else {
+        barColor = const Color(0xFF64B5F6).withOpacity(0.4);
+      }
+
+      // 绘制圆角矩形柱子
+      final rect = RRect.fromRectAndCorners(
+        Rect.fromLTWH(x, y, barWidth, barHeight),
+        topLeft: const Radius.circular(8),
+        topRight: const Radius.circular(8),
+      );
+
+      // 渐变
+      final gradientPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            barColor,
+            barColor.withOpacity(0.6),
+          ],
+        ).createShader(Rect.fromLTWH(x, y, barWidth, barHeight));
+
+      canvas.drawRRect(rect, gradientPaint);
+
+      // 选中时的边框
+      if (isSelected) {
+        canvas.drawRRect(
+          rect,
+          Paint()
+            ..color = const Color(0xFF64B5F6)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+      }
+
+      // 数值标签
+      if (isSelected) {
+        final valuePainter = TextPainter(
+          text: TextSpan(
+            text: '${data[i]}L',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF64B5F6),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        valuePainter.layout();
+        valuePainter.paint(
+          canvas,
+          Offset(x + barWidth / 2 - valuePainter.width / 2, y - 20),
+        );
+      }
+
+      // X轴标签
+      final dayPainter = TextPainter(
+        text: TextSpan(
+          text: days[i],
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11,
+            color: isSelected ? const Color(0xFF64B5F6) : Colors.grey.shade600,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      dayPainter.layout();
+      dayPainter.paint(
+        canvas,
+        Offset(x + barWidth / 2 - dayPainter.width / 2, chartBottom + 8),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaterBarChartPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.selectedDay != selectedDay;
+}
+
+/// Canvas: 开心饮水小熊
+class _HappyWaterBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // 头
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 开心眯眼
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.12);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.12);
+
+    // 开心嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.25);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.4, c.dx + r * 0.15, c.dy + r * 0.25);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 水滴
+    _drawWaterDrop(canvas, Offset(c.dx + r * 0.8, c.dy - r * 0.3), r * 0.15);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.6, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawWaterDrop(Canvas canvas, Offset center, double size) {
+    final paint = Paint()..color = const Color(0xFF64B5F6);
+    final path = Path();
+    path.moveTo(center.dx, center.dy - size);
+    path.quadraticBezierTo(center.dx - size, center.dy, center.dx, center.dy + size * 0.8);
+    path.quadraticBezierTo(center.dx + size, center.dy, center.dx, center.dy - size);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
