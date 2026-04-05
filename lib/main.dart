@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
 }
 
 /// ============================================
-/// 46屏导航器
+/// 46屏导航器 (MainContainer)
 /// ============================================
 class OnboardingNavigator extends StatefulWidget {
   const OnboardingNavigator({super.key});
@@ -59,11 +59,32 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
   int _currentPage = 0;
   final int _totalPages = 46;
 
+  @override
+  void initState() {
+    super.initState();
+    // P0 Splash 特殊逻辑：2秒后自动翻页
+    Timer(const Duration(seconds: 2), () {
+      if (mounted && _currentPage == 0) {
+        _nextPage();
+      }
+    });
+  }
+
   void _nextPage() {
     if (_currentPage < _totalPages - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic, // 弹簧感平滑曲线
+      );
+    }
+  }
+
+  void _goToPage(int pageIndex) {
+    if (pageIndex >= 0 && pageIndex < _totalPages) {
+      _pageController.animateToPage(
+        pageIndex,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
       );
     }
   }
@@ -73,7 +94,7 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
     return Scaffold(
       body: Stack(
         children: [
-          // 禁止手势滑动
+          // 禁止手势滑动 - 强力锁定
           PageView.builder(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
@@ -202,6 +223,53 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
               ),
             ),
           ),
+
+          // ============================================
+          // 全局胶囊按钮（P0 Splash不显示，P45最后一页不显示）
+          // ============================================
+          if (_currentPage > 0 && _currentPage < _totalPages - 1)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 32,
+              left: 40,
+              right: 40,
+              child: GestureDetector(
+                onTap: _nextPage,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
