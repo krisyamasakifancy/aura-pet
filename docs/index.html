@@ -16,13 +16,11 @@
       --surface: #FFFFFF;
       --gold: #FFD700;
       --dark-bg: #1A0033;
-      /* Creamy Bear Colors */
-      --bear-caramel: #D2B48C;
-      --bear-caramel-light: #E5C9A8;
-      --bear-caramel-dark: #A68B5B;
-      --bear-cream: #FFFDD0;
-      --bear-nose-pink: #FFB6C1;
-      --bear-blush: rgba(255, 182, 193, 0.5);
+      /* Classic Teddy Colors */
+      --teddy-brown: #8B4513;
+      --teddy-light: #A0522D;
+      --teddy-dark: #6B3410;
+      --teddy-nose: #4A2810;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, var(--bg-start), var(--bg-end)); min-height: 100vh; overflow: hidden; touch-action: pan-y; }
@@ -48,9 +46,11 @@
     .tab-icon { font-size: 20px; }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .confetti { position: absolute; width: 8px; height: 8px; animation: confettiFall 2s ease-out forwards; }
-    @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100px) rotate(360deg); opacity: 0; } }
     @keyframes logoPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
+    .confetti { position: absolute; width: 8px; height: 8px; animation: confettiFall 2.5s ease-out forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(-30px) rotate(0deg); opacity: 1; } 100% { transform: translateY(120px) rotate(360deg); opacity: 0; } }
+    .heart-bubble { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 20px; animation: heartPulse 2s ease-in-out infinite; }
+    @keyframes heartPulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.2); } }
   </style>
 </head>
 <body>
@@ -59,9 +59,9 @@
     <div class="quote-bubble" id="quoteBubble"><p class="quote-text" id="quoteText"></p><span class="quote-category" id="quoteCategory"></span></div>
 
     <!-- P1: Splash -->
-    <div class="page active" id="page-1" style="background: linear-gradient(135deg, #FFF8E7, #FFE4E1);">
+    <div class="page active" id="page-1" style="background: linear-gradient(135deg, #FFF8F0, #FFE8D6);">
       <div style="position: relative; width: 200px; height: 220px;">
-        <canvas id="bear-splash" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
+        <canvas id="teddy-splash" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
       </div>
       <div style="font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; color: var(--text-primary); margin-top: 16px; animation: logoPulse 1.5s ease-in-out infinite;">Aura-Pet</div>
       <p style="margin-top: 8px; font-size: 13px; color: #666;">你的健康智能伴侣</p>
@@ -70,8 +70,8 @@
     <!-- P2: Welcome -->
     <div class="page" id="page-2">
       <div class="content-card"><h1 class="card-title">Reach Your Weight Goals 🐻</h1><p class="card-subtitle">与你的可爱小熊一起，开启健康之旅</p></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 16px;">
-        <canvas id="bear-welcome" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
+      <div style="position: relative; width: 160px; height: 180px; margin-top: 16px;">
+        <canvas id="teddy-welcome" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
       </div>
     </div>
 
@@ -79,8 +79,8 @@
     <div class="page" id="page-3">
       <div style="font-size: 50px; animation: bounce 1s ease-in-out infinite;">🥗</div>
       <div class="content-card"><h1 class="card-title">Track Calories with Ease</h1><p class="card-subtitle">智能识别食物，一键记录每一餐</p></div>
-      <div style="position: relative; width: 140px; height: 160px; margin-top: 12px;">
-        <canvas id="bear-calorie" width="140" height="160" style="width: 140px; height: 160px;"></canvas>
+      <div style="position: relative; width: 120px; height: 140px; margin-top: 12px;">
+        <canvas id="teddy-calorie" width="120" height="140" style="width: 120px; height: 140px;"></canvas>
       </div>
     </div>
 
@@ -92,24 +92,24 @@
         <p class="card-subtitle" style="color: rgba(255,255,255,0.8);">16:8 间歇性禁食，智能计时</p>
       </div>
       <div style="font-family: 'Poppins', sans-serif; font-size: 38px; font-weight: 700; color: white; margin: 16px 0; letter-spacing: 2px;">16:00:00</div>
-      <div style="position: relative; width: 160px; height: 180px;">
-        <canvas id="bear-fasting" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
+      <div style="position: relative; width: 140px; height: 160px;">
+        <canvas id="teddy-fasting" width="140" height="160" style="width: 140px; height: 160px;"></canvas>
       </div>
     </div>
 
     <!-- P5: Weight Trend -->
     <div class="page" id="page-5">
       <div class="content-card"><h1 class="card-title">See Results 📈</h1></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
-        <canvas id="bear-trend" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
+      <div style="position: relative; width: 160px; height: 180px; margin-top: 12px;">
+        <canvas id="teddy-trend" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
       </div>
     </div>
 
     <!-- P6: Hydration -->
     <div class="page" id="page-6">
       <div class="content-card"><h1 class="card-title">Stay Hydrated 💧</h1><p class="card-subtitle">设置喝水提醒，保持身体水分</p></div>
-      <div style="position: relative; width: 160px; height: 180px; margin-top: 12px;">
-        <canvas id="bear-water" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
+      <div style="position: relative; width: 130px; height: 150px; margin-top: 12px;">
+        <canvas id="teddy-water" width="130" height="150" style="width: 130px; height: 150px;"></canvas>
       </div>
     </div>
 
@@ -125,25 +125,25 @@
     <div class="page" id="page-10"><div class="content-card"><h1 class="card-title">Select your gender 👤</h1></div></div>
     <div class="page" id="page-11"><div class="content-card"><h1 class="card-title">What's your age? 🎂</h1></div><input type="number" placeholder="年龄" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
 
-    <!-- P12-P15: Data Entry with Notebook -->
+    <!-- P12-P15: Data Entry with Brown Notebook -->
     <div class="page" id="page-12">
       <div class="content-card"><h1 class="card-title">How tall are you? 📏</h1></div>
-      <div style="position: relative; width: 200px; height: 220px; margin-top: 12px;">
-        <canvas id="bear-notebook" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
+      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
+        <canvas id="teddy-notebook" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
       </div>
     </div>
 
     <div class="page" id="page-13">
       <div class="content-card"><h1 class="card-title">Current weight? ⚖️</h1></div>
-      <div style="position: relative; width: 200px; height: 220px; margin-top: 12px;">
-        <canvas id="bear-notebook-2" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
+      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
+        <canvas id="teddy-notebook-2" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
       </div>
     </div>
 
     <div class="page" id="page-14">
       <div class="content-card"><h1 class="card-title">Target weight? 🎯</h1></div>
-      <div style="position: relative; width: 200px; height: 220px; margin-top: 12px;">
-        <canvas id="bear-notebook-3" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
+      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
+        <canvas id="teddy-notebook-3" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
       </div>
     </div>
 
@@ -156,9 +156,38 @@
     <div class="page" id="page-19"><div style="font-size: 60px;">🔔</div><div class="content-card"><h1 class="card-title">Enable notifications? 📱</h1></div></div>
     <div class="page" id="page-20" style="background: linear-gradient(180deg, #2D3748, #1A202C);"><div style="width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div><div class="content-card" style="background: rgba(255,255,255,0.1); margin-top: 24px;"><h1 class="card-title" style="color: white;">Creating your plan...</h1></div></div>
 
-    <!-- P21-P34 -->
-    <div class="page" id="page-21"><div class="content-card"><h1 class="card-title">Weight Prediction 📊</h1></div></div>
-    <div class="page" id="page-22"><div class="content-card"><h1 class="card-title">Habit Analysis 📈</h1></div><div style="position: relative; width: 120px; height: 140px; margin-top: 12px;"><canvas id="bear-star" width="120" height="140" style="width: 120px; height: 140px;"></canvas></div></div>
+    <!-- P21: Weight Prediction with Chart -->
+    <div class="page" id="page-21">
+      <div class="content-card"><h1 class="card-title">Weight Prediction 📊</h1></div>
+      <div style="position: relative; width: 100%; max-width: 320px; height: 160px; margin-top: 12px;">
+        <svg viewBox="0 0 320 160" style="width: 100%; height: 100%;">
+          <defs>
+            <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:0.4"/>
+              <stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/>
+            </linearGradient>
+          </defs>
+          <path d="M20,140 L60,130 L100,118 L140,105 L180,92 L220,78 L260,65 L300,52 L300,160 L20,160 Z" fill="url(#chartGrad)"/>
+          <path d="M20,140 L60,130 L100,118 L140,105 L180,92 L220,78 L260,65 L300,52" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="300" cy="52" r="6" fill="#4ECDC4"/>
+        </svg>
+      </div>
+      <p style="margin-top: 12px; font-size: 14px; color: var(--primary); font-weight: 600;">预计12周后: <strong>72kg</strong></p>
+      <div style="position: relative; width: 80px; height: 90px; margin-top: 8px;">
+        <canvas id="teddy-endpoint" width="80" height="90" style="width: 80px; height: 90px;"></canvas>
+        <div class="heart-bubble">💕</div>
+      </div>
+    </div>
+
+    <!-- P22: Habit Analysis -->
+    <div class="page" id="page-22">
+      <div class="content-card"><h1 class="card-title">Habit Analysis 📈</h1></div>
+      <div style="position: relative; width: 100px; height: 110px; margin-top: 12px;">
+        <canvas id="teddy-star" width="100" height="110" style="width: 100px; height: 110px;"></canvas>
+      </div>
+    </div>
+
+    <!-- P23-P34 -->
     <div class="page" id="page-23" style="background: linear-gradient(135deg, #11998E, #38EF7D);"><div class="content-card" style="background: linear-gradient(135deg, #FFD700, #FFA500);"><h1 class="card-title">✨ Premium ✨</h1></div></div>
     <div class="page" id="page-24"><div class="content-card"><h1 class="card-title">Choose your plan 💎</h1></div></div>
     <div class="page" id="page-25"><div style="font-size: 60px;">🤝</div><div class="content-card"><h1 class="card-title">Start your journey! 🚀</h1></div></div>
@@ -172,14 +201,14 @@
     <div class="page" id="page-33"><div class="content-card"><h1 class="card-title">Fasting Plan ⏰</h1></div></div>
     <div class="page" id="page-34" style="background: linear-gradient(180deg, #1A0033, #2D1B4E);"><div style="font-size: 44px;">🌙</div><div style="font-family: 'Poppins', sans-serif; font-size: 38px; color: white; margin: 14px 0;">15:42:33</div></div>
 
-    <!-- P35: Fasting with Sleepy Bear -->
+    <!-- P35: Fasting Timer with Sleepy Teddy -->
     <div class="page" id="page-35" style="background: linear-gradient(180deg, #1A0033, #2D1B4E);">
       <div class="content-card" style="background: rgba(255,255,255,0.1);">
         <h1 class="card-title" style="color: white;">Fasting in Progress 🌙</h1>
         <p class="card-subtitle" style="color: rgba(255,255,255,0.8);">小熊陪你一起坚持</p>
       </div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 16px;">
-        <canvas id="bear-sleepy" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
+      <div style="position: relative; width: 160px; height: 180px; margin-top: 16px;">
+        <canvas id="teddy-sleepy" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
       </div>
     </div>
 
@@ -190,12 +219,14 @@
     <div class="page" id="page-39"><div class="content-card"><h1 class="card-title">Profile 👤</h1></div></div>
     <div class="page" id="page-40" style="background: linear-gradient(135deg, #667eea, #764ba2);"><div style="font-size: 80px;">🎉</div><div class="content-card"><h1 class="card-title">Goal Reached! 🎯</h1></div><div id="confetti-container-2"></div></div>
 
-    <!-- P41: Achievement with Flower Bear -->
+    <!-- P41: Daily Goal Reached with Teddy -->
     <div class="page" id="page-41">
-      <div class="content-card"><h1 class="card-title">Achievement Unlocked! 🏆</h1></div>
+      <div class="content-card"><h1 class="card-title">Daily Goal Reached! 🎉</h1><p class="card-subtitle">恭喜你完成了今天的健康目标！</p></div>
       <div style="position: relative; width: 180px; height: 200px; margin-top: 16px;">
-        <canvas id="bear-flower" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
+        <canvas id="teddy-celebrate" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
       </div>
+      <!-- Full screen confetti -->
+      <div id="confetti-full" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
     </div>
 
     <!-- P42-P46 -->
@@ -210,20 +241,18 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════════════════════
-    // 🐻 Creamy Bear Canvas Renderer - 奶油小棕熊 Ultra-Q版
-    // 焦糖奶茶色 #D2B48C + 奶油白 #FFFDD0
+    // 🧸 Classic Teddy Bear Renderer - 经典泰迪熊 安静陪伴版
+    // 纯棕色 #8B4513 | 眯眯眼 | 倒Y嘴巴 | 呼吸动画
     // ═══════════════════════════════════════════════════════════════════════════
 
-    class CreamyBear {
+    class ClassicTeddy {
       constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.w = canvas.width;
         this.h = canvas.height;
         this.options = {
-          mode: options.mode || 'default', // default, hearting, notebook, sleepy, flower, celebrating
-          breathing: options.breathing !== false,
-          jiggle: options.jiggle || false,
+          mode: options.mode || 'default', // default, notebook, sleepy, celebrate
           time: 0
         };
         this.animFrame = null;
@@ -241,39 +270,28 @@
 
       stopAnimation() { if (this.animFrame) cancelAnimationFrame(this.animFrame); }
 
-      // 焦糖奶茶渐变
-      getCaramelGradient(x, y, w, h, isLight = false) {
+      // 纯棕色径向渐变
+      getBrownGradient(x, y, r, isLight = false) {
         const ctx = this.ctx;
-        const g = ctx.createRadialGradient(x + w/2, y + h/2, 0, x + w/2, y + h/2, w);
+        const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
         if (isLight) {
-          g.addColorStop(0, '#E5C9A8');
-          g.addColorStop(0.5, '#D2B48C');
-          g.addColorStop(1, '#C4A67A');
+          g.addColorStop(0, '#A0522D');
+          g.addColorStop(0.6, '#8B4513');
+          g.addColorStop(1, '#6B3410');
         } else {
-          g.addColorStop(0, '#D2B48C');
-          g.addColorStop(0.4, '#C4A67A');
-          g.addColorStop(0.8, '#A68B5B');
-          g.addColorStop(1, '#8B7355');
+          g.addColorStop(0, '#8B4513');
+          g.addColorStop(0.5, '#7A3D10');
+          g.addColorStop(1, '#5A2D0A');
         }
-        return g;
-      }
-
-      // 奶油白渐变
-      getCreamGradient(x, y, w, h) {
-        const ctx = this.ctx;
-        const g = ctx.createRadialGradient(x + w/2, y + h/3, 0, x + w/2, y + h/2, h);
-        g.addColorStop(0, '#FFFDD0');
-        g.addColorStop(0.6, '#FFF8DC');
-        g.addColorStop(1, '#F5E6C8');
         return g;
       }
 
       // 3D充气感内阴影
       drawInflatedShadow(cx, cy, r, intensity = 0.15) {
         const ctx = this.ctx;
-        const g = ctx.createRadialGradient(cx, cy - r * 0.3, r * 0.2, cx, cy, r);
+        const g = ctx.createRadialGradient(cx, cy - r * 0.3, r * 0.1, cx, cy, r);
         g.addColorStop(0, 'rgba(255,255,255,0)');
-        g.addColorStop(0.7, 'rgba(255,255,255,0)');
+        g.addColorStop(0.6, 'rgba(255,255,255,0)');
         g.addColorStop(1, `rgba(0,0,0,${intensity})`);
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -281,294 +299,148 @@
         ctx.fill();
       }
 
-      // 黑豆眼 - 三层晶莹高光
-      drawBeanEye(cx, cy, size, blinkChance = 0.02) {
+      // 眯眯眼 - 弯弯的黑色弧线
+      drawMochiEyes(cx, cy, size) {
         const ctx = this.ctx;
-        const time = this.options.time;
-        // 眨眼
-        const blink = Math.sin(time * 0.5) > 0.98 ? 0.1 : 1;
-        const eyeY = cy;
-        const eyeH = size * 1.2 * blink;
-
-        // 眼眶
+        ctx.strokeStyle = '#2D1810';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        // 左眼 - 弯弯笑
         ctx.beginPath();
-        ctx.ellipse(cx, eyeY, size, eyeH, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#2D2015';
+        ctx.arc(cx - size, cy, size * 0.6, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+        // 右眼
+        ctx.beginPath();
+        ctx.arc(cx + size, cy, size * 0.6, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      }
+
+      // 极简鼻子
+      drawSimpleNose(cx, cy, size) {
+        const ctx = this.ctx;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, size, size * 0.7, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#4A2810';
         ctx.fill();
-
-        // 黑豆光泽
-        const beanG = ctx.createRadialGradient(cx - size * 0.3, eyeY - eyeH * 0.3, 0, cx, eyeY, size);
-        beanG.addColorStop(0, '#4A3728');
-        beanG.addColorStop(0.6, '#2D2015');
-        beanG.addColorStop(1, '#1A100A');
         ctx.beginPath();
-        ctx.ellipse(cx, eyeY, size * 0.85, eyeH * 0.85, 0, 0, Math.PI * 2);
-        ctx.fillStyle = beanG;
-        ctx.fill();
-
-        // 第一层高光 - 大圆形
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.35, eyeY - eyeH * 0.35, size * 0.4, eyeH * 0.4, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fill();
-
-        // 第二层高光 - 小圆形
-        ctx.beginPath();
-        ctx.arc(cx + size * 0.25, eyeY + eyeH * 0.15, size * 0.2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.fill();
-
-        // 第三层高光 - 微型闪光
-        ctx.beginPath();
-        ctx.arc(cx - size * 0.15, eyeY - eyeH * 0.5, size * 0.12, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.ellipse(cx - size * 0.3, cy - size * 0.3, size * 0.3, size * 0.2, -0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
         ctx.fill();
       }
 
-      // 治愈系腮红
-      drawHealingBlush(cx, cy, size) {
+      // 倒Y字嘴巴
+      drawYSmile(cx, cy, size) {
         const ctx = this.ctx;
-        const pulse = 1 + Math.sin(this.options.time * 2) * 0.1;
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * pulse);
-        g.addColorStop(0, 'rgba(255, 182, 193, 0.6)');
-        g.addColorStop(0.5, 'rgba(255, 182, 193, 0.3)');
-        g.addColorStop(1, 'rgba(255, 182, 193, 0)');
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, size, size * 0.6, 0, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
-
-      // 粉嫩圆点鼻子
-      drawPinkNose(cx, cy, size) {
-        const ctx = this.ctx;
-        const noseG = ctx.createRadialGradient(cx - size * 0.2, cy - size * 0.2, 0, cx, cy, size);
-        noseG.addColorStop(0, '#FFC0CB');
-        noseG.addColorStop(0.5, '#FFB6C1');
-        noseG.addColorStop(1, '#FFA0B0');
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, size, size * 0.75, 0, 0, Math.PI * 2);
-        ctx.fillStyle = noseG;
-        ctx.fill();
-        // 鼻头高光
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.3, cy - size * 0.3, size * 0.35, size * 0.25, -0.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fill();
-      }
-
-      // 治愈系微笑
-      drawHealingSmile(cx, cy, size, intensity = 1) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.moveTo(cx - size, cy);
-        ctx.quadraticCurveTo(cx, cy + size * 1.2 * intensity, cx + size, cy);
-        ctx.quadraticCurveTo(cx, cy + size * 0.4, cx - size, cy);
-        ctx.fillStyle = '#C4A67A';
-        ctx.fill();
-        // 微笑弧度
-        ctx.beginPath();
-        ctx.moveTo(cx - size * 0.8, cy);
-        ctx.quadraticCurveTo(cx, cy + size * 0.8, cx + size * 0.8, cy);
-        ctx.strokeStyle = '#8B7355';
+        ctx.strokeStyle = '#4A2810';
         ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        // 左半Y
+        ctx.moveTo(cx - size, cy - size * 0.5);
+        ctx.lineTo(cx - size * 0.3, cy);
+        ctx.lineTo(cx - size * 0.6, cy + size * 0.8);
+        ctx.stroke();
+        // 右半Y
+        ctx.beginPath();
+        ctx.moveTo(cx + size, cy - size * 0.5);
+        ctx.lineTo(cx + size * 0.3, cy);
+        ctx.lineTo(cx + size * 0.6, cy + size * 0.8);
+        ctx.stroke();
+        // 微笑弧线
+        ctx.beginPath();
+        ctx.moveTo(cx - size * 0.3, cy);
+        ctx.quadraticCurveTo(cx, cy + size * 0.3, cx + size * 0.3, cy);
         ctx.stroke();
       }
 
       // 圆耳朵
       drawRoundEar(cx, cy, size, isLeft) {
         const ctx = this.ctx;
-        const dir = isLeft ? -1 : 1;
-        // 外耳
         ctx.beginPath();
         ctx.arc(cx, cy, size, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - size, cy - size, size * 2, size * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, cy, size);
         ctx.fill();
         this.drawInflatedShadow(cx, cy, size, 0.1);
-        // 内耳 - 奶油色
-        ctx.beginPath();
-        ctx.arc(cx, cy, size * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCreamGradient(cx - size * 0.6, cy - size * 0.6, size * 1.2, size * 1.2);
-        ctx.fill();
       }
 
-      // 短圆胖手臂
-      drawShortArm(cx, cy, size, angle = 0) {
+      // 圆身体
+      drawRoundBody(cx, cy, w, h) {
+        const ctx = this.ctx;
+        const breathScale = 1 + Math.sin(this.options.time * 1.5) * 0.03;
+        const bw = w * breathScale;
+        const bh = h * breathScale;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, bw, bh, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, cy, Math.max(bw, bh));
+        ctx.fill();
+        this.drawInflatedShadow(cx, cy, Math.max(bw, bh), 0.12);
+      }
+
+      // 圆手臂
+      drawRoundArm(cx, cy, size, angle = 0) {
         const ctx = this.ctx;
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(angle);
-        // 上臂
         ctx.beginPath();
-        ctx.ellipse(0, size * 0.5, size * 0.8, size, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(-size * 0.8, 0, size * 1.6, size * 2);
-        ctx.fill();
-        // 肉垫
-        ctx.beginPath();
-        ctx.arc(0, size * 1.2, size * 0.7, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFDD0';
+        ctx.ellipse(0, size * 0.6, size * 0.9, size, 0, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(0, size * 0.6, size);
         ctx.fill();
         ctx.restore();
       }
 
-      // 短圆胖腿
-      drawShortLeg(cx, cy, size) {
+      // 圆腿
+      drawRoundLeg(cx, cy, size) {
         const ctx = this.ctx;
         ctx.beginPath();
         ctx.ellipse(cx, cy, size * 1.1, size * 0.9, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - size, cy - size, size * 2, size * 1.8);
-        ctx.fill();
-        // 肉垫
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + size * 0.2, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFDD0';
+        ctx.fillStyle = this.getBrownGradient(cx, cy, size);
         ctx.fill();
       }
 
-      // 圆滚滚身体
-      drawRoundBody(cx, cy, w, h) {
-        const ctx = this.ctx;
-        const breathScale = 1 + Math.sin(this.options.time * 1.5) * 0.04;
-        const bw = w * breathScale;
-        const bh = h * breathScale;
-        // 身体
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, bw, bh, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - bw, cy - bh, bw * 2, bh * 2);
-        ctx.fill();
-        this.drawInflatedShadow(cx, cy, Math.max(bw, bh), 0.12);
-        // 肚子 - 奶油白
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + bh * 0.1, bw * 0.75, bh * 0.65, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCreamGradient(cx - bw * 0.75, cy - bh * 0.5, bw * 1.5, bh * 1.3);
-        ctx.fill();
-      }
-
-      // 比心手势
-      drawHeartPaw(cx, cy, size) {
-        const ctx = this.ctx;
-        const beat = 1 + Math.sin(this.options.time * 5) * 0.1;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.scale(beat, beat);
-        // 肉垫
-        ctx.beginPath();
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFDD0';
-        ctx.fill();
-        // 比心
-        ctx.beginPath();
-        ctx.moveTo(0, -size * 0.3);
-        ctx.bezierCurveTo(-size * 0.7, -size, -size * 0.7, size * 0.3, 0, size * 0.8);
-        ctx.bezierCurveTo(size * 0.7, size * 0.3, size * 0.7, -size, 0, -size * 0.3);
-        ctx.fillStyle = '#FF6B8A';
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // 睡眠帽
+      // 棕色睡帽
       drawSleepHat(cx, cy, size) {
         const ctx = this.ctx;
-        const wobble = Math.sin(this.options.time * 2) * 0.05;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(wobble);
-        // 帽子
         ctx.beginPath();
-        ctx.moveTo(0, -size * 1.5);
-        ctx.quadraticCurveTo(-size * 0.8, -size * 0.5, -size * 0.6, size * 0.2);
-        ctx.lineTo(size * 0.6, size * 0.2);
-        ctx.quadraticCurveTo(size * 0.8, -size * 0.5, 0, -size * 1.5);
-        const hatG = ctx.createLinearGradient(0, -size * 1.5, 0, size * 0.2);
-        hatG.addColorStop(0, '#E8D5F0');
-        hatG.addColorStop(1, '#D4B8E8');
-        ctx.fillStyle = hatG;
+        ctx.moveTo(cx, cy - size * 1.4);
+        ctx.quadraticCurveTo(cx - size * 0.7, cy - size * 0.4, cx - size * 0.5, cy + size * 0.2);
+        ctx.lineTo(cx + size * 0.5, cy + size * 0.2);
+        ctx.quadraticCurveTo(cx + size * 0.7, cy - size * 0.4, cx, cy - size * 1.4);
+        ctx.fillStyle = '#8B4513';
+        ctx.fill();
+        // 帽边
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + size * 0.15, size * 0.7, size * 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#6B3410';
         ctx.fill();
         // 毛球
         ctx.beginPath();
-        ctx.arc(0, -size * 1.6, size * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = '#E8D5F0';
+        ctx.arc(cx, cy - size * 1.5, size * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = '#8B4513';
         ctx.fill();
-        ctx.restore();
       }
 
-      // 奶油笔记本
-      drawNotebook(cx, cy, w, h) {
+      // 棕色笔记本
+      drawBrownNotebook(cx, cy, w, h) {
         const ctx = this.ctx;
-        const pageFlip = Math.sin(this.options.time * 0.8) * 0.05;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(pageFlip);
-        // 封面
         ctx.beginPath();
-        ctx.roundRect(-w/2, -h/2, w, h, 8);
-        ctx.fillStyle = '#FFFDD0';
+        ctx.roundRect(cx - w/2, cy - h/2, w, h, 6);
+        ctx.fillStyle = '#8B4513';
         ctx.fill();
-        ctx.strokeStyle = '#D2B48C';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#6B3410';
+        ctx.lineWidth = 2;
         ctx.stroke();
         // 线圈
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 4; i++) {
           ctx.beginPath();
-          ctx.arc(-w/2 - 3, -h/2 + 15 + i * 18, 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#C4A67A';
+          ctx.arc(cx - w/2 - 2, cy - h/2 + 12 + i * 16, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#5A2D0A';
           ctx.fill();
         }
-        // 横线
-        ctx.strokeStyle = '#E8DCC8';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 8; i++) {
-          ctx.beginPath();
-          ctx.moveTo(-w/2 + 15, -h/2 + 35 + i * 15);
-          ctx.lineTo(w/2 - 10, -h/2 + 35 + i * 15);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      // 莫奈色小花束
-      drawFlowerBouquet(cx, cy, size) {
-        const ctx = this.ctx;
-        const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#B5FFE5'];
-        const sway = Math.sin(this.options.time * 3) * 0.1;
-        ctx.save();
-        ctx.translate(cx, cy);
-        // 花茎
-        ctx.strokeStyle = '#7CB342';
-        ctx.lineWidth = 3;
+        // 页面
         ctx.beginPath();
-        ctx.moveTo(0, size);
-        ctx.quadraticCurveTo(sway * 20, size * 0.5, 0, 0);
-        ctx.stroke();
-        // 花朵
-        for (let i = 0; i < 5; i++) {
-          const angle = (i / 5) * Math.PI * 2 + sway;
-          const fx = Math.cos(angle) * size * 0.5;
-          const fy = Math.sin(angle) * size * 0.5;
-          this.drawFlower(ctx, fx, fy, size * 0.35, colors[i]);
-        }
-        // 主花
-        this.drawFlower(ctx, 0, -size * 0.3, size * 0.45, '#FFB5B5');
-        ctx.restore();
-      }
-
-      drawFlower(ctx, x, y, size, color) {
-        const petalCount = 5;
-        for (let i = 0; i < petalCount; i++) {
-          const angle = (i / petalCount) * Math.PI * 2;
-          ctx.beginPath();
-          ctx.ellipse(
-            x + Math.cos(angle) * size * 0.4,
-            y + Math.sin(angle) * size * 0.4,
-            size * 0.5, size * 0.3,
-            angle, 0, Math.PI * 2
-          );
-          ctx.fillStyle = color;
-          ctx.fill();
-        }
-        ctx.beginPath();
-        ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFE082';
+        ctx.roundRect(cx - w/2 + 8, cy - h/2 + 8, w - 16, h - 16, 3);
+        ctx.fillStyle = '#F5F0E8';
         ctx.fill();
       }
 
@@ -579,311 +451,182 @@
         const time = this.options.time;
         ctx.clearRect(0, 0, this.w, this.h);
 
-        const breathY = Math.sin(time * 1.5) * 4;
-        const jiggle = this.options.jiggle ? Math.sin(time * 15) * 2 : 0;
+        const breathY = Math.sin(time * 1.5) * 3;
 
         switch (this.options.mode) {
-          case 'hearting': this.drawHeartingMode(cx, cy, breathY, jiggle); break;
           case 'notebook': this.drawNotebookMode(cx, cy, breathY); break;
           case 'sleepy': this.drawSleepyMode(cx, cy, breathY); break;
-          case 'flower': this.drawFlowerMode(cx, cy, breathY); break;
-          case 'celebrating': this.drawCelebratingMode(cx, cy, breathY, jiggle); break;
-          default: this.drawDefaultMode(cx, cy, breathY, jiggle);
+          case 'celebrate': this.drawCelebrateMode(cx, cy, breathY); break;
+          default: this.drawDefaultMode(cx, cy, breathY);
         }
       }
 
-      drawDefaultMode(cx, cy, breathY, jiggle) {
+      drawDefaultMode(cx, cy, breathY) {
         const ctx = this.ctx;
         const bodyCy = cy + 25 + breathY * 0.5;
         // 身体
-        this.drawRoundBody(cx, bodyCy, 70, 55);
+        this.drawRoundBody(cx, bodyCy, 65, 50);
         // 腿
-        this.drawShortLeg(cx - 30, bodyCy + 40, 14);
-        this.drawShortLeg(cx + 30, bodyCy + 40, 14);
+        this.drawRoundLeg(cx - 28, bodyCy + 35, 13);
+        this.drawRoundLeg(cx + 28, bodyCy + 35, 13);
         // 头
-        const headCy = cy - 20 + breathY;
+        const headCy = cy - 18 + breathY;
         ctx.beginPath();
-        ctx.arc(cx + jiggle, headCy, 55, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - 55, headCy - 55, 110, 110);
+        ctx.arc(cx, headCy, 52, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, headCy, 52);
         ctx.fill();
-        this.drawInflatedShadow(cx + jiggle, headCy, 55, 0.1);
+        this.drawInflatedShadow(cx, headCy, 52, 0.1);
         // 耳朵
-        this.drawRoundEar(cx - 45 + jiggle, headCy - 40, 20, true);
-        this.drawRoundEar(cx + 45 + jiggle, headCy - 40, 20, false);
-        // 黑豆眼
-        this.drawBeanEye(cx - 20 + jiggle, headCy - 5, 12);
-        this.drawBeanEye(cx + 20 + jiggle, headCy - 5, 12);
-        // 腮红
-        this.drawHealingBlush(cx - 38 + jiggle, headCy + 12, 16);
-        this.drawHealingBlush(cx + 38 + jiggle, headCy + 12, 16);
+        this.drawRoundEar(cx - 44, headCy - 35, 18, true);
+        this.drawRoundEar(cx + 44, headCy - 35, 18, false);
+        // 眯眯眼
+        this.drawMochiEyes(cx, headCy - 3, 10);
         // 鼻子
-        this.drawPinkNose(cx + jiggle, headCy + 15, 10);
-        // 微笑
-        this.drawHealingSmile(cx + jiggle, headCy + 28, 12);
+        this.drawSimpleNose(cx, headCy + 12, 7);
+        // 倒Y嘴巴
+        this.drawYSmile(cx, headCy + 22, 10);
         // 手臂
-        this.drawShortArm(cx - 50, bodyCy + 10, 12, -0.3);
-        this.drawShortArm(cx + 50, bodyCy + 10, 12, 0.3);
-      }
-
-      drawHeartingMode(cx, cy, breathY, jiggle) {
-        const ctx = this.ctx;
-        const swell = 1 + Math.sin(this.options.time * 3) * 0.05;
-        const bodyCy = cy + 25 + breathY * 0.5;
-        // 身体
-        ctx.save();
-        ctx.translate(cx, bodyCy);
-        ctx.scale(swell, swell);
-        ctx.translate(-cx, -bodyCy);
-        this.drawRoundBody(cx, bodyCy, 70, 55);
-        ctx.restore();
-        // 腿
-        this.drawShortLeg(cx - 30, bodyCy + 40, 14);
-        this.drawShortLeg(cx + 30, bodyCy + 40, 14);
-        // 头
-        const headCy = cy - 20 + breathY;
-        ctx.beginPath();
-        ctx.arc(cx + jiggle, headCy, 55 * swell, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - 55, headCy - 55, 110, 110);
-        ctx.fill();
-        this.drawInflatedShadow(cx + jiggle, headCy, 55, 0.1);
-        // 耳朵
-        this.drawRoundEar(cx - 45 + jiggle, headCy - 40, 20, true);
-        this.drawRoundEar(cx + 45 + jiggle, headCy - 40, 20, false);
-        // 爱心眼
-        this.drawHeartEyes(cx, headCy);
-        // 腮红
-        this.drawHealingBlush(cx - 38 + jiggle, headCy + 12, 20);
-        this.drawHealingBlush(cx + 38 + jiggle, headCy + 12, 20);
-        // 鼻子
-        this.drawPinkNose(cx + jiggle, headCy + 15, 10);
-        // 微笑
-        this.drawHealingSmile(cx + jiggle, headCy + 28, 14, 1.2);
-        // 比心手
-        this.drawHeartPaw(cx + 65, cy - 5, 14);
-        // 心形粒子
-        this.drawHeartParticles(cx, cy);
-      }
-
-      drawHeartEyes(cx, headCy) {
-        const ctx = this.ctx;
-        const beat = 1 + Math.sin(this.options.time * 6) * 0.15;
-        [-20, 20].forEach(offset => {
-          ctx.save();
-          ctx.translate(cx + offset, headCy - 5);
-          ctx.scale(beat, beat);
-          ctx.beginPath();
-          ctx.moveTo(0, 8);
-          ctx.bezierCurveTo(-10, -5, -10, 8, 0, 14);
-          ctx.bezierCurveTo(10, 8, 10, -5, 0, 8);
-          ctx.fillStyle = '#FF6B8A';
-          ctx.fill();
-          ctx.restore();
-        });
-      }
-
-      drawHeartParticles(cx, cy) {
-        const ctx = this.ctx;
-        for (let i = 0; i < 6; i++) {
-          const t = this.options.time * 0.7 + i * 0.5;
-          const x = cx + 55 + Math.sin(t * 2 + i) * 25;
-          const y = cy - 20 - t * 12 % 70;
-          const size = 8 + Math.sin(t * 3) * 3;
-          const alpha = 1 - (t * 12 % 70) / 70;
-          ctx.globalAlpha = alpha * 0.6;
-          ctx.font = `${size * 2}px Arial`;
-          ctx.fillText('💕', x - size, y);
-        }
-        ctx.globalAlpha = 1;
+        this.drawRoundArm(cx - 48, bodyCy + 8, 11, -0.3);
+        this.drawRoundArm(cx + 48, bodyCy + 8, 11, 0.3);
       }
 
       drawNotebookMode(cx, cy, breathY) {
         const ctx = this.ctx;
-        const tilt = Math.sin(this.options.time * 0.5) * 0.08;
-        const bodyCy = cy + 30 + breathY * 0.5;
-        // 身体 - 抱笔记本姿势
-        this.drawRoundBody(cx, bodyCy, 65, 50);
+        const bodyCy = cy + 28 + breathY * 0.5;
+        // 身体
+        this.drawRoundBody(cx, bodyCy, 60, 48);
         // 腿
-        this.drawShortLeg(cx - 28, bodyCy + 35, 13);
-        this.drawShortLeg(cx + 28, bodyCy + 35, 13);
-        // 头 - 歪头
-        const headCy = cy - 15 + breathY;
-        ctx.save();
-        ctx.translate(cx, headCy);
-        ctx.rotate(tilt);
+        this.drawRoundLeg(cx - 26, bodyCy + 32, 12);
+        this.drawRoundLeg(cx + 26, bodyCy + 32, 12);
+        // 头
+        const headCy = cy - 12 + breathY;
         ctx.beginPath();
-        ctx.arc(0, 0, 52, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(-52, -52, 104, 104);
+        ctx.arc(cx, headCy, 48, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, headCy, 48);
         ctx.fill();
-        this.drawInflatedShadow(0, 0, 52, 0.1);
+        this.drawInflatedShadow(cx, headCy, 48, 0.1);
         // 耳朵
-        this.drawRoundEar(-42, -38, 18, true);
-        this.drawRoundEar(42, -38, 18, false);
-        // 黑豆眼 - 认真思考
-        this.drawBeanEye(-18, -3, 11);
-        this.drawBeanEye(18, -3, 11);
-        // 腮红
-        this.drawHealingBlush(-35, 10, 14);
-        this.drawHealingBlush(35, 10, 14);
+        this.drawRoundEar(cx - 40, headCy - 32, 16, true);
+        this.drawRoundEar(cx + 40, headCy - 32, 16, false);
+        // 眯眯眼
+        this.drawMochiEyes(cx, headCy - 2, 9);
         // 鼻子
-        this.drawPinkNose(0, 13, 9);
-        // 微笑
-        this.drawHealingSmile(0, 24, 10);
-        ctx.restore();
-        // 笔记本 - 抱着
-        ctx.save();
-        ctx.translate(cx + 55, cy + 5);
-        ctx.rotate(0.15);
-        this.drawNotebook(0, 0, 45, 60);
-        ctx.restore();
+        this.drawSimpleNose(cx, headCy + 10, 6);
+        // 倒Y嘴巴
+        this.drawYSmile(cx, headCy + 18, 8);
+        // 棕色笔记本
+        this.drawBrownNotebook(cx + 50, cy + 8, 38, 52);
         // 手臂 - 抱着
-        this.drawShortArm(cx + 40, bodyCy + 5, 10, 0.8);
+        this.drawRoundArm(cx + 40, bodyCy + 5, 10, 0.8);
       }
 
       drawSleepyMode(cx, cy, breathY) {
         const ctx = this.ctx;
-        const bellyBreath = Math.sin(this.options.time * 1.2) * 5;
-        const bodyCy = cy + 30;
-        // 身体 - 呼吸起伏
+        const bellyBreath = Math.sin(this.options.time * 1.2) * 4;
+        const bodyCy = cy + 28;
+        // 身体
         ctx.save();
         ctx.translate(cx, bodyCy);
-        ctx.scale(1, 1 + bellyBreath * 0.02);
+        ctx.scale(1, 1 + bellyBreath * 0.025);
         ctx.translate(-cx, -bodyCy);
-        this.drawRoundBody(cx, bodyCy, 72, 52);
+        this.drawRoundBody(cx, bodyCy, 68, 50);
         ctx.restore();
         // 腿
-        this.drawShortLeg(cx - 32, bodyCy + 38, 15);
-        this.drawShortLeg(cx + 32, bodyCy + 38, 15);
+        this.drawRoundLeg(cx - 30, bodyCy + 36, 14);
+        this.drawRoundLeg(cx + 30, bodyCy + 36, 14);
         // 头
-        const headCy = cy - 18 + breathY * 0.5;
+        const headCy = cy - 15 + breathY * 0.5;
         ctx.beginPath();
-        ctx.arc(cx, headCy, 54, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(cx - 54, headCy - 54, 108, 108);
+        ctx.arc(cx, headCy, 50, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, headCy, 50);
         ctx.fill();
-        this.drawInflatedShadow(cx, headCy, 54, 0.08);
-        // 睡眠帽
-        this.drawSleepHat(cx, headCy - 50, 25);
+        this.drawInflatedShadow(cx, headCy, 50, 0.08);
+        // 棕色睡帽
+        this.drawSleepHat(cx, headCy - 45, 22);
         // 耳朵
-        this.drawRoundEar(cx - 44, headCy - 36, 18, true);
-        this.drawRoundEar(cx + 44, headCy - 36, 18, false);
+        this.drawRoundEar(cx - 42, headCy - 32, 16, true);
+        this.drawRoundEar(cx + 42, headCy - 32, 16, false);
         // 闭眼 - 弯弯的缝
-        ctx.strokeStyle = '#2D2015';
+        ctx.strokeStyle = '#2D1810';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(cx - 18, headCy - 2, 7, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx + 18, headCy - 2, 7, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+        // 鼻子
+        this.drawSimpleNose(cx, headCy + 12, 6);
+        // 倒Y嘴巴
+        this.drawYSmile(cx, headCy + 20, 8);
+      }
+
+      drawCelebrateMode(cx, cy, breathY) {
+        const ctx = this.ctx;
+        const bodyCy = cy + 28 + breathY * 0.5;
+        // 身体
+        this.drawRoundBody(cx, bodyCy, 65, 50);
+        // 腿
+        this.drawRoundLeg(cx - 28, bodyCy + 35, 13);
+        this.drawRoundLeg(cx + 28, bodyCy + 35, 13);
+        // 头
+        const headCy = cy - 18 + breathY;
+        ctx.beginPath();
+        ctx.arc(cx, headCy, 52, 0, Math.PI * 2);
+        ctx.fillStyle = this.getBrownGradient(cx, headCy, 52);
+        ctx.fill();
+        this.drawInflatedShadow(cx, headCy, 52, 0.1);
+        // 耳朵
+        this.drawRoundEar(cx - 44, headCy - 35, 18, true);
+        this.drawRoundEar(cx + 44, headCy - 35, 18, false);
+        // 眯眯眼 - 开心
+        this.drawHappyMochiEyes(cx, headCy - 3, 11);
+        // 鼻子
+        this.drawSimpleNose(cx, headCy + 12, 7);
+        // 开心倒Y嘴巴
+        this.drawYSmile(cx, headCy + 22, 11);
+        // 双手举起
+        this.drawRoundArm(cx - 52, bodyCy - 5, 11, -1.2);
+        this.drawRoundArm(cx + 52, bodyCy - 5, 11, 1.2);
+      }
+
+      drawHappyMochiEyes(cx, cy, size) {
+        const ctx = this.ctx;
+        ctx.strokeStyle = '#2D1810';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
-        // 左眼
+        // 左眼 - 大笑弯
         ctx.beginPath();
-        ctx.moveTo(cx - 28, headCy - 3);
-        ctx.quadraticCurveTo(cx - 18, headCy - 10, cx - 8, headCy - 3);
+        ctx.arc(cx - size, cy, size * 0.7, 0.1 * Math.PI, 0.9 * Math.PI);
         ctx.stroke();
         // 右眼
         ctx.beginPath();
-        ctx.moveTo(cx + 8, headCy - 3);
-        ctx.quadraticCurveTo(cx + 18, headCy - 10, cx + 28, headCy - 3);
+        ctx.arc(cx + size, cy, size * 0.7, 0.1 * Math.PI, 0.9 * Math.PI);
         ctx.stroke();
-        // 腮红
-        this.drawHealingBlush(cx - 36, headCy + 10, 14);
-        this.drawHealingBlush(cx + 36, headCy + 10, 14);
-        // 鼻子
-        this.drawPinkNose(cx, headCy + 14, 9);
-        // 微笑
-        this.drawHealingSmile(cx, headCy + 26, 10, 0.8);
-        // ZZZ
-        const zzz = Math.sin(this.options.time * 2);
-        ctx.font = 'bold 20px Poppins';
-        ctx.fillStyle = '#9C27B0';
-        ctx.fillText('Z', cx + 50 + zzz * 6, cy - 45 - zzz * 8);
-        ctx.font = 'bold 16px Poppins';
-        ctx.fillText('z', cx + 60 + zzz * 4, cy - 58 - zzz * 6);
-        ctx.font = 'bold 12px Poppins';
-        ctx.fillText('z', cx + 68 + zzz * 3, cy - 68 - zzz * 4);
-      }
-
-      drawFlowerMode(cx, cy, breathY) {
-        const ctx = this.ctx;
-        const wiggle = Math.sin(this.options.time * 8) * 3;
-        const bodyCy = cy + 25 + breathY * 0.5;
-        // 身体 - 开心晃动
-        ctx.save();
-        ctx.translate(cx + wiggle * 0.5, bodyCy);
-        ctx.rotate(wiggle * 0.03);
-        this.drawRoundBody(0, 0, 70, 55);
-        ctx.restore();
-        // 腿
-        this.drawShortLeg(cx - 30, bodyCy + 40, 14);
-        this.drawShortLeg(cx + 30, bodyCy + 40, 14);
-        // 头
-        const headCy = cy - 20 + breathY;
-        ctx.save();
-        ctx.translate(cx, headCy);
-        ctx.rotate(wiggle * 0.02);
-        ctx.beginPath();
-        ctx.arc(0, 0, 55, 0, Math.PI * 2);
-        ctx.fillStyle = this.getCaramelGradient(-55, -55, 110, 110);
-        ctx.fill();
-        this.drawInflatedShadow(0, 0, 55, 0.1);
-        // 耳朵
-        this.drawRoundEar(-45, -40, 20, true);
-        this.drawRoundEar(45, -40, 20, false);
-        // 星星眼
-        this.drawStarEyes(0);
-        // 腮红
-        this.drawHealingBlush(-38, 12, 18);
-        this.drawHealingBlush(38, 12, 18);
-        // 鼻子
-        this.drawPinkNose(0, 15, 10);
-        // 大笑
-        this.drawHealingSmile(0, 28, 14, 1.3);
-        ctx.restore();
-        // 花束 - 背后
-        this.drawFlowerBouquet(cx - 65, cy - 10, 20);
-        // 比心手
-        this.drawHeartPaw(cx + 60, cy, 12);
-      }
-
-      drawStarEyes(offsetX) {
-        const ctx = this.ctx;
-        const cx = offsetX;
-        const headCy = -5;
-        const starSize = 10 + Math.sin(this.options.time * 5) * 2;
-        [-20, 20].forEach(o => {
-          ctx.beginPath();
-          for (let i = 0; i < 5; i++) {
-            const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-            const x = cx + o + Math.cos(angle) * starSize;
-            const y = headCy + Math.sin(angle) * starSize;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.closePath();
-          ctx.fillStyle = '#FFD700';
-          ctx.fill();
-        });
-      }
-
-      drawCelebratingMode(cx, cy, breathY, jiggle) {
-        const wiggle = Math.sin(this.options.time * 10) * 4;
-        this.drawDefaultMode(cx, cy, breathY + wiggle, jiggle);
       }
     }
 
-    // Initialize Bears
-    function initBears() {
+    // Initialize Teddies
+    function initTeddies() {
       const configs = [
-        { id: 'bear-splash', mode: 'hearting' },
-        { id: 'bear-welcome', mode: 'hearting' },
-        { id: 'bear-calorie', mode: 'default' },
-        { id: 'bear-fasting', mode: 'sleepy' },
-        { id: 'bear-trend', mode: 'default' },
-        { id: 'bear-water', mode: 'default' },
-        { id: 'bear-notebook', mode: 'notebook' },
-        { id: 'bear-notebook-2', mode: 'notebook' },
-        { id: 'bear-notebook-3', mode: 'notebook' },
-        { id: 'bear-sleepy', mode: 'sleepy' },
-        { id: 'bear-star', mode: 'celebrating' },
-        { id: 'bear-flower', mode: 'flower' }
+        { id: 'teddy-splash', mode: 'default' },
+        { id: 'teddy-welcome', mode: 'default' },
+        { id: 'teddy-calorie', mode: 'default' },
+        { id: 'teddy-fasting', mode: 'sleepy' },
+        { id: 'teddy-trend', mode: 'default' },
+        { id: 'teddy-water', mode: 'default' },
+        { id: 'teddy-notebook', mode: 'notebook' },
+        { id: 'teddy-notebook-2', mode: 'notebook' },
+        { id: 'teddy-notebook-3', mode: 'notebook' },
+        { id: 'teddy-endpoint', mode: 'default' },
+        { id: 'teddy-star', mode: 'default' },
+        { id: 'teddy-sleepy', mode: 'sleepy' },
+        { id: 'teddy-celebrate', mode: 'celebrate' }
       ];
       configs.forEach(c => {
         const canvas = document.getElementById(c.id);
-        if (canvas) new CreamyBear(canvas, { mode: c.mode, breathing: true });
+        if (canvas) new ClassicTeddy(canvas, { mode: c.mode });
       });
     }
 
@@ -916,6 +659,7 @@
         }
         if (currentPage === 26) createConfetti('confetti-container');
         if (currentPage === 40) createConfetti('confetti-container-2');
+        if (currentPage === 41) createFullConfetti();
       }
     }
 
@@ -934,16 +678,37 @@
     function createConfetti(containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181', '#AA96DA'];
-      for (let i = 0; i < 20; i++) {
+      const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#B5FFE5'];
+      for (let i = 0; i < 15; i++) {
         const piece = document.createElement('div');
         piece.className = 'confetti';
         piece.style.left = Math.random() * 100 + '%';
         piece.style.top = '0';
         piece.style.background = colors[Math.floor(Math.random() * colors.length)];
         piece.style.animationDelay = Math.random() * 0.5 + 's';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
         container.appendChild(piece);
-        setTimeout(() => piece.remove(), 2500);
+        setTimeout(() => piece.remove(), 3000);
+      }
+    }
+
+    function createFullConfetti() {
+      const container = document.getElementById('confetti-full');
+      if (!container) return;
+      const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#B5FFE5', '#FFD700', '#FF6B8A'];
+      for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti';
+        piece.style.position = 'absolute';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = '-20px';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.width = (6 + Math.random() * 8) + 'px';
+        piece.style.height = (6 + Math.random() * 8) + 'px';
+        piece.style.animationDelay = Math.random() * 1 + 's';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        container.appendChild(piece);
+        setTimeout(() => piece.remove(), 3500);
       }
     }
 
@@ -957,7 +722,7 @@
 
     // Auto-start
     setTimeout(() => { if (currentPage === 1) nextPage(); }, 2500);
-    window.addEventListener('load', initBears);
+    window.addEventListener('load', initTeddies);
   </script>
 </body>
 </html>
