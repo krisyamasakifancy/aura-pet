@@ -158,6 +158,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return SettingsScreen(onComplete: _nextPage);
                 case 40:
                   return GoalReachedScreen(onComplete: _nextPage);
+                case 41:
+                  return DressingRoomScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -17302,6 +17304,601 @@ class _MonetConfettiPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MonetConfettiPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+
+/// ============================================
+/// P42: Dressing Room Screen
+/// ============================================
+class DressingRoomScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const DressingRoomScreen({super.key, required this.onComplete});
+
+  @override
+  State<DressingRoomScreen> createState() => _DressingRoomScreenState();
+}
+
+class _DressingRoomScreenState extends State<DressingRoomScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _spinController;
+  late Animation<double> _spinAnim;
+  late AnimationController _breatheController;
+
+  String? _selectedItem;
+
+  final List<_CostumeItem> _costumes = [
+    _CostumeItem(id: 'hat', emoji: '🎩', name: 'Top Hat'),
+    _CostumeItem(id: 'bowtie', emoji: '🎀', name: 'Bow Tie'),
+    _CostumeItem(id: 'sunglasses', emoji: '🕶️', name: 'Sunglasses'),
+    _CostumeItem(id: 'scarf', emoji: '🧣', name: 'Scarf'),
+    _CostumeItem(id: 'crown', emoji: '👑', name: 'Crown'),
+    _CostumeItem(id: 'flower', emoji: '🌸', name: 'Flower'),
+    _CostumeItem(id: 'bow', emoji: '🎗️', name: 'Bow'),
+    _CostumeItem(id: 'star', emoji: '⭐', name: 'Star'),
+  ];
+
+  Color _auraColor = const Color(0xFF4ECDC4);
+
+  final Map<String, Color> _auraColors = {
+    'hat': const Color(0xFF8B7355), // 棕色
+    'bowtie': const Color(0xFFFF6B6B), // 红色
+    'sunglasses': const Color(0xFF2D3436), // 黑色
+    'scarf': const Color(0xFFE67E22), // 橙色
+    'crown': const Color(0xFFFFD700), // 金色
+    'flower': const Color(0xFFFFB5E8), // 粉色
+    'bow': const Color(0xFFDDA0DD), // 紫色
+    'star': const Color(0xFFFFE066), // 黄色
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _spinController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _spinAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _spinController, curve: Curves.easeInOut),
+    );
+    _spinController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _spinController.reset();
+      }
+    });
+
+    _breatheController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _spinController.dispose();
+    _breatheController.dispose();
+    super.dispose();
+  }
+
+  void _selectCostume(String id) {
+    setState(() {
+      _selectedItem = _selectedItem == id ? null : id;
+      _auraColor = _auraColors[id] ?? const Color(0xFF4ECDC4);
+    });
+    _spinController.reset();
+    _spinController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              _auraColor.withOpacity(0.2),
+              const Color(0xFFEDF6FA),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Aura-Pet\nDressing Room',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                _selectedItem != null
+                    ? 'Looking fabulous! ✨'
+                    : 'Tap to dress up your pet!',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const Spacer(),
+
+              // Canvas小熊换装
+              AnimatedBuilder(
+                animation: Listenable.merge([_spinAnim, _breatheController]),
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 1 + _breatheController.value * 0.03,
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateY(_spinAnim.value * math.pi * 2),
+                      child: CustomPaint(
+                        size: const Size(180, 180),
+                        painter: _DressedBearPainter(
+                          costume: _selectedItem,
+                          breathePhase: _breatheController.value,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // 当前装扮名称
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _selectedItem != null
+                      ? _auraColor.withOpacity(0.15)
+                      : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _selectedItem != null
+                      ? _costumes.firstWhere((c) => c.id == _selectedItem).name
+                      : 'No costume selected',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: _selectedItem != null ? _auraColor : Colors.grey,
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // 装备栏
+              Container(
+                height: 120,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _costumes.length,
+                  itemBuilder: (context, index) {
+                    final costume = _costumes[index];
+                    final isSelected = _selectedItem == costume.id;
+                    return _CostumeCard(
+                      costume: costume,
+                      isSelected: isSelected,
+                      onTap: () => _selectCostume(costume.id),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: GestureDetector(
+                  onTap: widget.onComplete,
+                  child: Container(
+                    height: 56,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Next',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 装扮数据
+class _CostumeItem {
+  final String id;
+  final String emoji;
+  final String name;
+
+  _CostumeItem({required this.id, required this.emoji, required this.name});
+}
+
+/// 装扮卡片
+class _CostumeCard extends StatefulWidget {
+  final _CostumeItem costume;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CostumeCard({
+    required this.costume,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_CostumeCard> createState() => _CostumeCardState();
+}
+
+class _CostumeCardState extends State<_CostumeCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(_CostumeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected && !oldWidget.isSelected) {
+      _controller.forward().then((_) => _controller.reverse());
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 80,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? const Color(0xFF4ECDC4).withOpacity(0.2)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.isSelected
+                  ? const Color(0xFF4ECDC4)
+                  : Colors.grey.shade200,
+              width: widget.isSelected ? 2 : 1,
+            ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF4ECDC4).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                widget.costume.emoji,
+                style: TextStyle(
+                  fontSize: widget.isSelected ? 32 : 28,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.costume.name,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10,
+                  color: widget.isSelected
+                      ? const Color(0xFF4ECDC4)
+                      : Colors.grey.shade600,
+                  fontWeight:
+                      widget.isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 换装小熊
+class _DressedBearPainter extends CustomPainter {
+  final String? costume;
+  final double breathePhase;
+
+  _DressedBearPainter({required this.costume, required this.breathePhase});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // Aura光晕
+    _drawAura(canvas, c, r);
+
+    // 身体
+    final bodyPath = Path();
+    bodyPath.addOval(Rect.fromCenter(
+      center: Offset(c.dx, c.dy + r * 0.4),
+      width: r * 1.4,
+      height: r * 1.2,
+    ));
+    canvas.drawPath(bodyPath, Paint()..color = const Color(0xFFD4A574));
+
+    // 头部
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(c.dx, c.dy + r * 0.15),
+        width: r * 0.9,
+        height: r * 0.8,
+      ),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 装扮绘制
+    if (costume != null) {
+      _drawCostume(canvas, c, r);
+    }
+
+    // 眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx - r * 0.26, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.25);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.4, c.dx + r * 0.15, c.dy + r * 0.25);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+  }
+
+  void _drawAura(Canvas canvas, Offset c, double r) {
+    final breathe = math.sin(breathePhase * math.pi * 2) * 0.1 + 0.9;
+    final auraPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF4ECDC4).withOpacity(0.3 * breathe),
+          const Color(0xFF4ECDC4).withOpacity(0.1 * breathe),
+          const Color(0xFF4ECDC4).withOpacity(0),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: c, radius: r * 1.5));
+    canvas.drawCircle(c, r * 1.5 * breathe, auraPaint);
+  }
+
+  void _drawCostume(Canvas canvas, Offset c, double r) {
+    switch (costume) {
+      case 'hat': // 礼帽
+        canvas.drawRect(
+          Rect.fromLTWH(c.dx - r * 0.4, c.dy - r * 1.2, r * 0.8, r * 0.15),
+          Paint()..color = const Color(0xFF2D3436),
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(c.dx - r * 0.25, c.dy - r * 1.8, r * 0.5, r * 0.6),
+          Paint()..color = const Color(0xFF2D3436),
+        );
+        // 帽子缎带
+        canvas.drawRect(
+          Rect.fromLTWH(c.dx - r * 0.25, c.dy - r * 1.25, r * 0.5, r * 0.08),
+          Paint()..color = const Color(0xFFFF6B6B),
+        );
+        break;
+
+      case 'bowtie': // 领结
+        final bowPath = Path();
+        bowPath.moveTo(c.dx - r * 0.1, c.dy + r * 0.5);
+        bowPath.quadraticBezierTo(c.dx - r * 0.4, c.dy + r * 0.35, c.dx - r * 0.5, c.dy + r * 0.5);
+        bowPath.quadraticBezierTo(c.dx - r * 0.4, c.dy + r * 0.65, c.dx - r * 0.1, c.dy + r * 0.5);
+        bowPath.moveTo(c.dx + r * 0.1, c.dy + r * 0.5);
+        bowPath.quadraticBezierTo(c.dx + r * 0.4, c.dy + r * 0.35, c.dx + r * 0.5, c.dy + r * 0.5);
+        bowPath.quadraticBezierTo(c.dx + r * 0.4, c.dy + r * 0.65, c.dx + r * 0.1, c.dy + r * 0.5);
+        canvas.drawPath(bowPath, Paint()..color = const Color(0xFFFF6B6B));
+        // 中心圆
+        canvas.drawCircle(Offset(c.dx, c.dy + r * 0.5), r * 0.08, Paint()..color = const Color(0xFFFF6B6B));
+        break;
+
+      case 'sunglasses': // 墨镜
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(c.dx - r * 0.55, c.dy - r * 0.2, r * 0.4, r * 0.25),
+            Radius.circular(r * 0.05),
+          ),
+          Paint()..color = const Color(0xFF2D3436),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(c.dx + r * 0.15, c.dy - r * 0.2, r * 0.4, r * 0.25),
+            Radius.circular(r * 0.05),
+          ),
+          Paint()..color = const Color(0xFF2D3436),
+        );
+        // 镜框连接
+        canvas.drawLine(
+          Offset(c.dx - r * 0.15, c.dy - r * 0.08),
+          Offset(c.dx + r * 0.15, c.dy - r * 0.08),
+          Paint()
+            ..color = const Color(0xFF2D3436)
+            ..strokeWidth = 3,
+        );
+        break;
+
+      case 'scarf': // 围巾
+        final scarfPath = Path();
+        scarfPath.addRect(Rect.fromLTWH(c.dx - r * 0.5, c.dy + r * 0.35, r * 1.0, r * 0.2));
+        scarfPath.addRect(Rect.fromLTWH(c.dx + r * 0.3, c.dy + r * 0.5, r * 0.2, r * 0.6));
+        canvas.drawPath(scarfPath, Paint()..color = const Color(0xFFE67E22));
+        // 围巾条纹
+        canvas.drawLine(
+          Offset(c.dx - r * 0.4, c.dy + r * 0.4),
+          Offset(c.dx + r * 0.4, c.dy + r * 0.4),
+          Paint()..color = const Color(0xFFE67E22).withOpacity(0.6)..strokeWidth = 2,
+        );
+        break;
+
+      case 'crown': // 皇冠
+        final crownPath = Path();
+        crownPath.moveTo(c.dx - r * 0.4, c.dy - r * 0.7);
+        crownPath.lineTo(c.dx - r * 0.4, c.dy - r * 1.1);
+        crownPath.lineTo(c.dx - r * 0.2, c.dy - r * 0.85);
+        crownPath.lineTo(c.dx, c.dy - r * 1.2);
+        crownPath.lineTo(c.dx + r * 0.2, c.dy - r * 0.85);
+        crownPath.lineTo(c.dx + r * 0.4, c.dy - r * 1.1);
+        crownPath.lineTo(c.dx + r * 0.4, c.dy - r * 0.7);
+        crownPath.close();
+        canvas.drawPath(crownPath, Paint()..color = const Color(0xFFFFD700));
+        // 宝石
+        canvas.drawCircle(Offset(c.dx, c.dy - r * 1.0), r * 0.06, Paint()..color = const Color(0xFFFF6B6B));
+        canvas.drawCircle(Offset(c.dx - r * 0.25, c.dy - r * 0.85), r * 0.04, Paint()..color = const Color(0xFF64B5F6));
+        canvas.drawCircle(Offset(c.dx + r * 0.25, c.dy - r * 0.85), r * 0.04, Paint()..color = const Color(0xFF64B5F6));
+        break;
+
+      case 'flower': // 花朵
+        for (int i = 0; i < 5; i++) {
+          final angle = (i * 72 - 90) * math.pi / 180;
+          final x = c.dx + math.cos(angle) * r * 0.25;
+          final y = c.dy - r * 0.9 + math.sin(angle) * r * 0.25;
+          canvas.drawOval(
+            Rect.fromCenter(center: Offset(x, y), width: r * 0.2, height: r * 0.25),
+            Paint()..color = const Color(0xFFFFB5E8),
+          );
+        }
+        canvas.drawCircle(Offset(c.dx, c.dy - r * 0.9), r * 0.1, Paint()..color = const Color(0xFFFFE066));
+        break;
+
+      case 'bow': // 蝴蝶结
+        final bowPath = Path();
+        bowPath.moveTo(c.dx, c.dy - r * 0.75);
+        bowPath.quadraticBezierTo(c.dx - r * 0.35, c.dy - r * 0.95, c.dx - r * 0.5, c.dy - r * 0.75);
+        bowPath.quadraticBezierTo(c.dx - r * 0.35, c.dy - r * 0.55, c.dx, c.dy - r * 0.75);
+        bowPath.moveTo(c.dx, c.dy - r * 0.75);
+        bowPath.quadraticBezierTo(c.dx + r * 0.35, c.dy - r * 0.95, c.dx + r * 0.5, c.dy - r * 0.75);
+        bowPath.quadraticBezierTo(c.dx + r * 0.35, c.dy - r * 0.55, c.dx, c.dy - r * 0.75);
+        canvas.drawPath(bowPath, Paint()..color = const Color(0xFFDDA0DD));
+        canvas.drawCircle(Offset(c.dx, c.dy - r * 0.75), r * 0.08, Paint()..color = const Color(0xFFDDA0DD));
+        break;
+
+      case 'star': // 星星发夹
+        _drawStar(canvas, Offset(c.dx + r * 0.55, c.dy - r * 0.5), r * 0.2, const Color(0xFFFFE066));
+        _drawStar(canvas, Offset(c.dx - r * 0.5, c.dy - r * 0.55), r * 0.15, const Color(0xFFFFE066));
+        _drawStar(canvas, Offset(c.dx + r * 0.35, c.dy - r * 0.7), r * 0.12, const Color(0xFFFFE066));
+        break;
+    }
+  }
+
+  void _drawStar(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 144 - 90) * math.pi / 180;
+      final x = center.dx + math.cos(angle) * size;
+      final y = center.dy + math.sin(angle) * size;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DressedBearPainter oldDelegate) =>
+      oldDelegate.costume != costume || oldDelegate.breathePhase != breathePhase;
 }
 
 /// 占位页
