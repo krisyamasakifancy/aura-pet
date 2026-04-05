@@ -71,6 +71,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WeightTrendScreen(onComplete: _nextPage);
                 case 5:
                   return HydrationScreen(onComplete: _nextPage);
+                case 6:
+                  return NutritionScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -2378,6 +2380,456 @@ class _WaterLevelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WaterLevelPainter oldDelegate) => oldDelegate.level != level || oldDelegate.wavePhase != wavePhase;
+}
+
+/// ============================================
+/// P7: Nutrition Breakdown Screen
+/// ============================================
+class NutritionScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const NutritionScreen({super.key, required this.onComplete});
+
+  @override
+  State<NutritionScreen> createState() => _NutritionScreenState();
+}
+
+class _NutritionScreenState extends State<NutritionScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _heartController;
+  late AnimationController _progressController;
+
+  // 营养数据
+  final Map<String, _Nutrient> _nutrients = {
+    'Carbs': _Nutrient(value: 75, max: 100, color: const Color(0xFFFFB74D), label: 'Carbs'),
+    'Protein': _Nutrient(value: 45, max: 80, color: const Color(0xFF4FC3F7), label: 'Protein'),
+    'Fats': _Nutrient(value: 28, max: 65, color: const Color(0xFFFF8A65), label: 'Fats'),
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _heartController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    )..repeat(reverse: true);
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _heartController.dispose();
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 背景装饰
+            Positioned(
+              top: 100,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 200,
+              left: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFB74D).withOpacity(0.1),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+
+                  // 标题
+                  const Text(
+                    'What a well-balanced\nplate! Good job!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      height: 1.2,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Canvas小熊 + 沙拉碗
+                  Center(
+                    child: AnimatedBuilder(
+                      animation: _heartController,
+                      builder: (context, child) {
+                        final scale = 1.0 + _heartController.value * 0.05;
+                        final rotation = math.sin(_heartController.value * math.pi * 2) * 0.03;
+                        return Transform.scale(
+                          scale: scale,
+                          child: Transform.rotate(
+                            angle: rotation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 沙拉碗
+                          Positioned(
+                            bottom: 0,
+                            child: CustomPaint(
+                              size: const Size(180, 100),
+                              painter: _SaladBowlPainter(),
+                            ),
+                          ),
+                          // 比心小熊
+                          CustomPaint(
+                            size: const Size(160, 160),
+                            painter: _DoubleHeartBearPainter(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 营养进度条
+                  AnimatedBuilder(
+                    animation: _progressController,
+                    builder: (context, child) {
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Nutrition Breakdown',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                color: Color(0xFF2D3748),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ..._nutrients.entries.map((entry) {
+                              final nutrient = entry.value;
+                              final progress = (nutrient.value / nutrient.max) * _progressController.value;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _NutrientBar(
+                                  label: nutrient.label,
+                                  value: nutrient.value.toInt(),
+                                  progress: progress,
+                                  color: nutrient.color,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  const Spacer(),
+
+                  // 胶囊按钮
+                  GestureDetector(
+                    onTap: widget.onComplete,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Next',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 营养数据模型
+class _Nutrient {
+  final double value;
+  final double max;
+  final Color color;
+  final String label;
+  _Nutrient({required this.value, required this.max, required this.color, required this.label});
+}
+
+/// 营养进度条组件
+class _NutrientBar extends StatelessWidget {
+  final String label;
+  final int value;
+  final double progress;
+  final Color color;
+
+  const _NutrientBar({
+    required this.label,
+    required this.value,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+            Text(
+              '${value}g',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Stack(
+          children: [
+            // 背景
+            Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            // 进度
+            FractionallySizedBox(
+              widthFactor: progress.clamp(0.0, 1.0),
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// ============================================
+/// Canvas: 比心小熊 (双手比心)
+/// ============================================
+class _DoubleHeartBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 1.0), width: radius * 1.8, height: radius * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头部
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.75), radius * 0.3, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx - radius * 0.75, center.dy - radius * 0.75), radius * 0.18, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.75), radius * 0.3, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(center.dx + radius * 0.75, center.dy - radius * 0.75), radius * 0.18, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + radius * 0.12), width: radius * 1.1, height: radius * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 爱心眼
+    _drawHeartEye(canvas, Offset(center.dx - radius * 0.3, center.dy - radius * 0.1), radius * 0.2);
+    _drawHeartEye(canvas, Offset(center.dx + radius * 0.3, center.dy - radius * 0.1), radius * 0.2);
+
+    // 微笑嘴
+    final smilePath = Path();
+    smilePath.moveTo(center.dx - radius * 0.15, center.dy + radius * 0.35);
+    smilePath.quadraticBezierTo(center.dx, center.dy + radius * 0.5, center.dx + radius * 0.15, center.dy + radius * 0.35);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx - radius * 0.45, center.dy + radius * 0.05), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(center.dx + radius * 0.45, center.dy + radius * 0.05), width: radius * 0.25, height: radius * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // ========== 双手比心 ==========
+    // 左手比心
+    _drawHeartHand(canvas, Offset(center.dx - radius * 0.9, center.dy + radius * 0.4), radius * 0.35, -0.3);
+    // 右手比心
+    _drawHeartHand(canvas, Offset(center.dx + radius * 0.9, center.dy + radius * 0.4), radius * 0.35, 0.3);
+  }
+
+  void _drawHeartEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()..color = const Color(0xFFFF6B6B);
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(center.dx - size * 1.2, center.dy - size * 0.3, center.dx - size * 1.2, center.dy - size * 1.2, center.dx, center.dy - size * 0.3);
+    path.cubicTo(center.dx + size * 1.2, center.dy - size * 1.2, center.dx + size * 1.2, center.dy - size * 0.3, center.dx, center.dy + size * 0.3);
+    canvas.drawPath(path, paint);
+    canvas.drawCircle(center + Offset(-size * 0.3, -size * 0.5), size * 0.2, Paint()..color = Colors.white.withOpacity(0.6));
+  }
+
+  void _drawHeartHand(Canvas canvas, Offset center, double size, double angle) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    
+    // 爱心形状的手
+    final paint = Paint()..color = const Color(0xFFFF6B6B);
+    final path = Path();
+    final cx = 0.0;
+    final cy = -size * 0.2;
+    path.moveTo(cx, cy + size * 0.5);
+    path.cubicTo(cx - size * 0.8, cy - size * 0.2, cx - size * 0.8, cy - size * 0.8, cx, cy - size * 0.2);
+    path.cubicTo(cx + size * 0.8, cy - size * 0.8, cx + size * 0.8, cy - size * 0.2, cx, cy + size * 0.5);
+    canvas.drawPath(path, paint);
+    
+    // 手腕
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(0, size * 0.5), width: size * 0.5, height: size * 0.8),
+        const Radius.circular(8),
+      ),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ============================================
+/// Canvas: 沙拉碗
+/// ============================================
+class _SaladBowlPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height);
+
+    // 碗身
+    final bowlPath = Path();
+    bowlPath.moveTo(size.width * 0.1, 0);
+    bowlPath.quadraticBezierTo(size.width * 0.5, size.height * 0.8, size.width * 0.9, 0);
+    bowlPath.lineTo(size.width * 0.85, 0);
+    bowlPath.quadraticBezierTo(size.width * 0.5, size.height * 0.7, size.width * 0.15, 0);
+    bowlPath.close();
+    canvas.drawPath(bowlPath, Paint()..color = const Color(0xFFE8E8E8));
+
+    // 碗边
+    canvas.drawOval(Rect.fromLTWH(0, 0, size.width, size.height * 0.35), Paint()..color = Colors.white);
+    canvas.drawOval(Rect.fromLTWH(0, 0, size.width, size.height * 0.35), Paint()..color = const Color(0xFFDDDDDD)..style = PaintingStyle.stroke..strokeWidth = 3);
+
+    // 食物
+    _drawLeaf(canvas, Offset(center.dx - 25, 20), 18, const Color(0xFF90EE90));
+    _drawLeaf(canvas, Offset(center.dx + 15, 15), 16, const Color(0xFF7CCD7C));
+    _drawLeaf(canvas, Offset(center.dx - 5, 25), 20, const Color(0xFF66CD66));
+    canvas.drawCircle(Offset(center.dx + 30, 22), 8, Paint()..color = const Color(0xFFFF6347));
+    canvas.drawCircle(Offset(center.dx - 15, 28), 4, Paint()..color = const Color(0xFF4169E1));
+    canvas.drawCircle(Offset(center.dx - 5, 30), 4, Paint()..color = const Color(0xFF6495ED));
+  }
+
+  void _drawLeaf(Canvas canvas, Offset center, double size, Color color) {
+    final path = Path();
+    path.moveTo(center.dx, center.dy - size);
+    path.quadraticBezierTo(center.dx + size * 0.8, center.dy, center.dx, center.dy + size * 0.3);
+    path.quadraticBezierTo(center.dx - size * 0.8, center.dy, center.dx, center.dy - size);
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// ============================================
