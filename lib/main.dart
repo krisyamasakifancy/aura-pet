@@ -96,6 +96,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return GenderScreen(onComplete: _nextPage);
                 case 11:
                   return AgeScreen(onComplete: _nextPage);
+                case 12:
+                  return HeightScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -4547,6 +4549,460 @@ class _CuriousBearPainter extends CustomPainter {
     canvas.drawCircle(center, radius * 0.6, Paint()..color = Colors.black);
     canvas.drawCircle(center + Offset(-radius * 0.2, -radius * 0.2), radius * 0.25, Paint()..color = Colors.white);
   }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P13: Height Input Screen
+/// ============================================
+class HeightScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const HeightScreen({super.key, required this.onComplete});
+
+  @override
+  State<HeightScreen> createState() => _HeightScreenState();
+}
+
+class _HeightScreenState extends State<HeightScreen> with SingleTickerProviderStateMixin {
+  late FixedExtentScrollController _cmController;
+  late AnimationController _bearController;
+  
+  bool _isCm = true;
+  int _selectedCm = 170;
+  int _selectedFt = 5;
+  int _selectedIn = 7;
+  
+  final int _minCm = 100;
+  final int _maxCm = 220;
+
+  @override
+  void initState() {
+    super.initState();
+    _cmController = FixedExtentScrollController(initialItem: _selectedCm - _minCm);
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _cmController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  String get _displayHeight {
+    if (_isCm) {
+      return '$_selectedCm cm';
+    } else {
+      return "$_selectedFt' $_selectedIn\"";
+    }
+  }
+
+  double get _heightInCm {
+    if (_isCm) return _selectedCm.toDouble();
+    return (_selectedFt * 30.48) + (_selectedIn * 2.54);
+  }
+
+  void _toggleUnit() {
+    setState(() {
+      _isCm = !_isCm;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              
+              // 标题
+              const Text(
+                'How tall\nare you?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Slide to measure your height',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.grey.shade600),
+              ),
+
+              const SizedBox(height: 16),
+
+              // CM/FT切换按钮
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _UnitButton(label: 'CM', isSelected: _isCm, onTap: () { if (!_isCm) _toggleUnit(); }),
+                      _UnitButton(label: 'FT', isSelected: !_isCm, onTap: () { if (_isCm) _toggleUnit(); }),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 主内容区
+              Expanded(
+                child: Row(
+                  children: [
+                    // Canvas小熊 (高度随标尺浮动)
+                    Expanded(
+                      flex: 2,
+                      child: Center(
+                        child: AnimatedBuilder(
+                          animation: Listenable.merge([_bearController, _cmController]),
+                          builder: (context, child) {
+                            // 小熊高度随标尺数值变化 (100-220 -> 0.5-1.2)
+                            final heightRatio = ((_heightInCm - 100) / 120).clamp(0.0, 1.0);
+                            final bearScale = 0.7 + heightRatio * 0.5;
+                            final floatY = math.sin(_bearController.value * math.pi * 2) * 5;
+                            return Transform.translate(
+                              offset: Offset(0, floatY),
+                              child: Transform.scale(
+                                scale: bearScale,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: CustomPaint(
+                            size: const Size(150, 200),
+                            painter: _MeasuringBearPainter(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // 垂直标尺
+                    Expanded(
+                      flex: 1,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 刻度尺
+                          Container(
+                            width: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                            ),
+                            child: _isCm
+                                ? ListView.builder(
+                                    controller: _cmController,
+                                    physics: const FixedExtentScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(vertical: 60),
+                                    itemCount: _maxCm - _minCm + 1,
+                                    itemBuilder: (context, index) {
+                                      final cm = _minCm + index;
+                                      final isSelected = cm == _selectedCm;
+                                      return GestureDetector(
+                                        onTap: () => _cmController.animateToItem(index, duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          height: 20,
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Column(
+                                            children: [
+                                              AnimatedContainer(
+                                                duration: const Duration(milliseconds: 200),
+                                                width: isSelected ? 30 : (cm % 10 == 0 ? 20 : 10),
+                                                height: isSelected ? 3 : (cm % 10 == 0 ? 2 : 1),
+                                                color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+                                              ),
+                                              if (cm % 10 == 0)
+                                                AnimatedDefaultTextStyle(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: isSelected ? 14 : 10,
+                                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                    color: isSelected ? const Color(0xFF4CAF50) : Colors.grey.shade500,
+                                                  ),
+                                                  child: Text('$cm'),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : _FtPicker(
+                                    selectedFt: _selectedFt,
+                                    selectedIn: _selectedIn,
+                                    onFtChanged: (ft) => setState(() => _selectedFt = ft),
+                                    onInChanged: ( inch) => setState(() => _selectedIn = inch),
+                                  ),
+                          ),
+
+                          // 中间指示器
+                          Container(
+                            width: 40,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50),
+                              borderRadius: BorderRadius.circular(2),
+                              boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.5), blurRadius: 8)],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 身高显示
+              Center(
+                child: Text(
+                  _displayHeight,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 48,
+                    color: Color(0xFF4CAF50),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: () {
+                  UserMetrics.height = _heightInCm;
+                  widget.onComplete();
+                },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                  ),
+                  child: const Center(child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Next', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  )),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 单位切换按钮
+class _UnitButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _UnitButton({required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: isSelected ? Colors.white : Colors.grey.shade600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// FT选择器
+class _FtPicker extends StatelessWidget {
+  final int selectedFt;
+  final int selectedIn;
+  final Function(int) onFtChanged;
+  final Function(int) onInChanged;
+
+  const _FtPicker({
+    required this.selectedFt,
+    required this.selectedIn,
+    required this.onFtChanged,
+    required this.onInChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('$selectedFt\' ${selectedIn}"', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF4CAF50))),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _MiniWheelPicker(
+              value: selectedFt,
+              min: 3,
+              max: 7,
+              onChanged: onFtChanged,
+              label: 'ft',
+            ),
+            const SizedBox(width: 8),
+            _MiniWheelPicker(
+              value: selectedIn,
+              min: 0,
+              max: 11,
+              onChanged: onInChanged,
+              label: 'in',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniWheelPicker extends StatelessWidget {
+  final int value;
+  final int min;
+  final int max;
+  final Function(int) onChanged;
+  final String label;
+
+  const _MiniWheelPicker({required this.value, required this.min, required this.max, required this.onChanged, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 150,
+      width: 50,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListView.builder(
+        itemCount: max - min + 1,
+        itemBuilder: (context, index) {
+          final v = min + index;
+          final isSelected = v == value;
+          return GestureDetector(
+            onTap: () => onChanged(v),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 30,
+              alignment: Alignment.center,
+              color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.2) : Colors.transparent,
+              child: Text(
+                '$v',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: isSelected ? 16 : 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? const Color(0xFF4CAF50) : Colors.grey,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Canvas: 测量小熊 (直立姿势)
+class _MeasuringBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+
+    // 身体 (直立)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.8), width: r * 1.5, height: r * 2), Paint()..color = const Color(0xFFD4A574));
+
+    // 头部
+    canvas.drawCircle(Offset(c.dx, c.dy - r * 0.5), r * 0.8, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.6, c.dy - r * 1.1), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.6, c.dy - r * 1.1), r * 0.15, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.6, c.dy - r * 1.1), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.6, c.dy - r * 1.1), r * 0.15, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy - r * 0.4), width: r * 1.0, height: r * 0.8), Paint()..color = const Color(0xFFE8C4A0));
+
+    // 测量眼睛 (认真表情)
+    _drawMeasuringEye(canvas, Offset(c.dx - r * 0.25, c.dy - r * 0.55), r * 0.15);
+    _drawMeasuringEye(canvas, Offset(c.dx + r * 0.25, c.dy - r * 0.55), r * 0.15);
+
+    // 认真嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy - r * 0.15);
+    smilePath.lineTo(c.dx + r * 0.15, c.dy - r * 0.15);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.35, c.dy - r * 0.3), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.35, c.dy - r * 0.3), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 手 (举起来测量姿势)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.8, c.dy - r * 0.2), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.8, c.dy - r * 0.2), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+
+    // 脚
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 1.6), width: r * 0.5, height: r * 0.3), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 1.6), width: r * 0.5, height: r * 0.3), Paint()..color = const Color(0xFFD4A574));
+  }
+
+  void _drawMeasuringEye(Canvas canvas, Offset center, double radius) {
+    canvas.drawCircle(center, radius, Paint()..color = Colors.black);
+    canvas.drawCircle(center + Offset(-radius * 0.3, -radius * 0.3), radius * 0.3, Paint()..color = Colors.white);
+  }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
