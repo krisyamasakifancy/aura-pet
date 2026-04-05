@@ -10,10 +10,14 @@ import 'screens/main_navigation.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'services/quote_engine.dart';
 import 'utils/theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Quote Engine
+  await QuoteEngine.instance.init();
   
   // Lock orientation to portrait
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
