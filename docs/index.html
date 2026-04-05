@@ -1,728 +1,669 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aura-Pet - 46屏健康伴侣</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-start: #EDF6FA;
-      --bg-end: #C1DDF1;
-      --primary: #4ECDC4;
-      --accent: #FF8BA0;
-      --heart-pink: #FF6B8A;
-      --text-primary: #2D3436;
-      --surface: #FFFFFF;
-      --gold: #FFD700;
-      --dark-bg: #1A0033;
-      /* Classic Teddy Colors */
-      --teddy-brown: #8B4513;
-      --teddy-light: #A0522D;
-      --teddy-dark: #6B3410;
-      --teddy-nose: #4A2810;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, var(--bg-start), var(--bg-end)); min-height: 100vh; overflow: hidden; touch-action: pan-y; }
-    .app-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
-    .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; padding-bottom: 120px; opacity: 0; transform: translateX(100%); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; overflow-y: auto; }
-    .page.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
-    .page.exit-left { transform: translateX(-100%); }
-    .capsule-btn { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 16px 48px; background: linear-gradient(135deg, #4CAF50, #8BC34A); color: white; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 18px; border: none; border-radius: 28px; cursor: pointer; box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3); transition: all 0.3s ease; z-index: 100; animation: btnPulse 2s ease-in-out infinite; }
-    .capsule-btn:hover { transform: translateX(-50%) scale(1.05); }
-    @keyframes btnPulse { 0%, 100% { box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3); } 50% { box-shadow: 0 8px 32px rgba(76, 175, 80, 0.5); } }
-    .page-counter { position: fixed; top: 20px; right: 20px; padding: 8px 16px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--text-primary); z-index: 100; backdrop-filter: blur(10px); }
-    .content-card { background: var(--surface); border-radius: 24px; padding: 28px; margin: 16px; max-width: 360px; width: 100%; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); animation: cardFloat 3s ease-in-out infinite; }
-    @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-    .card-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-align: center; line-height: 1.3; }
-    .card-subtitle { font-size: 14px; color: #666; text-align: center; line-height: 1.6; }
-    .quote-bubble { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) scale(0.8); background: linear-gradient(135deg, #FFF8E7, #FFE4E1); padding: 14px 18px; border-radius: 16px; max-width: 280px; width: 90%; box-shadow: 0 8px 32px rgba(255, 107, 107, 0.2); opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 200; }
-    .quote-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
-    .quote-text { font-size: 13px; line-height: 1.6; color: #2D3748; text-align: center; }
-    .quote-category { display: inline-block; margin-top: 8px; padding: 3px 8px; background: rgba(255, 107, 107, 0.2); border-radius: 8px; font-size: 9px; font-weight: 600; color: #FF6B8A; }
-    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); z-index: 50; }
-    .tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #999; font-size: 10px; cursor: pointer; transition: color 0.3s ease; }
-    .tab-item.active { color: var(--primary); }
-    .tab-icon { font-size: 20px; }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes logoPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
-    .confetti { position: absolute; width: 8px; height: 8px; animation: confettiFall 2.5s ease-out forwards; }
-    @keyframes confettiFall { 0% { transform: translateY(-30px) rotate(0deg); opacity: 1; } 100% { transform: translateY(120px) rotate(360deg); opacity: 0; } }
-    .heart-bubble { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 20px; animation: heartPulse 2s ease-in-out infinite; }
-    @keyframes heartPulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.2); } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aura-Pet</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg-start:#EDF6FA;--bg-end:#C1DDF1;--primary:#4ECDC4;--heart-pink:#FF6B8A;--surface:#fff;--gold:#FFD700;--text:#2D3436}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));min-height:100vh;overflow:hidden}
+.app{width:100vw;height:100vh;position:relative;overflow:hidden}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 20px 130px;opacity:0;transform:translateX(100%);transition:all .6s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.page.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.page.exit-left{transform:translateX(-100%)}
+.btn{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);padding:16px 48px;background:linear-gradient(135deg,#4CAF50,#8BC34A);color:#fff;font-family:Poppins,sans-serif;font-weight:600;font-size:18px;border:none;border-radius:28px;cursor:pointer;box-shadow:0 8px 24px rgba(76,175,80,.3);z-index:100}
+.counter{position:fixed;top:20px;right:20px;padding:8px 16px;background:rgba(255,255,255,0.9);border-radius:20px;font-size:14px;font-weight:600;color:var(--text);z-index:100}
+.card{background:var(--surface);border-radius:24px;padding:32px;margin:12px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.title{font-family:Poppins,sans-serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:12px;text-align:center;line-height:1.3}
+.subtitle{font-size:15px;color:#666;text-align:center;line-height:1.6}
+.bubble{position:fixed;bottom:145px;left:50%;transform:translateX(-50%) scale(.8);background:linear-gradient(135deg,#FFF8E7,#FFE4E1);padding:14px 18px;border-radius:16px;max-width:280px;width:90%;box-shadow:0 8px 32px rgba(255,107,107,.2);opacity:0;transition:all .5s;z-index:200}
+.bubble.show{opacity:1;transform:translateX(-50%) scale(1)}
+.bubble-text{font-size:13px;line-height:1.6;color:#2D3748;text-align:center}
+.bubble-cat{display:inline-block;margin-top:8px;padding:3px 8px;background:rgba(255,107,107,.2);border-radius:8px;font-size:9px;font-weight:600;color:#FF6B8A}
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);display:flex;justify-content:space-around;padding:12px 0;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:50}
+.tabitem{display:flex;flex-direction:column;align-items:center;gap:4px;color:#999;font-size:10px}
+.tabitem.active{color:var(--primary)}
+.tabicon{font-size:22px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes heartFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes wave{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(180deg)}}
+@keyframes confettiFall{0%{transform:translateY(-30px) rotate(0);opacity:1}100%{transform:translateY(150px) rotate(360deg);opacity:0}}
+.heart-bubble{position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:22px;animation:heartFloat 2s ease-in-out infinite}
+.confetti{position:absolute;width:8px;height:8px;border-radius:50%;animation:confettiFall 2.5s ease-out forwards}
+.option{background:#fff;border:2px solid #E0E0E0;border-radius:16px;padding:16px 20px;text-align:center;cursor:pointer;font-size:15px;font-weight:500;margin:6px 0;transition:all .3s}
+.option:hover{border-color:var(--primary)}
+.input{width:100%;max-width:180px;padding:14px 20px;border:2px solid #E0E0E0;border-radius:14px;font-size:22px;font-weight:600;text-align:center;outline:none}
+.input:focus{border-color:var(--primary)}
+.progress-ring{position:relative;width:160px;height:160px}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring circle{fill:none;stroke-width:12}
+.progress-ring .bg{stroke:#E0E0E0}
+.progress-ring .progress{stroke:var(--primary);stroke-linecap:round}
+.progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.progress-value{font-family:Poppins,sans-serif;font-size:36px;font-weight:700}
+.progress-label{font-size:12px;color:#666}
+.nutrient-bar{width:100%;height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;margin:8px 0}
+.nutrient-fill{height:100%;border-radius:4px}
+.nutrient-fill.carbs{background:linear-gradient(90deg,#FFB74D,#FF9800)}
+.nutrient-fill.protein{background:linear-gradient(90deg,#4FC3F7,#29B6F6)}
+.nutrient-fill.fat{background:linear-gradient(90deg,#BA68C8,#9C27B0)}
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.mood-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;background:#fff;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.mood-emoji{font-size:26px}
+.mood-label{font-size:10px;color:#666}
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.badge-icon{font-size:32px}
+.badge-name{font-size:10px;font-weight:600}
+.setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fff;border-radius:12px;margin:6px 0}
+.toggle{width:48px;height:26px;background:#E0E0E0;border-radius:13px;position:relative;cursor:pointer;transition:background .3s}
+.toggle.on{background:var(--primary)}
+.toggle::after{content:"";position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .3s}
+.toggle.on::after{left:24px}
+.water-wave{position:relative;width:100px;height:100px;background:linear-gradient(180deg,#64B5F6,#2196F3);border-radius:50%;overflow:hidden}
+.wave{position:absolute;bottom:0;left:-50%;width:200%;height:100%;background:rgba(255,255,255,0.3);border-radius:40%;animation:wave 3s ease-in-out infinite}
+.wave:nth-child(2){animation-delay:-1.5s}
+.chart{width:100%;max-width:300px;height:150px}
+.fasting-phases{display:flex;gap:5px;margin-top:14px}
+.phase-bar{flex:1;height:6px;background:#E0E0E0;border-radius:3px;overflow:hidden}
+.phase-fill{height:100%;border-radius:3px}
+.phase-fill.eating{background:#4CAF50}
+.phase-fill.burning{background:#FF9800}
+.phase-fill.fasting{background:#9C27B0}
+.feature-card{background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.feature-icon{font-size:28px;margin-bottom:6px}
+.feature-text{font-size:12px;font-weight:500}
+.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+</style>
 </head>
 <body>
-  <div class="app-container">
-    <div class="page-counter"><span id="currentPageNum">1</span> / 46</div>
-    <div class="quote-bubble" id="quoteBubble"><p class="quote-text" id="quoteText"></p><span class="quote-category" id="quoteCategory"></span></div>
+<div class="app">
+<div class="counter"><span id="pageNum">1</span> / 46</div>
+<div class="bubble" id="bubble"><p class="bubble-text" id="bubbleText"></p><span class="bubble-cat" id="bubbleCat"></span></div>
+<div class="page active" id="page-1" style="background:linear-gradient(135deg,#FFF8F0,#FFE8D6)">
+<div style="position:relative;width:200px;height:220px"><canvas id="t1" width="200" height="220"></canvas></div>
+<div style="font-family:Poppins,sans-serif;font-size:30px;font-weight:700;color:var(--text);margin-top:20px;animation:pulse 2s ease-in-out infinite">Aura-Pet</div>
+<p style="margin-top:10px;font-size:14px;color:#666">你的健康智能伴侣</p>
+</div><div class="page" id="page-2">
+<div class="card"><h1 class="title">Reach Your<br>Weight Goals 🐻</h1><p class="subtitle">与你的可爱小熊一起，开启健康之旅</p></div>
+<div style="position:relative;width:140px;height:160px;margin-top:16px"><canvas id="t2" width="140" height="160"></canvas></div>
+</div><div class="page" id="page-3">
+<div style="font-size:56px;animation:pulse 1.5s ease-in-out infinite">🥗</div>
+<div class="card"><h1 class="title">Track Calories<br>with Ease</h1><p class="subtitle">智能识别食物，一键记录每一餐</p></div>
+<div style="position:relative;width:100px;height:120px;margin-top:12px"><canvas id="t3" width="100" height="120"></canvas></div>
+</div><div class="page" id="page-4" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:56px">🌙</div>
+<div class="card" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px)">
+<h1 class="title" style="color:#fff">Enjoy Fasting<br>Without the Struggle</h1>
+<p class="subtitle" style="color:rgba(255,255,255,0.8)">16:8 间歇性禁食，智能计时</p>
+</div>
+<div style="font-family:Poppins,sans-serif;font-size:42px;font-weight:700;color:#fff;margin:16px 0;letter-spacing:2px">16:00:00</div>
+<div style="position:relative;width:130px;height:150px"><canvas id="t4" width="130" height="150"></canvas></div>
+</div><div class="page" id="page-5">
+<div class="card"><h1 class="title">See Results 📈</h1></div>
+<div class="chart" style="margin:12px 0">
+<svg viewBox="0 0 300 150" style="width:100%;height:100%">
+<defs><linearGradient id="cg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:0.4"/><stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/></linearGradient></defs>
+<path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32 L280,150 L20,150 Z" fill="url(#cg)"/>
+<path d="M20,130 L60,122 L100,125 L140,100 L180,78 L220,60 L260,45 L280,32" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+</svg>
+</div>
+<div style="display:flex;gap:16px;margin-top:12px">
+<div class="feature-card"><div style="font-size:18px;font-weight:700;color:var(--primary)">85kg</div><div style="font-size:10px;color:#666">Start</div></div>
+<div class="feature-card"><div style="font-size:18px;font-weight:700;color:var(--heart-pink)">78kg</div><div style="font-size:10px;color:#666">Current</div></div>
+<div class="feature-card"><div style="font-size:18px;font-weight:700;color:#4CAF50">-7kg</div><div style="font-size:10px;color:#666">Lost</div></div>
+</div>
+</div><div class="page" id="page-6">
+<div class="card"><h1 class="title">Stay Hydrated 💧</h1><p class="subtitle">设置喝水提醒，保持身体水分</p></div>
+<div class="water-wave" style="margin:16px 0"><div class="wave"></div><div class="wave"></div></div>
+<div style="position:relative;width:100px;height:120px"><canvas id="t6" width="100" height="120"></canvas></div>
+</div><div class="page" id="page-7">
+<div style="font-size:56px;animation:pulse 1.5s ease-in-out infinite">🥑</div>
+<div class="card"><h1 class="title">Balanced Nutrition</h1><p class="subtitle">碳水/蛋白质/脂肪，精准配比</p></div>
+</div><div class="page" id="page-8">
+<div class="card"><h1 class="title">How did you hear<br>about us? 📢</h1></div>
+<div style="max-width:300px;width:100%">
+<div class="option" onclick="selectOption(this)">Instagram</div>
+<div class="option" onclick="selectOption(this)">TikTok</div>
+<div class="option" onclick="selectOption(this)">朋友推荐</div>
+<div class="option" onclick="selectOption(this)">小红书</div>
+</div>
+</div><div class="page" id="page-9">
+<div class="card"><h1 class="title">What is your<br>main goal? 🎯</h1></div>
+<div style="max-width:300px;width:100%">
+<div class="option" onclick="selectOption(this)">💪 减重</div>
+<div class="option" onclick="selectOption(this)">⚖️ 维持体重</div>
+<div class="option" onclick="selectOption(this)">💪 增肌</div>
+</div>
+</div><div class="page" id="page-10">
+<div class="card"><h1 class="title">Select your<br>gender 👤</h1></div>
+<div style="max-width:300px;width:100%">
+<div class="option" onclick="selectOption(this)">👩 女性</div>
+<div class="option" onclick="selectOption(this)">👨 男性</div>
+<div class="option" onclick="selectOption(this)">⚧️ 非二元</div>
+</div>
+</div><div class="page" id="page-11">
+<div class="card"><h1 class="title">What's your<br>age? 🎂</h1></div>
+<input type="number" class="input" id="ageInput" placeholder="年龄" min="13" max="120">
+<div style="position:relative;width:80px;height:100px;margin-top:16px"><canvas id="t11" width="80" height="100"></canvas></div>
+</div><div class="page" id="page-12">
+<div class="card"><h1 class="title">How tall are<br>you? 📏</h1></div>
+<input type="number" class="input" id="heightInput" placeholder="cm" min="100" max="250">
+<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t12" width="160" height="180"></canvas></div>
+</div><div class="page" id="page-13">
+<div class="card"><h1 class="title">Current weight? ⚖️</h1></div>
+<input type="number" class="input" id="weightInput" placeholder="kg" min="30" max="300">
+<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t13" width="160" height="180"></canvas></div>
+</div><div class="page" id="page-14">
+<div class="card"><h1 class="title">Target weight? 🎯</h1></div>
+<input type="number" class="input" id="goalWeightInput" placeholder="kg" min="30" max="300">
+<div style="position:relative;width:160px;height:180px;margin-top:12px"><canvas id="t14" width="160" height="180"></canvas></div>
+</div><div class="page" id="page-15">
+<div class="card"><h1 class="title">Activity level? 🏃</h1></div>
+<div style="max-width:300px;width:100%">
+<div class="option" onclick="selectOption(this)">🛋️ 久坐</div>
+<div class="option" onclick="selectOption(this)">🚶 轻度</div>
+<div class="option" onclick="selectOption(this)">🏃 中度</div>
+<div class="option" onclick="selectOption(this)">💪 高强度</div>
+</div>
+</div><div class="page" id="page-16" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div class="spinner" style="border-top-color:#fff"></div>
+<div class="card" style="background:rgba(255,255,255,0.15);margin-top:24px">
+<h1 class="title" style="color:#fff">Analyzing...</h1>
+<div style="margin-top:16px">
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">计算BMI</span></div>
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">分析代谢率</span></div>
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#4ECDC4">✓</span><span style="color:#fff">生成计划</span></div>
+</div>
+</div>
+</div><div class="page" id="page-17">
+<div style="font-size:70px;animation:pulse 1.5s ease-in-out infinite">🎉</div>
+<div class="card"><h1 class="title">Your plan is ready! ✨</h1><p class="subtitle">基于您的数据，定制专属计划</p></div>
+<div style="display:flex;gap:12px;margin-top:16px">
+<div class="feature-card"><div class="feature-icon">🔥</div><div class="feature-text">1850 kcal</div></div>
+<div class="feature-card"><div class="feature-icon">💧</div><div class="feature-text">2.5L 水</div></div>
+<div class="feature-card"><div class="feature-icon">⏰</div><div class="feature-text">16:8</div></div>
+</div>
+</div><div class="page" id="page-18">
+<div class="card"><h1 class="title">What users say 💬</h1></div>
+<div style="max-width:280px;margin-top:12px">
+<div class="feature-card" style="text-align:left;display:flex;gap:12px;align-items:flex-start">
+<span style="font-size:32px">👩</span>
+<div><div style="color:#FFD700">★★★★★</div><p style="font-size:13px;color:#666;margin-top:4px">"太可爱了！小熊陪我减肥一点都不孤单"</p></div>
+</div>
+</div>
+</div><div class="page" id="page-19">
+<div style="font-size:70px">🔔</div>
+<div class="card"><h1 class="title">Enable notifications? 📱</h1><p class="subtitle">接收喝水、饮食记录提醒</p></div>
+<div style="max-width:300px;width:100%">
+<div class="option" onclick="selectOption(this)" style="background:var(--primary);color:#fff">开启提醒</div>
+<div class="option" onclick="selectOption(this)">稍后再说</div>
+</div>
+</div><div class="page" id="page-20" style="background:linear-gradient(180deg,#2D3748,#1A202C)">
+<div class="spinner"></div>
+<div class="card" style="background:rgba(255,255,255,0.1);margin-top:24px">
+<h1 class="title" style="color:#fff">Creating your plan...</h1>
+<div style="margin-top:16px">
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">个性化餐食计划</span></div>
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">禁食时间表</span></div>
+<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span style="color:#fff">●</span><span style="color:rgba(255,255,255,0.6)">成就系统</span></div>
+</div>
+</div>
+</div><div class="page" id="page-21">
+<div class="card"><h1 class="title">Weight Prediction 📊</h1></div>
+<div class="chart" style="margin:12px 0">
+<svg viewBox="0 0 300 150" style="width:100%;height:100%">
+<path d="M20,130 L55,120 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42 L260,150 L20,150 Z" fill="url(#cg)"/>
+<path d="M20,130 L55,120 L90,105 L125,92 L160,80 L195,68 L230,55 L260,42" fill="none" stroke="#4ECDC4" stroke-width="3"/>
+<circle cx="260" cy="42" r="6" fill="#4ECDC4"/>
+</svg>
+</div>
+<p style="margin-top:12px;font-size:14px;color:var(--primary);font-weight:600">预计12周后: <strong>72kg</strong></p>
+<div style="position:relative;width:80px;height:90px;margin-top:8px">
+<canvas id="tend" width="80" height="90"></canvas>
+<div class="heart-bubble">💕</div>
+</div>
+</div><div class="page" id="page-22">
+<div class="card"><h1 class="title">Habit Analysis 📈</h1></div>
+<div style="max-width:280px;margin-top:12px">
+<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#FFF3E0;border-radius:12px"><span>记录习惯</span><span style="font-weight:600;color:#FF9800">78%</span></div>
+<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#E3F2FD;border-radius:12px"><span>喝水达标</span><span style="font-weight:600;color:#2196F3">65%</span></div>
+<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#F3E5F5;border-radius:12px"><span>禁食完成</span><span style="font-weight:600;color:#9C27B0">82%</span></div>
+</div>
+<div style="position:relative;width:80px;height:100px;margin-top:12px"><canvas id="t22" width="80" height="100"></canvas></div>
+</div><div class="page" id="page-23" style="background:linear-gradient(135deg,#11998E,#38EF7D)">
+<div class="card" style="background:linear-gradient(135deg,#FFD700,#FFA500)">
+<h1 class="title">✨ Premium ✨</h1><p class="subtitle">解锁全部功能</p>
+</div>
+<div style="max-width:280px;margin-top:16px">
+<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ AI 食物识别</div>
+<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ 深度分析报告</div>
+<div style="background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:12px;margin:6px 0">✓ 无限装扮</div>
+</div>
+</div><div class="page" id="page-24">
+<div class="card"><h1 class="title">Choose your plan 💎</h1></div>
+<div style="display:flex;gap:12px;margin-top:16px;max-width:320px">
+<div class="feature-card" style="flex:1"><div style="font-size:11px;color:#666">Weekly</div><div style="font-size:24px;font-weight:700;margin:6px 0">$4.99</div><div style="font-size:10px;color:#999">/周</div></div>
+<div class="feature-card" style="flex:1;border:2px solid var(--primary);position:relative">
+<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:2px 10px;border-radius:8px;font-size:10px">最受欢迎</div>
+<div style="font-size:11px;color:#666">Yearly</div><div style="font-size:24px;font-weight:700;margin:6px 0;color:var(--primary)">$35.99</div><div style="font-size:10px;color:#999">/年 (省70%)</div>
+</div>
+</div>
+</div><div class="page" id="page-25">
+<div style="font-size:70px">🤝</div>
+<div class="card"><h1 class="title">Start your journey! 🚀</h1><p class="subtitle">30天退款保证，无风险尝试</p></div>
+<div style="display:flex;gap:16px;margin-top:16px"><span style="font-size:24px">🔒</span><span style="font-size:24px">✓</span><span style="font-size:24px">💳</span><span style="font-size:24px">🛡️</span></div>
+</div><div class="page" id="page-26">
+<div style="font-size:80px">🎊</div>
+<div class="card"><h1 class="title">Welcome Back! 🐻</h1><p class="subtitle">欢迎回来，继续您的健康之旅</p></div>
+<div id="confetti1" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-27">
+<div class="card" style="text-align:center">
+<h1 class="title">Today 📅</h1>
+<div class="progress-ring" style="margin:16px auto">
+<svg width="160" height="160"><circle class="bg" cx="80" cy="80" r="65"/><circle class="progress" cx="80" cy="80" r="65" stroke-dasharray="408" stroke-dashoffset="204"/></svg>
+<div class="progress-text"><div class="progress-value" id="calorieToday">1150</div><div class="progress-label">/ 2000 kcal</div></div>
+</div>
+<div style="display:flex;justify-content:center;gap:20px;margin-top:16px">
+<div><div style="font-size:24px">🥗</div><div style="font-size:11px;color:#666">早餐</div></div>
+<div><div style="font-size:24px">🍜</div><div style="font-size:11px;color:#666">午餐</div></div>
+<div><div style="font-size:24px">🍽️</div><div style="font-size:11px;color:#666">晚餐</div></div>
+</div>
+</div>
+<div class="tabbar"><div class="tabitem active"><span class="tabicon">🏠</span><span>首页</span></div><div class="tabitem"><span class="tabicon">📊</span><span>统计</span></div><div class="tabitem"><span class="tabicon">🏆</span><span>成就</span></div><div class="tabitem"><span class="tabicon">👤</span><span>我的</span></div></div>
+</div><div class="page" id="page-28" style="">
+<div style="font-size:56px"></div>
+<div class="card"><h1 class="title">Nutrients 📊</h1></div>
+</div><div class="page" id="page-29" style="">
+<div style="font-size:56px"></div>
+<div class="card"><h1 class="title">How are you feeling? 💭</h1></div>
+</div><div class="page" id="page-30" style="">
+<div style="font-size:56px"></div>
+<div class="card"><h1 class="title">Food Search 🔍</h1></div>
+</div><div class="page" id="page-31" style="">
+<div style="font-size:56px"></div>
+<div class="card"><h1 class="title">Today's meals 🍽️</h1></div>
+</div><div class="page" id="page-32" style="">
+<div style="font-size:56px"></div>
+<div class="card"><h1 class="title">Calculator 🧮</h1></div>
+</div><div class="page" id="page-33" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:56px">🌙</div>
+<div class="card"><h1 class="title">Fasting Plan ⏰</h1></div>
+</div><div class="page" id="page-34" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:56px">🌙</div>
+<div class="card"><h1 class="title">Fasting Timer 🌙</h1></div>
+</div><div class="page" id="page-35" style="background:linear-gradient(180deg,#1A0033,#2D1B4E)">
+<div style="font-size:56px">🌙</div>
+<div class="card"><h1 class="title">Fasting Progress 🌙</h1></div>
+</div><div class="page" id="page-36" style="">
 
-    <!-- P1: Splash -->
-    <div class="page active" id="page-1" style="background: linear-gradient(135deg, #FFF8F0, #FFE8D6);">
-      <div style="position: relative; width: 200px; height: 220px;">
-        <canvas id="teddy-splash" width="200" height="220" style="width: 200px; height: 220px;"></canvas>
-      </div>
-      <div style="font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; color: var(--text-primary); margin-top: 16px; animation: logoPulse 1.5s ease-in-out infinite;">Aura-Pet</div>
-      <p style="margin-top: 8px; font-size: 13px; color: #666;">你的健康智能伴侣</p>
-    </div>
+<div class="card"><h1 class="title">Water 💧</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-37" style="">
 
-    <!-- P2: Welcome -->
-    <div class="page" id="page-2">
-      <div class="content-card"><h1 class="card-title">Reach Your Weight Goals 🐻</h1><p class="card-subtitle">与你的可爱小熊一起，开启健康之旅</p></div>
-      <div style="position: relative; width: 160px; height: 180px; margin-top: 16px;">
-        <canvas id="teddy-welcome" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
-      </div>
-    </div>
+<div class="card"><h1 class="title">Water History 📊</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-38" style="">
 
-    <!-- P3: Calorie -->
-    <div class="page" id="page-3">
-      <div style="font-size: 50px; animation: bounce 1s ease-in-out infinite;">🥗</div>
-      <div class="content-card"><h1 class="card-title">Track Calories with Ease</h1><p class="card-subtitle">智能识别食物，一键记录每一餐</p></div>
-      <div style="position: relative; width: 120px; height: 140px; margin-top: 12px;">
-        <canvas id="teddy-calorie" width="120" height="140" style="width: 120px; height: 140px;"></canvas>
-      </div>
-    </div>
+<div class="card"><h1 class="title">Achievements 🏆</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-39" style="">
 
-    <!-- P4: Fasting (Dark) -->
-    <div class="page" id="page-4" style="background: linear-gradient(180deg, #1A0033 0%, #2D1B4E 100%);">
-      <div style="font-size: 50px;">🌙</div>
-      <div class="content-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-        <h1 class="card-title" style="color: white;">Enjoy Fasting Without the Struggle</h1>
-        <p class="card-subtitle" style="color: rgba(255,255,255,0.8);">16:8 间歇性禁食，智能计时</p>
-      </div>
-      <div style="font-family: 'Poppins', sans-serif; font-size: 38px; font-weight: 700; color: white; margin: 16px 0; letter-spacing: 2px;">16:00:00</div>
-      <div style="position: relative; width: 140px; height: 160px;">
-        <canvas id="teddy-fasting" width="140" height="160" style="width: 140px; height: 160px;"></canvas>
-      </div>
-    </div>
+<div class="card"><h1 class="title">Profile 👤</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-40" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div style=font-size:90px>🎉</div>
+<div class="card"><h1 class="title">Goal Reached! 🎯</h1><p class=subtitle>恭喜您达成目标！</p></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-41" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div style=font-size:90px>🎉</div>
+<div class="card"><h1 class="title">Daily Goal Reached! 🎉</h1><p class=subtitle>恭喜您达成目标！</p></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-42" style="">
 
-    <!-- P5: Weight Trend -->
-    <div class="page" id="page-5">
-      <div class="content-card"><h1 class="card-title">See Results 📈</h1></div>
-      <div style="position: relative; width: 160px; height: 180px; margin-top: 12px;">
-        <canvas id="teddy-trend" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
-      </div>
-    </div>
+<div class="card"><h1 class="title">Weekly Report 📊</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-43" style="">
+<div style=font-size:90px>🏆</div>
+<div class="card"><h1 class="title">7天连续打卡 🔥</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-44" style="">
 
-    <!-- P6: Hydration -->
-    <div class="page" id="page-6">
-      <div class="content-card"><h1 class="card-title">Stay Hydrated 💧</h1><p class="card-subtitle">设置喝水提醒，保持身体水分</p></div>
-      <div style="position: relative; width: 130px; height: 150px; margin-top: 12px;">
-        <canvas id="teddy-water" width="130" height="150" style="width: 130px; height: 150px;"></canvas>
-      </div>
-    </div>
+<div class="card"><h1 class="title">Notifications 🔔</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-45" style="">
 
-    <!-- P7: Nutrition -->
-    <div class="page" id="page-7">
-      <div style="font-size: 50px; animation: bounce 1s ease-in-out infinite;">🥑</div>
-      <div class="content-card"><h1 class="card-title">Balanced Nutrition</h1><p class="card-subtitle">碳水/蛋白质/脂肪，精准配比</p></div>
-    </div>
-
-    <!-- P8-P11 -->
-    <div class="page" id="page-8"><div class="content-card"><h1 class="card-title">How did you hear about us? 📢</h1></div></div>
-    <div class="page" id="page-9"><div class="content-card"><h1 class="card-title">What is your main goal? 🎯</h1></div></div>
-    <div class="page" id="page-10"><div class="content-card"><h1 class="card-title">Select your gender 👤</h1></div></div>
-    <div class="page" id="page-11"><div class="content-card"><h1 class="card-title">What's your age? 🎂</h1></div><input type="number" placeholder="年龄" style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 14px; font-size: 22px; text-align: center; outline: none; width: 180px;"></div>
-
-    <!-- P12-P15: Data Entry with Brown Notebook -->
-    <div class="page" id="page-12">
-      <div class="content-card"><h1 class="card-title">How tall are you? 📏</h1></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
-        <canvas id="teddy-notebook" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
-      </div>
-    </div>
-
-    <div class="page" id="page-13">
-      <div class="content-card"><h1 class="card-title">Current weight? ⚖️</h1></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
-        <canvas id="teddy-notebook-2" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
-      </div>
-    </div>
-
-    <div class="page" id="page-14">
-      <div class="content-card"><h1 class="card-title">Target weight? 🎯</h1></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 12px;">
-        <canvas id="teddy-notebook-3" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
-      </div>
-    </div>
-
-    <div class="page" id="page-15"><div class="content-card"><h1 class="card-title">Activity level? 🏃</h1></div></div>
-
-    <!-- P16-P20 -->
-    <div class="page" id="page-16" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><div style="width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div><div class="content-card" style="background: rgba(255,255,255,0.15); margin-top: 24px;"><h1 class="card-title" style="color: white;">Analyzing...</h1></div></div>
-    <div class="page" id="page-17"><div style="font-size: 60px; animation: bounce 1s ease-in-out infinite;">🎉</div><div class="content-card"><h1 class="card-title">Your plan is ready! ✨</h1></div></div>
-    <div class="page" id="page-18"><div class="content-card"><h1 class="card-title">What users say 💬</h1></div></div>
-    <div class="page" id="page-19"><div style="font-size: 60px;">🔔</div><div class="content-card"><h1 class="card-title">Enable notifications? 📱</h1></div></div>
-    <div class="page" id="page-20" style="background: linear-gradient(180deg, #2D3748, #1A202C);"><div style="width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div><div class="content-card" style="background: rgba(255,255,255,0.1); margin-top: 24px;"><h1 class="card-title" style="color: white;">Creating your plan...</h1></div></div>
-
-    <!-- P21: Weight Prediction with Chart -->
-    <div class="page" id="page-21">
-      <div class="content-card"><h1 class="card-title">Weight Prediction 📊</h1></div>
-      <div style="position: relative; width: 100%; max-width: 320px; height: 160px; margin-top: 12px;">
-        <svg viewBox="0 0 320 160" style="width: 100%; height: 100%;">
-          <defs>
-            <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:0.4"/>
-              <stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:0"/>
-            </linearGradient>
-          </defs>
-          <path d="M20,140 L60,130 L100,118 L140,105 L180,92 L220,78 L260,65 L300,52 L300,160 L20,160 Z" fill="url(#chartGrad)"/>
-          <path d="M20,140 L60,130 L100,118 L140,105 L180,92 L220,78 L260,65 L300,52" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="300" cy="52" r="6" fill="#4ECDC4"/>
-        </svg>
-      </div>
-      <p style="margin-top: 12px; font-size: 14px; color: var(--primary); font-weight: 600;">预计12周后: <strong>72kg</strong></p>
-      <div style="position: relative; width: 80px; height: 90px; margin-top: 8px;">
-        <canvas id="teddy-endpoint" width="80" height="90" style="width: 80px; height: 90px;"></canvas>
-        <div class="heart-bubble">💕</div>
-      </div>
-    </div>
-
-    <!-- P22: Habit Analysis -->
-    <div class="page" id="page-22">
-      <div class="content-card"><h1 class="card-title">Habit Analysis 📈</h1></div>
-      <div style="position: relative; width: 100px; height: 110px; margin-top: 12px;">
-        <canvas id="teddy-star" width="100" height="110" style="width: 100px; height: 110px;"></canvas>
-      </div>
-    </div>
-
-    <!-- P23-P34 -->
-    <div class="page" id="page-23" style="background: linear-gradient(135deg, #11998E, #38EF7D);"><div class="content-card" style="background: linear-gradient(135deg, #FFD700, #FFA500);"><h1 class="card-title">✨ Premium ✨</h1></div></div>
-    <div class="page" id="page-24"><div class="content-card"><h1 class="card-title">Choose your plan 💎</h1></div></div>
-    <div class="page" id="page-25"><div style="font-size: 60px;">🤝</div><div class="content-card"><h1 class="card-title">Start your journey! 🚀</h1></div></div>
-    <div class="page" id="page-26"><div style="font-size: 70px;">🎊</div><div class="content-card"><h1 class="card-title">Welcome Back! 🐻</h1></div><div id="confetti-container"></div></div>
-    <div class="page" id="page-27"><div class="content-card" style="text-align: center;"><h1 class="card-title">Today 📅</h1></div><div class="tab-bar"><div class="tab-item active"><span class="tab-icon">🏠</span><span>首页</span></div><div class="tab-item"><span class="tab-icon">📊</span><span>统计</span></div><div class="tab-item"><span class="tab-icon">🏆</span><span>成就</span></div><div class="tab-item"><span class="tab-icon">👤</span><span>我的</span></div></div></div>
-    <div class="page" id="page-28"><div class="content-card"><h1 class="card-title">Nutrients 📊</h1></div></div>
-    <div class="page" id="page-29"><div class="content-card"><h1 class="card-title">How are you feeling? 💭</h1></div></div>
-    <div class="page" id="page-30"><div class="content-card"><h1 class="card-title">Food Search 🔍</h1></div></div>
-    <div class="page" id="page-31"><div class="content-card"><h1 class="card-title">Today's meals 🍽️</h1></div></div>
-    <div class="page" id="page-32"><div class="content-card"><h1 class="card-title">Calculator 🧮</h1></div></div>
-    <div class="page" id="page-33"><div class="content-card"><h1 class="card-title">Fasting Plan ⏰</h1></div></div>
-    <div class="page" id="page-34" style="background: linear-gradient(180deg, #1A0033, #2D1B4E);"><div style="font-size: 44px;">🌙</div><div style="font-family: 'Poppins', sans-serif; font-size: 38px; color: white; margin: 14px 0;">15:42:33</div></div>
-
-    <!-- P35: Fasting Timer with Sleepy Teddy -->
-    <div class="page" id="page-35" style="background: linear-gradient(180deg, #1A0033, #2D1B4E);">
-      <div class="content-card" style="background: rgba(255,255,255,0.1);">
-        <h1 class="card-title" style="color: white;">Fasting in Progress 🌙</h1>
-        <p class="card-subtitle" style="color: rgba(255,255,255,0.8);">小熊陪你一起坚持</p>
-      </div>
-      <div style="position: relative; width: 160px; height: 180px; margin-top: 16px;">
-        <canvas id="teddy-sleepy" width="160" height="180" style="width: 160px; height: 180px;"></canvas>
-      </div>
-    </div>
-
-    <!-- P36-P40 -->
-    <div class="page" id="page-36"><div class="content-card"><h1 class="card-title">Water 💧</h1><p class="card-subtitle">目标: 2.5L</p></div></div>
-    <div class="page" id="page-37"><div class="content-card"><h1 class="card-title">Water History 📊</h1></div></div>
-    <div class="page" id="page-38"><div class="content-card"><h1 class="card-title">Achievements 🏆</h1></div></div>
-    <div class="page" id="page-39"><div class="content-card"><h1 class="card-title">Profile 👤</h1></div></div>
-    <div class="page" id="page-40" style="background: linear-gradient(135deg, #667eea, #764ba2);"><div style="font-size: 80px;">🎉</div><div class="content-card"><h1 class="card-title">Goal Reached! 🎯</h1></div><div id="confetti-container-2"></div></div>
-
-    <!-- P41: Daily Goal Reached with Teddy -->
-    <div class="page" id="page-41">
-      <div class="content-card"><h1 class="card-title">Daily Goal Reached! 🎉</h1><p class="card-subtitle">恭喜你完成了今天的健康目标！</p></div>
-      <div style="position: relative; width: 180px; height: 200px; margin-top: 16px;">
-        <canvas id="teddy-celebrate" width="180" height="200" style="width: 180px; height: 200px;"></canvas>
-      </div>
-      <!-- Full screen confetti -->
-      <div id="confetti-full" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
-    </div>
-
-    <!-- P42-P46 -->
-    <div class="page" id="page-42"><div class="content-card"><h1 class="card-title">Weekly Report 📊</h1></div></div>
-    <div class="page" id="page-43"><div style="font-size: 60px; margin: 14px 0;">🏆</div><div class="content-card"><h1 class="card-title">7天连续打卡 🔥</h1></div></div>
-    <div class="page" id="page-44"><div class="content-card"><h1 class="card-title">Notifications 🔔</h1></div></div>
-    <div class="page" id="page-45"><div class="content-card"><h1 class="card-title">About Us 📖</h1></div></div>
-    <div class="page" id="page-46"><div class="content-card"><h1 class="card-title">Support 💬</h1></div><p style="margin-top: 30px; font-size: 11px; color: #999;">Version 1.0.0</p></div>
-
-    <button class="capsule-btn" id="nextBtn" onclick="nextPage()">Next</button>
-  </div>
-
-  <script>
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 🧸 Classic Teddy Bear Renderer - 经典泰迪熊 安静陪伴版
-    // 纯棕色 #8B4513 | 眯眯眼 | 倒Y嘴巴 | 呼吸动画
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    class ClassicTeddy {
-      constructor(canvas, options = {}) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.w = canvas.width;
-        this.h = canvas.height;
-        this.options = {
-          mode: options.mode || 'default', // default, notebook, sleepy, celebrate
-          time: 0
-        };
-        this.animFrame = null;
-        this.startAnimation();
-      }
-
-      startAnimation() {
-        const animate = () => {
-          this.options.time += 0.016;
-          this.draw();
-          this.animFrame = requestAnimationFrame(animate);
-        };
-        animate();
-      }
-
-      stopAnimation() { if (this.animFrame) cancelAnimationFrame(this.animFrame); }
-
-      // 纯棕色径向渐变
-      getBrownGradient(x, y, r, isLight = false) {
-        const ctx = this.ctx;
-        const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
-        if (isLight) {
-          g.addColorStop(0, '#A0522D');
-          g.addColorStop(0.6, '#8B4513');
-          g.addColorStop(1, '#6B3410');
-        } else {
-          g.addColorStop(0, '#8B4513');
-          g.addColorStop(0.5, '#7A3D10');
-          g.addColorStop(1, '#5A2D0A');
-        }
-        return g;
-      }
-
-      // 3D充气感内阴影
-      drawInflatedShadow(cx, cy, r, intensity = 0.15) {
-        const ctx = this.ctx;
-        const g = ctx.createRadialGradient(cx, cy - r * 0.3, r * 0.1, cx, cy, r);
-        g.addColorStop(0, 'rgba(255,255,255,0)');
-        g.addColorStop(0.6, 'rgba(255,255,255,0)');
-        g.addColorStop(1, `rgba(0,0,0,${intensity})`);
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
-
-      // 眯眯眼 - 弯弯的黑色弧线
-      drawMochiEyes(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.strokeStyle = '#2D1810';
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        // 左眼 - 弯弯笑
-        ctx.beginPath();
-        ctx.arc(cx - size, cy, size * 0.6, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-        // 右眼
-        ctx.beginPath();
-        ctx.arc(cx + size, cy, size * 0.6, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-      }
-
-      // 极简鼻子
-      drawSimpleNose(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, size, size * 0.7, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#4A2810';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.3, cy - size * 0.3, size * 0.3, size * 0.2, -0.3, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.fill();
-      }
-
-      // 倒Y字嘴巴
-      drawYSmile(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.strokeStyle = '#4A2810';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        // 左半Y
-        ctx.moveTo(cx - size, cy - size * 0.5);
-        ctx.lineTo(cx - size * 0.3, cy);
-        ctx.lineTo(cx - size * 0.6, cy + size * 0.8);
-        ctx.stroke();
-        // 右半Y
-        ctx.beginPath();
-        ctx.moveTo(cx + size, cy - size * 0.5);
-        ctx.lineTo(cx + size * 0.3, cy);
-        ctx.lineTo(cx + size * 0.6, cy + size * 0.8);
-        ctx.stroke();
-        // 微笑弧线
-        ctx.beginPath();
-        ctx.moveTo(cx - size * 0.3, cy);
-        ctx.quadraticCurveTo(cx, cy + size * 0.3, cx + size * 0.3, cy);
-        ctx.stroke();
-      }
-
-      // 圆耳朵
-      drawRoundEar(cx, cy, size, isLeft) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.arc(cx, cy, size, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, cy, size);
-        ctx.fill();
-        this.drawInflatedShadow(cx, cy, size, 0.1);
-      }
-
-      // 圆身体
-      drawRoundBody(cx, cy, w, h) {
-        const ctx = this.ctx;
-        const breathScale = 1 + Math.sin(this.options.time * 1.5) * 0.03;
-        const bw = w * breathScale;
-        const bh = h * breathScale;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, bw, bh, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, cy, Math.max(bw, bh));
-        ctx.fill();
-        this.drawInflatedShadow(cx, cy, Math.max(bw, bh), 0.12);
-      }
-
-      // 圆手臂
-      drawRoundArm(cx, cy, size, angle = 0) {
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.ellipse(0, size * 0.6, size * 0.9, size, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(0, size * 0.6, size);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // 圆腿
-      drawRoundLeg(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, size * 1.1, size * 0.9, 0, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, cy, size);
-        ctx.fill();
-      }
-
-      // 棕色睡帽
-      drawSleepHat(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - size * 1.4);
-        ctx.quadraticCurveTo(cx - size * 0.7, cy - size * 0.4, cx - size * 0.5, cy + size * 0.2);
-        ctx.lineTo(cx + size * 0.5, cy + size * 0.2);
-        ctx.quadraticCurveTo(cx + size * 0.7, cy - size * 0.4, cx, cy - size * 1.4);
-        ctx.fillStyle = '#8B4513';
-        ctx.fill();
-        // 帽边
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + size * 0.15, size * 0.7, size * 0.2, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#6B3410';
-        ctx.fill();
-        // 毛球
-        ctx.beginPath();
-        ctx.arc(cx, cy - size * 1.5, size * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = '#8B4513';
-        ctx.fill();
-      }
-
-      // 棕色笔记本
-      drawBrownNotebook(cx, cy, w, h) {
-        const ctx = this.ctx;
-        ctx.beginPath();
-        ctx.roundRect(cx - w/2, cy - h/2, w, h, 6);
-        ctx.fillStyle = '#8B4513';
-        ctx.fill();
-        ctx.strokeStyle = '#6B3410';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        // 线圈
-        for (let i = 0; i < 4; i++) {
-          ctx.beginPath();
-          ctx.arc(cx - w/2 - 2, cy - h/2 + 12 + i * 16, 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#5A2D0A';
-          ctx.fill();
-        }
-        // 页面
-        ctx.beginPath();
-        ctx.roundRect(cx - w/2 + 8, cy - h/2 + 8, w - 16, h - 16, 3);
-        ctx.fillStyle = '#F5F0E8';
-        ctx.fill();
-      }
-
-      draw() {
-        const ctx = this.ctx;
-        const cx = this.w / 2;
-        const cy = this.h / 2;
-        const time = this.options.time;
-        ctx.clearRect(0, 0, this.w, this.h);
-
-        const breathY = Math.sin(time * 1.5) * 3;
-
-        switch (this.options.mode) {
-          case 'notebook': this.drawNotebookMode(cx, cy, breathY); break;
-          case 'sleepy': this.drawSleepyMode(cx, cy, breathY); break;
-          case 'celebrate': this.drawCelebrateMode(cx, cy, breathY); break;
-          default: this.drawDefaultMode(cx, cy, breathY);
-        }
-      }
-
-      drawDefaultMode(cx, cy, breathY) {
-        const ctx = this.ctx;
-        const bodyCy = cy + 25 + breathY * 0.5;
-        // 身体
-        this.drawRoundBody(cx, bodyCy, 65, 50);
-        // 腿
-        this.drawRoundLeg(cx - 28, bodyCy + 35, 13);
-        this.drawRoundLeg(cx + 28, bodyCy + 35, 13);
-        // 头
-        const headCy = cy - 18 + breathY;
-        ctx.beginPath();
-        ctx.arc(cx, headCy, 52, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, headCy, 52);
-        ctx.fill();
-        this.drawInflatedShadow(cx, headCy, 52, 0.1);
-        // 耳朵
-        this.drawRoundEar(cx - 44, headCy - 35, 18, true);
-        this.drawRoundEar(cx + 44, headCy - 35, 18, false);
-        // 眯眯眼
-        this.drawMochiEyes(cx, headCy - 3, 10);
-        // 鼻子
-        this.drawSimpleNose(cx, headCy + 12, 7);
-        // 倒Y嘴巴
-        this.drawYSmile(cx, headCy + 22, 10);
-        // 手臂
-        this.drawRoundArm(cx - 48, bodyCy + 8, 11, -0.3);
-        this.drawRoundArm(cx + 48, bodyCy + 8, 11, 0.3);
-      }
-
-      drawNotebookMode(cx, cy, breathY) {
-        const ctx = this.ctx;
-        const bodyCy = cy + 28 + breathY * 0.5;
-        // 身体
-        this.drawRoundBody(cx, bodyCy, 60, 48);
-        // 腿
-        this.drawRoundLeg(cx - 26, bodyCy + 32, 12);
-        this.drawRoundLeg(cx + 26, bodyCy + 32, 12);
-        // 头
-        const headCy = cy - 12 + breathY;
-        ctx.beginPath();
-        ctx.arc(cx, headCy, 48, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, headCy, 48);
-        ctx.fill();
-        this.drawInflatedShadow(cx, headCy, 48, 0.1);
-        // 耳朵
-        this.drawRoundEar(cx - 40, headCy - 32, 16, true);
-        this.drawRoundEar(cx + 40, headCy - 32, 16, false);
-        // 眯眯眼
-        this.drawMochiEyes(cx, headCy - 2, 9);
-        // 鼻子
-        this.drawSimpleNose(cx, headCy + 10, 6);
-        // 倒Y嘴巴
-        this.drawYSmile(cx, headCy + 18, 8);
-        // 棕色笔记本
-        this.drawBrownNotebook(cx + 50, cy + 8, 38, 52);
-        // 手臂 - 抱着
-        this.drawRoundArm(cx + 40, bodyCy + 5, 10, 0.8);
-      }
-
-      drawSleepyMode(cx, cy, breathY) {
-        const ctx = this.ctx;
-        const bellyBreath = Math.sin(this.options.time * 1.2) * 4;
-        const bodyCy = cy + 28;
-        // 身体
-        ctx.save();
-        ctx.translate(cx, bodyCy);
-        ctx.scale(1, 1 + bellyBreath * 0.025);
-        ctx.translate(-cx, -bodyCy);
-        this.drawRoundBody(cx, bodyCy, 68, 50);
-        ctx.restore();
-        // 腿
-        this.drawRoundLeg(cx - 30, bodyCy + 36, 14);
-        this.drawRoundLeg(cx + 30, bodyCy + 36, 14);
-        // 头
-        const headCy = cy - 15 + breathY * 0.5;
-        ctx.beginPath();
-        ctx.arc(cx, headCy, 50, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, headCy, 50);
-        ctx.fill();
-        this.drawInflatedShadow(cx, headCy, 50, 0.08);
-        // 棕色睡帽
-        this.drawSleepHat(cx, headCy - 45, 22);
-        // 耳朵
-        this.drawRoundEar(cx - 42, headCy - 32, 16, true);
-        this.drawRoundEar(cx + 42, headCy - 32, 16, false);
-        // 闭眼 - 弯弯的缝
-        ctx.strokeStyle = '#2D1810';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(cx - 18, headCy - 2, 7, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(cx + 18, headCy - 2, 7, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-        // 鼻子
-        this.drawSimpleNose(cx, headCy + 12, 6);
-        // 倒Y嘴巴
-        this.drawYSmile(cx, headCy + 20, 8);
-      }
-
-      drawCelebrateMode(cx, cy, breathY) {
-        const ctx = this.ctx;
-        const bodyCy = cy + 28 + breathY * 0.5;
-        // 身体
-        this.drawRoundBody(cx, bodyCy, 65, 50);
-        // 腿
-        this.drawRoundLeg(cx - 28, bodyCy + 35, 13);
-        this.drawRoundLeg(cx + 28, bodyCy + 35, 13);
-        // 头
-        const headCy = cy - 18 + breathY;
-        ctx.beginPath();
-        ctx.arc(cx, headCy, 52, 0, Math.PI * 2);
-        ctx.fillStyle = this.getBrownGradient(cx, headCy, 52);
-        ctx.fill();
-        this.drawInflatedShadow(cx, headCy, 52, 0.1);
-        // 耳朵
-        this.drawRoundEar(cx - 44, headCy - 35, 18, true);
-        this.drawRoundEar(cx + 44, headCy - 35, 18, false);
-        // 眯眯眼 - 开心
-        this.drawHappyMochiEyes(cx, headCy - 3, 11);
-        // 鼻子
-        this.drawSimpleNose(cx, headCy + 12, 7);
-        // 开心倒Y嘴巴
-        this.drawYSmile(cx, headCy + 22, 11);
-        // 双手举起
-        this.drawRoundArm(cx - 52, bodyCy - 5, 11, -1.2);
-        this.drawRoundArm(cx + 52, bodyCy - 5, 11, 1.2);
-      }
-
-      drawHappyMochiEyes(cx, cy, size) {
-        const ctx = this.ctx;
-        ctx.strokeStyle = '#2D1810';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        // 左眼 - 大笑弯
-        ctx.beginPath();
-        ctx.arc(cx - size, cy, size * 0.7, 0.1 * Math.PI, 0.9 * Math.PI);
-        ctx.stroke();
-        // 右眼
-        ctx.beginPath();
-        ctx.arc(cx + size, cy, size * 0.7, 0.1 * Math.PI, 0.9 * Math.PI);
-        ctx.stroke();
-      }
+<div class="card"><h1 class="title">About Us 📖</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div><div class="page" id="page-46" style="">
+<div style=font-size:90px>💬</div>
+<div class="card"><h1 class="title">Support 💬</h1></div>
+<div id="confetti2" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+</div>
+<button class="btn" id="nextBtn" onclick="nextPage()">Next</button>
+</div>
+<script>
+// 🧸 ClassicTeddyBear - Pure Brown #8B4513 | 眯眯眼 | 安静陪伴
+class Teddy {
+  constructor(c, m) {
+    this.c = c;
+    this.x = c.getContext('2d');
+    this.w = c.width;
+    this.h = c.height;
+    this.m = m;
+    this.t = 0;
+    this.start();
+  }
+  start() {
+    const a = () => { this.t += 0.016; this.draw(); requestAnimationFrame(a); };
+    a();
+  }
+  bg(x, y, r) {
+    const g = this.x.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+    g.addColorStop(0, '#A0522D');
+    g.addColorStop(0.5, '#8B4513');
+    g.addColorStop(1, '#6B3410');
+    return g;
+  }
+  sh(cx, cy, r, i = 0.12) {
+    const g = this.x.createRadialGradient(cx, cy - r * 0.3, r * 0.1, cx, cy, r);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.6, 'rgba(255,255,255,0)');
+    g.addColorStop(1, `rgba(0,0,0,${i})`);
+    this.x.beginPath();
+    this.x.arc(cx, cy, r, 0, Math.PI * 2);
+    this.x.fillStyle = g;
+    this.x.fill();
+  }
+  eyes(cx, cy, s, h = false) {
+    const ctx = this.x;
+    ctx.strokeStyle = '#2D1810';
+    ctx.lineWidth = h ? 3 : 2.5;
+    ctx.lineCap = 'round';
+    const a = h ? 0.1 : 0.2;
+    const e = h ? 0.9 : 0.8;
+    ctx.beginPath();
+    ctx.arc(cx - s, cy, s * (h ? 0.7 : 0.6), a * Math.PI, e * Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + s, cy, s * (h ? 0.7 : 0.6), a * Math.PI, e * Math.PI);
+    ctx.stroke();
+  }
+  nose(cx, cy, s) {
+    this.x.beginPath();
+    this.x.ellipse(cx, cy, s, s * 0.7, 0, 0, Math.PI * 2);
+    this.x.fillStyle = '#4A2810';
+    this.x.fill();
+    this.x.beginPath();
+    this.x.ellipse(cx - s * 0.3, cy - s * 0.3, s * 0.3, s * 0.2, 0, 0, Math.PI * 2);
+    this.x.fillStyle = 'rgba(255,255,255,0.2)';
+    this.x.fill();
+  }
+  smile(cx, cy, s) {
+    const ctx = this.x;
+    ctx.strokeStyle = '#4A2810';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - s, cy - s * 0.5);
+    ctx.lineTo(cx - s * 0.3, cy);
+    ctx.lineTo(cx - s * 0.6, cy + s * 0.8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + s, cy - s * 0.5);
+    ctx.lineTo(cx + s * 0.3, cy);
+    ctx.lineTo(cx + s * 0.6, cy + s * 0.8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - s * 0.3, cy);
+    ctx.quadraticCurveTo(cx, cy + s * 0.3, cx + s * 0.3, cy);
+    ctx.stroke();
+  }
+  ear(cx, cy, s) {
+    this.x.beginPath();
+    this.x.arc(cx, cy, s, 0, Math.PI * 2);
+    this.x.fillStyle = this.bg(cx, cy, s);
+    this.x.fill();
+  }
+  body(cx, cy, w, h) {
+    const b = 1 + Math.sin(this.t * 1.5) * 0.03;
+    this.x.beginPath();
+    this.x.ellipse(cx, cy, w * b, h * b, 0, 0, Math.PI * 2);
+    this.x.fillStyle = this.bg(cx, cy, Math.max(w * b, h * b));
+    this.x.fill();
+    this.sh(cx, cy, Math.max(w * b, h * b));
+  }
+  legs(cy, s) {
+    this.x.fillStyle = '#8B4513';
+    this.x.beginPath();
+    this.x.ellipse(this.w / 2 - 28, cy, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
+    this.x.fill();
+    this.x.beginPath();
+    this.x.ellipse(this.w / 2 + 28, cy, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
+    this.x.fill();
+  }
+  arms(cy, s, la = -0.3, ra = 0.3) {
+    const ctx = this.x;
+    ctx.fillStyle = '#8B4513';
+    ctx.save();
+    ctx.translate(this.w / 2 - 48, cy);
+    ctx.rotate(la);
+    ctx.beginPath();
+    ctx.ellipse(0, s * 0.5, s * 0.9, s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(this.w / 2 + 48, cy);
+    ctx.rotate(ra);
+    ctx.beginPath();
+    ctx.ellipse(0, s * 0.5, s * 0.9, s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  raised(cy, s) { this.arms(cy, s, -1.2, 1.2); }
+  hat(cx, cy, s) {
+    const ctx = this.x;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s * 1.4);
+    ctx.quadraticCurveTo(cx - s * 0.7, cy - s * 0.4, cx - s * 0.5, cy + s * 0.2);
+    ctx.lineTo(cx + s * 0.5, cy + s * 0.2);
+    ctx.quadraticCurveTo(cx + s * 0.7, cy - s * 0.4, cx, cy - s * 1.4);
+    ctx.closePath();
+    ctx.fillStyle = '#8B4513';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + s * 0.15, s * 0.7, s * 0.2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#6B3410';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy - s * 1.5, s * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#8B4513';
+    ctx.fill();
+  }
+  nb(cx, cy, w, h) {
+    const ctx = this.x;
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 6);
+    ctx.fillStyle = '#8B4513';
+    ctx.fill();
+    ctx.strokeStyle = '#6B3410';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.arc(cx - w / 2 - 2, cy - h / 2 + 12 + i * 16, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#5A2D0A';
+      ctx.fill();
     }
-
-    // Initialize Teddies
-    function initTeddies() {
-      const configs = [
-        { id: 'teddy-splash', mode: 'default' },
-        { id: 'teddy-welcome', mode: 'default' },
-        { id: 'teddy-calorie', mode: 'default' },
-        { id: 'teddy-fasting', mode: 'sleepy' },
-        { id: 'teddy-trend', mode: 'default' },
-        { id: 'teddy-water', mode: 'default' },
-        { id: 'teddy-notebook', mode: 'notebook' },
-        { id: 'teddy-notebook-2', mode: 'notebook' },
-        { id: 'teddy-notebook-3', mode: 'notebook' },
-        { id: 'teddy-endpoint', mode: 'default' },
-        { id: 'teddy-star', mode: 'default' },
-        { id: 'teddy-sleepy', mode: 'sleepy' },
-        { id: 'teddy-celebrate', mode: 'celebrate' }
-      ];
-      configs.forEach(c => {
-        const canvas = document.getElementById(c.id);
-        if (canvas) new ClassicTeddy(canvas, { mode: c.mode });
-      });
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2 + 8, cy - h / 2 + 8, w - 16, h - 16, 3);
+    ctx.fillStyle = '#F5F0E8';
+    ctx.fill();
+  }
+  head(cx, cy, s, h = false) {
+    this.ear(cx - s * 0.85, cy - s * 0.65, s * 0.35);
+    this.ear(cx + s * 0.85, cy - s * 0.65, s * 0.35);
+    this.x.beginPath();
+    this.x.arc(cx, cy, s, 0, Math.PI * 2);
+    this.x.fillStyle = this.bg(cx, cy, s);
+    this.x.fill();
+    this.sh(cx, cy, s, 0.1);
+    this.eyes(cx, cy - s * 0.08, s * 0.18, h);
+    this.nose(cx, cy + s * 0.2, s * 0.12);
+    this.smile(cx, cy + s * 0.38, s * 0.18);
+  }
+  sleepyHead(cx, cy, s) {
+    this.hat(cx, cy - s * 0.85, s * 0.4);
+    this.ear(cx - s * 0.85, cy - s * 0.6, s * 0.32);
+    this.ear(cx + s * 0.85, cy - s * 0.6, s * 0.32);
+    this.x.beginPath();
+    this.x.arc(cx, cy, s, 0, Math.PI * 2);
+    this.x.fillStyle = this.bg(cx, cy, s);
+    this.x.fill();
+    const ctx = this.x;
+    ctx.strokeStyle = '#2D1810';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx - s * 0.5, cy - s * 0.05, s * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + s * 0.5, cy - s * 0.05, s * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.stroke();
+    this.nose(cx, cy + s * 0.2, s * 0.12);
+    this.smile(cx, cy + s * 0.38, s * 0.18);
+  }
+  draw() {
+    const ctx = this.x;
+    ctx.clearRect(0, 0, this.w, this.h);
+    const cx = this.w / 2;
+    const cy = this.h / 2;
+    const by = cy + 25 + Math.sin(this.t * 1.5) * 3;
+    if (this.m === 'notebook') {
+      this.body(cx, by, 60, 48);
+      this.legs(by + 32, 12);
+      this.head(cx, cy - 12 + Math.sin(this.t * 1.5) * 3, 48);
+      this.arms(by + 5, 10, 0.8, -0.8);
+      this.nb(cx + 50, cy + 8, 38, 52);
+    } else if (this.m === 'sleepy') {
+      const bb = Math.sin(this.t * 1.2) * 4;
+      ctx.save();
+      ctx.translate(cx, by + 28);
+      ctx.scale(1, 1 + bb * 0.025);
+      ctx.translate(-cx, -(by + 28));
+      this.body(cx, by + 28, 68, 50);
+      ctx.restore();
+      this.legs(by + 36, 14);
+      this.sleepyHead(cx, cy - 15 + Math.sin(this.t * 1.5) * 1.5, 50);
+    } else if (this.m === 'celebrate') {
+      this.body(cx, by, 65, 50);
+      this.legs(by + 35, 13);
+      this.head(cx, cy - 18 + Math.sin(this.t * 1.5) * 3, 52, true);
+      this.raised(by - 5, 11);
+    } else {
+      this.body(cx, by, 65, 50);
+      this.legs(by + 35, 13);
+      this.head(cx, cy - 18 + Math.sin(this.t * 1.5) * 3, 52);
+      this.arms(by + 8, 11);
     }
+  }
+}
 
-    // Navigation
-    let currentPage = 1;
-    const totalPages = 46;
-    let usedQuoteIndices = [];
+// Initialize teddies
+const teddies = [
+  {id: 't1', mode: 'default'},
+  {id: 't2', mode: 'default'},
+  {id: 't3', mode: 'default'},
+  {id: 't4', mode: 'sleepy'},
+  {id: 't6', mode: 'default'},
+  {id: 't11', mode: 'default'},
+  {id: 't12', mode: 'notebook'},
+  {id: 't13', mode: 'notebook'},
+  {id: 't14', mode: 'notebook'},
+  {id: 'tend', mode: 'default'},
+  {id: 't22', mode: 'celebrate'},
+  {id: 't35', mode: 'sleepy'},
+  {id: 't41', mode: 'celebrate'},
+];
 
-    const quotes = [
-      {text:"这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨",category:"美食和解"},
-      {text:"咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊",category:"自律之美"},
-      {text:"刚才你在忙吗？我偷偷在你的屏幕里种了一朵玫瑰，只为你一个人盛开。🌹",category:"日常撒娇"},
-      {text:"叮！恭喜你获得'光之追随者'徽章。你的生命力已经溢出屏幕啦！✨",category:"激励赞美"},
-      {text:"卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～",category:"美食和解"}
-    ];
+teddies.forEach(t => {
+  const c = document.getElementById(t.id);
+  if (c) new Teddy(c, t.mode);
+});
 
-    function nextPage() {
-      if (currentPage < totalPages) {
-        document.getElementById('page-' + currentPage).classList.remove('active');
-        document.getElementById('page-' + currentPage).classList.add('exit-left');
-        currentPage++;
-        document.getElementById('page-' + currentPage).classList.add('active');
-        document.getElementById('currentPageNum').textContent = currentPage;
-        if (currentPage % 3 === 0) showQuote();
-        const btn = document.getElementById('nextBtn');
-        if (currentPage === totalPages) {
-          btn.textContent = 'Done!';
-          btn.onclick = () => alert('🎉 感谢体验 Aura-Pet！');
-          btn.style.animation = 'none';
-        }
-        if (currentPage === 26) createConfetti('confetti-container');
-        if (currentPage === 40) createConfetti('confetti-container-2');
-        if (currentPage === 41) createFullConfetti();
-      }
+// Navigation
+let currentPage = 1;
+const totalPages = 46;
+const quotes = [
+  {text: "这口奶油里藏着云朵的吻，吃掉它，你的心情就会变成粉色啦！✨", cat: "美食和解"},
+  {text: "咕嘟咕嘟...你喝下的每一口清泉，都在帮我洗亮莫奈花园里的倒影哦。🌊", cat: "自律之美"},
+  {text: "刚才你在忙吗？我偷偷在你的屏幕里种了一朵玫瑰，只为你一个人盛开。🌹", cat: "日常撒娇"},
+  {text: "叮！恭喜你获得'光之追随者'徽章。你的生命力已经溢出屏幕啦！✨", cat: "激励赞美"},
+  {text: "卡路里？不不不，那是'发光能量'。今天你又比昨天更闪耀了呢～", cat: "美食和解"}
+];
+let usedIdx = [];
+
+function nextPage() {
+  if (currentPage < totalPages) {
+    document.getElementById('page-' + currentPage).classList.remove('active');
+    document.getElementById('page-' + currentPage).classList.add('exit-left');
+    currentPage++;
+    document.getElementById('page-' + currentPage).classList.add('active');
+    document.getElementById('pageNum').textContent = currentPage;
+    if (currentPage % 3 === 0) showQuote();
+    const btn = document.getElementById('nextBtn');
+    if (currentPage === totalPages) {
+      btn.textContent = 'Done!';
+      btn.onclick = () => alert('🎉 感谢体验 Aura-Pet！');
     }
+    if (currentPage === 26) createConfetti('confetti1');
+    if (currentPage === 40) createConfetti('confetti2');
+  }
+}
 
-    function showQuote() {
-      let idx;
-      if (usedQuoteIndices.length >= quotes.length) usedQuoteIndices = [];
-      do { idx = Math.floor(Math.random() * quotes.length); } while (usedQuoteIndices.includes(idx));
-      usedQuoteIndices.push(idx);
-      const q = quotes[idx];
-      document.getElementById('quoteText').textContent = q.text;
-      document.getElementById('quoteCategory').textContent = q.category;
-      document.getElementById('quoteBubble').classList.add('show');
-      setTimeout(() => document.getElementById('quoteBubble').classList.remove('show'), 4000);
-    }
+function showQuote() {
+  let idx;
+  if (usedIdx.length >= quotes.length) usedIdx = [];
+  do { idx = Math.floor(Math.random() * quotes.length); } while (usedIdx.includes(idx));
+  usedIdx.push(idx);
+  const q = quotes[idx];
+  document.getElementById('bubbleText').textContent = q.text;
+  document.getElementById('bubbleCat').textContent = q.cat;
+  document.getElementById('bubble').classList.add('show');
+  setTimeout(() => document.getElementById('bubble').classList.remove('show'), 4000);
+}
 
-    function createConfetti(containerId) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#B5FFE5'];
-      for (let i = 0; i < 15; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'confetti';
-        piece.style.left = Math.random() * 100 + '%';
-        piece.style.top = '0';
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.animationDelay = Math.random() * 0.5 + 's';
-        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-        container.appendChild(piece);
-        setTimeout(() => piece.remove(), 3000);
-      }
-    }
+function selectOption(el) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
 
-    function createFullConfetti() {
-      const container = document.getElementById('confetti-full');
-      if (!container) return;
-      const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#B5FFE5', '#FFD700', '#FF6B8A'];
-      for (let i = 0; i < 50; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'confetti';
-        piece.style.position = 'absolute';
-        piece.style.left = Math.random() * 100 + '%';
-        piece.style.top = '-20px';
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.width = (6 + Math.random() * 8) + 'px';
-        piece.style.height = (6 + Math.random() * 8) + 'px';
-        piece.style.animationDelay = Math.random() * 1 + 's';
-        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-        container.appendChild(piece);
-        setTimeout(() => piece.remove(), 3500);
-      }
-    }
+function createConfetti(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const colors = ['#FFB5B5', '#B5D8FF', '#FFE5B5', '#E5B5FF', '#FFD700'];
+  for (let i = 0; i < 15; i++) {
+    const d = document.createElement('div');
+    d.className = 'confetti';
+    d.style.left = Math.random() * 100 + '%';
+    d.style.top = '0';
+    d.style.background = colors[Math.floor(Math.random() * colors.length)];
+    d.style.animationDelay = Math.random() * 0.5 + 's';
+    c.appendChild(d);
+    setTimeout(() => d.remove(), 3000);
+  }
+}
 
-    // Touch support
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-    document.addEventListener('touchend', e => {
-      const diff = touchStartX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50 && diff > 0) nextPage();
-    });
+let touchX = 0;
+document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+document.addEventListener('touchend', e => {
+  if (touchX - e.changedTouches[0].clientX > 50) nextPage();
+});
 
-    // Auto-start
-    setTimeout(() => { if (currentPage === 1) nextPage(); }, 2500);
-    window.addEventListener('load', initTeddies);
-  </script>
+setTimeout(() => { if (currentPage === 1) nextPage(); }, 2500);
+</script>
 </body>
 </html>
