@@ -124,6 +124,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return PremiumPaywallScreen(onComplete: _nextPage);
                 case 24:
                   return PricingScreen(onComplete: _nextPage);
+                case 25:
+                  return PaymentCommitmentScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -9637,6 +9639,400 @@ class _PlanCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// ============================================
+/// P26: Payment Commitment Screen
+/// ============================================
+class PaymentCommitmentScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const PaymentCommitmentScreen({super.key, required this.onComplete});
+
+  @override
+  State<PaymentCommitmentScreen> createState() => _PaymentCommitmentScreenState();
+}
+
+class _PaymentCommitmentScreenState extends State<PaymentCommitmentScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bearController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _showPaymentDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 成功图标
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF4CAF50),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Payment processed!',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your subscription is now active.',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  widget.onComplete();
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+
+              // 标题
+              const Text(
+                'We are committed\nto your success',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  height: 1.2,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Canvas郑重承诺小熊
+              AnimatedBuilder(
+                animation: _bearController,
+                builder: (context, child) {
+                  final raise = math.sin(_bearController.value * math.pi) * 10;
+                  return Transform.translate(
+                    offset: Offset(0, raise),
+                    child: child,
+                  );
+                },
+                child: CustomPaint(
+                  size: const Size(180, 180),
+                  painter: _CommitmentBearPainter(),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 退款政策卡片
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // 退款政策
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4ECDC4).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text('💰', style: TextStyle(fontSize: 24)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '30-Day Money Back',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                              Text(
+                                'No questions asked',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey.shade200),
+                    const SizedBox(height: 16),
+
+                    // 信任标识
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _TrustBadge(icon: '🔒', label: 'SSL\nEncrypted'),
+                        _TrustBadge(icon: '✅', label: 'Secure\nPayment'),
+                        _TrustBadge(icon: '🛡️', label: 'Protected\nData'),
+                        _TrustBadge(icon: '📱', label: 'Private &\nSecure'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Subscribe胶囊按钮
+              GestureDetector(
+                onTap: _showPaymentDialog,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Subscribe',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.lock, color: Colors.white, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 副文案
+              Text(
+                'By subscribing, you agree to our Terms of Service',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 信任标识
+class _TrustBadge extends StatelessWidget {
+  final String icon;
+  final String label;
+
+  const _TrustBadge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 10,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Canvas: 郑重承诺小熊
+class _CommitmentBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 1.0), width: r * 1.6, height: r * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.7), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.7), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.7), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.7), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.0, height: r * 0.85),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 坚定眼神 (眯着)
+    _drawDeterminedEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.12);
+    _drawDeterminedEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.12);
+
+    // 自信微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.2, c.dy + r * 0.3);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.45, c.dx + r * 0.2, c.dy + r * 0.3);
+    canvas.drawPath(smilePath, Paint()
+      ..color = const Color(0xFF8B4513)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 举起的小爪子
+    _drawRaisedPaw(canvas, Offset(c.dx - r * 1.0, c.dy - r * 0.3), r * 0.35);
+    _drawRaisedPaw(canvas, Offset(c.dx + r * 1.0, c.dy - r * 0.3), r * 0.35);
+  }
+
+  void _drawDeterminedEye(Canvas canvas, Offset center, double size) {
+    // 眯眼表达坚定
+    final path = Path();
+    path.moveTo(center.dx - size * 1.2, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.6, center.dx + size * 1.2, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy + size * 0.3, center.dx - size * 1.2, center.dy);
+    canvas.drawPath(path, Paint()..color = const Color(0xFF5D4037));
+  }
+
+  void _drawRaisedPaw(Canvas canvas, Offset center, double size) {
+    // 爪子掌
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.7, height: size * 0.9),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+    // 爪垫
+    canvas.drawCircle(center + Offset(-size * 0.15, -size * 0.15), size * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(center + Offset(size * 0.15, -size * 0.15), size * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(center + Offset(0, -size * 0.05), size * 0.1, Paint()..color = const Color(0xFFE8C4A0));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
