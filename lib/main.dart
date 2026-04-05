@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+/// ============================================
+/// 全局用户数据
+/// ============================================
+class UserMetrics {
+  static String? gender;
+  static String? selectedChannel;
+  static String? primaryGoal;
+  static final Set<String> additionalGoals = {};
+  static double? height;
+  static double? weight;
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -79,6 +91,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return GoalSurveyScreen(onComplete: _nextPage);
                 case 9:
                   return AdditionalGoalsScreen(onComplete: _nextPage);
+                case 10:
+                  return GenderScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -3622,6 +3636,361 @@ class _AdditionalGoalCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ============================================
+/// P11: Gender Selection Screen
+/// ============================================
+class GenderScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const GenderScreen({super.key, required this.onComplete});
+
+  @override
+  State<GenderScreen> createState() => _GenderScreenState();
+}
+
+class _GenderScreenState extends State<GenderScreen> {
+  String? _selectedGender;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              // 标题
+              const Text(
+                "What's your\ngender?",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'This helps us personalize your plan',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // 性别选项
+              Expanded(
+                child: Row(
+                  children: [
+                    // Male
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedGender = 'male';
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: _selectedGender == 'male'
+                                ? const Color(0xFF64B5F6).withOpacity(0.15)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: _selectedGender == 'male'
+                                  ? const Color(0xFF64B5F6)
+                                  : Colors.grey.shade300,
+                              width: _selectedGender == 'male' ? 3 : 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _selectedGender == 'male'
+                                    ? const Color(0xFF64B5F6).withOpacity(0.2)
+                                    : Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Male图标
+                              CustomPaint(
+                                size: const Size(100, 100),
+                                painter: _MaleIconPainter(
+                                  isSelected: _selectedGender == 'male',
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Male',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                  color: _selectedGender == 'male'
+                                      ? const Color(0xFF64B5F6)
+                                      : const Color(0xFF2D3748),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Female
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedGender = 'female';
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: _selectedGender == 'female'
+                                ? const Color(0xFFFF8A65).withOpacity(0.15)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: _selectedGender == 'female'
+                                  ? const Color(0xFFFF8A65)
+                                  : Colors.grey.shade300,
+                              width: _selectedGender == 'female' ? 3 : 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _selectedGender == 'female'
+                                    ? const Color(0xFFFF8A65).withOpacity(0.2)
+                                    : Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Female图标
+                              CustomPaint(
+                                size: const Size(100, 100),
+                                painter: _FemaleIconPainter(
+                                  isSelected: _selectedGender == 'female',
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Female',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                  color: _selectedGender == 'female'
+                                      ? const Color(0xFFFF8A65)
+                                      : const Color(0xFF2D3748),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 胶囊按钮
+              GestureDetector(
+                onTap: _selectedGender != null
+                    ? () {
+                        UserMetrics.gender = _selectedGender;
+                        widget.onComplete();
+                      }
+                    : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: _selectedGender != null
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                          )
+                        : null,
+                    color: _selectedGender == null ? Colors.grey.shade300 : null,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _selectedGender != null
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF4CAF50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: _selectedGender != null ? Colors.white : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: _selectedGender != null ? Colors.white : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================================
+/// Canvas: Male Icon
+/// ============================================
+class _MaleIconPainter extends CustomPainter {
+  final bool isSelected;
+  _MaleIconPainter({required this.isSelected});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final color = isSelected ? const Color(0xFF64B5F6) : const Color(0xFF2D3748);
+
+    // 圆圈
+    canvas.drawCircle(
+      center,
+      size.width / 2 - 5,
+      Paint()
+        ..color = color.withOpacity(0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+
+    // 箭头 (简化男性符号)
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+
+    // 横线
+    canvas.drawLine(
+      Offset(center.dx - 20, center.dy),
+      Offset(center.dx + 20, center.dy),
+      paint,
+    );
+    // 右上箭头
+    canvas.drawLine(
+      Offset(center.dx + 10, center.dy - 10),
+      Offset(center.dx + 20, center.dy),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(center.dx + 10, center.dy + 10),
+      Offset(center.dx + 20, center.dy),
+      paint,
+    );
+    // 左箭头
+    canvas.drawLine(
+      Offset(center.dx - 20, center.dy),
+      Offset(center.dx - 10, center.dy - 10),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(center.dx - 20, center.dy),
+      Offset(center.dx - 10, center.dy + 10),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MaleIconPainter oldDelegate) =>
+      oldDelegate.isSelected != isSelected;
+}
+
+/// ============================================
+/// Canvas: Female Icon
+/// ============================================
+class _FemaleIconPainter extends CustomPainter {
+  final bool isSelected;
+  _FemaleIconPainter({required this.isSelected});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final color = isSelected ? const Color(0xFFFF8A65) : const Color(0xFF2D3748);
+
+    // 外圆
+    canvas.drawCircle(
+      center,
+      size.width / 2 - 5,
+      Paint()
+        ..color = color.withOpacity(0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+
+    // 十字 (简化女性符号)
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+
+    // 竖线
+    canvas.drawLine(
+      Offset(center.dx, center.dy - 20),
+      Offset(center.dx, center.dy + 20),
+      paint,
+    );
+    // 横线
+    canvas.drawLine(
+      Offset(center.dx - 15, center.dy - 5),
+      Offset(center.dx + 15, center.dy - 5),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _FemaleIconPainter oldDelegate) =>
+      oldDelegate.isSelected != isSelected;
 }
 
 /// ============================================
