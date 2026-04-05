@@ -166,6 +166,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return BadgeDetailScreen(onComplete: _nextPage);
                 case 44:
                   return NotificationSettingsScreen(onComplete: _nextPage);
+                case 45:
+                  return AboutScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -19568,6 +19570,536 @@ class _NotificationBearPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+/// ============================================
+/// P46: About & Support Screen
+/// ============================================
+class AboutScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AboutScreen({super.key, required this.onComplete});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _waveController;
+  late Animation<double> _waveAnim;
+  late Animation<double> _fadeAnim;
+  late Animation<double> _fadeOutAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _waveAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _waveController, curve: Curves.easeInOut),
+    );
+
+    _fadeAnim = CurvedAnimation(
+      parent: AnimationController(duration: const Duration(milliseconds: 1000), vsync: this)..forward(),
+      curve: Curves.easeOut,
+    );
+
+    _fadeOutAnim = Tween<double>(begin: 1.0, end: 0.3).animate(
+      CurvedAnimation(parent: _waveController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  void _showPrivacyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.privacy_tip, color: Color(0xFF4ECDC4)),
+            SizedBox(width: 12),
+            Text(
+              'Privacy Policy',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Last updated: March 2025',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Your privacy is important to us. Aura-Pet collects minimal data necessary to provide personalized health tracking services.\n\n'
+                '• We store your health metrics securely\n'
+                '• Your data is encrypted in transit and at rest\n'
+                '• We never sell your personal information\n'
+                '• You can delete your data anytime\n\n'
+                'For more information, please visit our website.',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 14, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF4ECDC4)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.description, color: Color(0xFF4ECDC4)),
+            SizedBox(width: 12),
+            Text(
+              'Terms of Service',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Last updated: March 2025',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.grey),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'By using Aura-Pet, you agree to the following terms:\n\n'
+                '• Aura-Pet provides health tracking for informational purposes only\n'
+                '• This app is not a substitute for professional medical advice\n'
+                '• You are responsible for the accuracy of the data you enter\n'
+                '• Please consult healthcare professionals for medical decisions\n\n'
+                'We strive to provide the best experience while respecting your privacy.',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 14, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF4ECDC4)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'About',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // Logo区
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4ECDC4), Color(0xFF6DD5C4)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4ECDC4).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🐻', style: TextStyle(fontSize: 48)),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // App名称
+            const Text(
+              'Aura-Pet',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 28,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            // 版本号
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4ECDC4).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Version 1.0.0',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4ECDC4),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // 链接列表
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _LinkItem(
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Privacy Policy',
+                    onTap: _showPrivacyDialog,
+                  ),
+                  Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                  _LinkItem(
+                    icon: Icons.description_outlined,
+                    title: 'Terms of Service',
+                    onTap: _showTermsDialog,
+                  ),
+                  Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                  _LinkItem(
+                    icon: Icons.help_outline,
+                    title: 'Help & Support',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Contact: support@aura-pet.com'),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // Canvas小熊挥手告别
+            AnimatedBuilder(
+              animation: Listenable.merge([_waveAnim, _fadeOutAnim]),
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeOutAnim.value,
+                  child: Transform.translate(
+                    offset: Offset(math.sin(_waveAnim.value * math.pi * 2) * 5, 0),
+                    child: child,
+                  ),
+                );
+              },
+              child: CustomPaint(
+                size: const Size(80, 80),
+                painter: _WavingBearPainter(waveProgress: _waveAnim.value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 底部语
+            const Text(
+              'Made with ♥ for your health',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Color(0xFF4ECDC4),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Back to Home胶囊按钮
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.home, color: Colors.white, size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Back to Home',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 链接项
+class _LinkItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _LinkItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4ECDC4).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Icon(icon, color: const Color(0xFF4ECDC4), size: 22),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 15,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey.shade400,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 挥手告别小熊
+class _WavingBearPainter extends CustomPainter {
+  final double waveProgress;
+
+  _WavingBearPainter({required this.waveProgress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // 头
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 身体
+    final bodyPath = Path();
+    bodyPath.addOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.5), width: r * 1.2, height: r * 1.0));
+    canvas.drawPath(bodyPath, Paint()..color = const Color(0xFFD4A574));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 挥手的手臂 (左右摇摆)
+    final waveAngle = math.sin(waveProgress * math.pi * 2) * 0.5;
+
+    // 左臂 (挥手)
+    canvas.save();
+    canvas.translate(c.dx - r * 0.7, c.dy + r * 0.2);
+    canvas.rotate(-1.2 + waveAngle);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -r * 0.4), width: r * 0.35, height: r * 0.6), Paint()..color = const Color(0xFFD4A574));
+    // 手掌
+    canvas.drawCircle(Offset(0, -r * 0.6), r * 0.15, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.restore();
+
+    // 右臂
+    canvas.save();
+    canvas.translate(c.dx + r * 0.7, c.dy + r * 0.2);
+    canvas.rotate(1.2 - waveAngle);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -r * 0.4), width: r * 0.35, height: r * 0.6), Paint()..color = const Color(0xFFD4A574));
+    canvas.restore();
+
+    // 眼睛 (开心眯眼)
+    final eyeY = c.dy - r * 0.05;
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, eyeY), r * 0.12);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, eyeY), r * 0.12);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.42, c.dx + r * 0.15, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 心形装饰
+    _drawHeart(canvas, Offset(c.dx - r * 1.0, c.dy - r * 0.8), r * 0.15);
+    _drawHeart(canvas, Offset(c.dx + r * 1.0, c.dy - r * 0.5), r * 0.1);
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.6, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size) {
+    final paint = Paint()..color = const Color(0xFFFF6B6B).withOpacity(0.7);
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx - size * 1.2, center.dy - size * 0.3,
+      center.dx - size * 1.2, center.dy - size * 1.2,
+      center.dx, center.dy - size * 0.3,
+    );
+    path.cubicTo(
+      center.dx + size * 1.2, center.dy - size * 1.2,
+      center.dx + size * 1.2, center.dy - size * 0.3,
+      center.dx, center.dy + size * 0.3,
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _WavingBearPainter oldDelegate) =>
+      oldDelegate.waveProgress != waveProgress;
 }
 
 /// 占位页
