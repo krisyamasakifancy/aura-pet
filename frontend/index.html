@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aura-Pet - 智能宠物养成</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Digital Impressionism - Monet/Van Gogh HSL Palette */
+            --monet-rose: #E8B4B8;
+            --monet-lavender: #C9B8E0;
+            --monet-peach: #F5D0C5;
+            --monet-mint: #B8E0D2;
+            
+            --van-gogh-night: #1A1A2E;
+            --van-gogh-twilight: #16213E;
+            --van-gogh-purple: #0F3460;
+            
+            --accent-primary: #FF6B9D;
+            --accent-secondary: #C44CFF;
+            --accent-tertiary: #4C9AFF;
+            --accent-success: #4ADE80;
+            
+            /* HSL Dynamic Colors */
+            --dynamic-hue: 320;
+            --dynamic-saturation: 70%;
+            --dynamic-lightness: 65%;
+            
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: rgba(0, 0, 0, 0.25);
+            
+            /* Fluid Background */
+            --fluid-color-1: hsla(var(--dynamic-hue), var(--dynamic-saturation), var(--dynamic-lightness), 0.4);
+            --fluid-color-2: hsla(calc(var(--dynamic-hue) + 30), 60%, 70%, 0.3);
+            --fluid-color-3: hsla(calc(var(--dynamic-hue) + 60), 50%, 60%, 0.25);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            background: var(--van-gogh-night);
+            color: white;
+        }
+        
+        /* Dynamic Fluid Background */
+        .fluid-background {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .fluid-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: fluidFloat 20s ease-in-out infinite;
+            transition: all 3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .fluid-orb:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: var(--fluid-color-1);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+        
+        .fluid-orb:nth-child(2) {
+            width: 350px;
+            height: 350px;
+            background: var(--fluid-color-2);
+            bottom: -80px;
+            right: -80px;
+            animation-delay: -5s;
+        }
+        
+        .fluid-orb:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            background: var(--fluid-color-3);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+        
+        @keyframes fluidFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(40px, 30px) scale(1.05); }
+        }
+        
+        /* Main App Container */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+        }
+        
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .app-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+        
+        .user-coins {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            font-weight: 600;
+        }
+        
+        .coin-icon {
+            font-size: 1.2rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Pet View */
+        .pet-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .pet-character {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        /* Spring Physics Animation */
+        .pet-sprite {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-origin: center bottom;
+            transition: transform 0.1s ease-out;
+        }
+        
+        .pet-sprite.bounce {
+            animation: springBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .pet-sprite.spin {
+            animation: spinAround 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .pet-sprite.hug {
+            animation: hugMotion 1s ease-out;
+        }
+        
+        .pet-sprite.jump {
+            animation: jumpUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes springBounce {
+            0%, 100% { transform: scale(1); }
+            30% { transform: scale(1.3); }
+            60% { transform: scale(0.9); }
+            80% { transform: scale(1.1); }
+        }
+        
+        @keyframes spinAround {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(360deg) scale(1.2); }
+            100% { transform: rotate(720deg) scale(1); }
+        }
+        
+        @keyframes hugMotion {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.2) translateY(-10px); }
+            60% { transform: scale(1.1) translateY(5px); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes jumpUp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-60px); }
+        }
+        
+        /* Pet Avatar (Canvas) */
+        #pet-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        /* Pet Mood Indicator */
+        .pet-mood-badge {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.4rem 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .mood-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+        
+        /* Touch Hint Particles */
+        .touch-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFade 0.8s ease-out forwards;
+        }
+        
+        @keyframes particleFade {
+            0% { opacity: 1; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5) translateY(-50px); }
+        }
+        
+        /* Stats Cards */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            padding: 1rem 0;
+        }
+        
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:active {
+            transform: scale(0.95);
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .stat-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            padding: 1rem 0;
+        }
+        
+        .action-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.4);
+        }
+        
+        .action-btn-icon {
+            font-size: 1.5rem;
+        }
+        
+        .action-btn-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            border-radius: 24px 24px 0 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-primary);
+        }
+        
+        .nav-item-icon {
+            font-size: 1.5rem;
+        }
+        
+        .nav-item-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Dialog Overlay */
+        .dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dialog-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .dialog-content {
+            background: var(--van-gogh-twilight);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            max-width: 90%;
+            width: 320px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .dialog-overlay.active .dialog-content {
+            transform: scale(1);
+        }
+        
+        .dialog-emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .dialog-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dialog-message {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+        
+        .dialog-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: 24px;
+            padding: 0.875rem 2rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .dialog-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Camera/Meal Dialog */
+        .meal-dialog {
+            max-width: 90%;
+            width: 360px;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--van-gogh-night);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .camera-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .camera-placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Ripple Effect for Water */
+        .ripple-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(74, 222, 128, 0.3);
+            animation: rippleExpand 2s ease-out forwards;
+        }
+        
+        @keyframes rippleExpand {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 200px; height: 200px; opacity: 0; margin: -100px; }
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--van-gogh-twilight);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 0.875rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 200;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+        
+        .toast-text {
+            font-weight: 500;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Coin Animation */
+        .coin-float {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.5rem;
+            animation: coinFloat 1.5s ease-out forwards;
+            z-index: 150;
+        }
+        
+        @keyframes coinFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-100px) scale(0.5); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fluid Background -->
+    <div class="fluid-background" id="fluidBackground">
+        <div class="fluid-orb"></div>
+        <div class="fluid-orb"></div>
+        <div class="fluid-orb"></div>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="header-left">
+                <div class="app-logo">Aura-Pet</div>
+            </div>
+            <div class="user-coins">
+                <span class="coin-icon">🪙</span>
+                <span id="coinCount">150</span>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Pet View -->
+            <div class="pet-container">
+                <div class="pet-character" id="petCharacter">
+                    <canvas id="pet-canvas"></canvas>
+                    <div class="pet-mood-badge">
+                        <div class="mood-dot"></div>
+                        <span id="petMoodText">开心</span>
+                    </div>
+                </div>
+                <div class="ripple-container" id="rippleContainer"></div>
+            </div>
+            
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stat-card" onclick="showToast('🍽️ 今日已记录 3 餐')">
+                    <div class="stat-icon">🍽️</div>
+                    <div class="stat-value" id="mealsToday">3</div>
+                    <div class="stat-label">今日餐食</div>
+                    <div class="stat-bar">
+                        <div class="stat-bar-fill" style="width: 60%; background: linear-gradient(90deg, #FF6B9D, #C44CFF);"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" onclick="showToast('💧 水分补给完成！')">
+                    <div class="stat-icon">💧</div>
+                    <div class="stat-value" id="waterIntake">1200</div>
+                    <div class="stat-label">ml</div>
+                    <div class="stat-bar">
+                        <div class="stat-bar-fill" id="waterBar" style="width: 60%; background: linear-gradient(90deg, #4C9AFF, #4ADE80);"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="streakCount">5</div>
+                    <div class="stat-label">连续天数</div>
+                    <div class="stat-bar">
+                        <div class="stat-bar-fill" style="width: 83%; background: linear-gradient(90deg, #FF6B9D, #FFD700);"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="openMealDialog()">
+                    <span class="action-btn-icon">📸</span>
+                    <span class="action-btn-text">拍照记录</span>
+                </button>
+                
+                <button class="action-btn" onclick="addWater()">
+                    <span class="action-btn-icon">🥤</span>
+                    <span class="action-btn-text">喝水 +250ml</span>
+                </button>
+                
+                <button class="action-btn" onclick="petInteraction('head')">
+                    <span class="action-btn-icon">👋</span>
+                    <span class="action-btn-text">摸摸头</span>
+                </button>
+                
+                <button class="action-btn" onclick="petInteraction('poke')">
+                    <span class="action-btn-icon">😺</span>
+                    <span class="action-btn-text">戳戳肚子</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <span class="nav-item-icon">🏠</span>
+                <span class="nav-item-label">首页</span>
+            </div>
+            <div class="nav-item" onclick="showToast('📊 数据看板开发中...')">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-label">看板</span>
+            </div>
+            <div class="nav-item" onclick="showToast('🛒 商店开发中...')">
+                <span class="nav-item-icon">🛒</span>
+                <span class="nav-item-label">商店</span>
+            </div>
+            <div class="nav-item" onclick="showToast('👤 个人中心...')">
+                <span class="nav-item-icon">👤</span>
+                <span class="nav-item-label">我的</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Meal Dialog -->
+    <div class="dialog-overlay" id="mealDialog">
+        <div class="dialog-content meal-dialog">
+            <div class="camera-preview" id="cameraPreview">
+                <div class="camera-placeholder">
+                    <div class="camera-placeholder-icon">📸</div>
+                    <div>点击模拟拍照</div>
+                </div>
+            </div>
+            <div class="dialog-title">🍰 记录餐食</div>
+            <div class="dialog-message" id="mealDialogMessage">
+                拍下你的餐食，AI 会帮你分析并喂养小浣熊～
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="dialog-btn" style="flex: 1; background: var(--glass-bg);" onclick="closeMealDialog()">取消</button>
+                <button class="dialog-btn" style="flex: 1;" onclick="simulateMealCapture()">拍照</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✨</span>
+        <span class="toast-text" id="toastText">操作成功</span>
+    </div>
+
+    <script>
+        // ============================================
+        // APP STATE
+        // ============================================
+        const AppState = {
+            coins: 150,
+            mealsToday: 3,
+            waterIntake: 1200,
+            waterGoal: 2000,
+            streak: 5,
+            petMood: 'happy',
+            petJoy: 80,
+            petHunger: 70,
+            petVigor: 65,
+            evolutionXp: 120,
+            evolutionLevel: 2
+        };
+
+        // ============================================
+        // DIGITAL IMPRESSIONISM COLORS
+        // ============================================
+        const ColorPalettes = {
+            happy: { hue: 320, saturation: '70%', lightness: '65%' },
+            neutral: { hue: 200, saturation: '50%', lightness: '60%' },
+            sad: { hue: 220, saturation: '60%', lightness: '55%' },
+            excited: { hue: 45, saturation: '80%', lightness: '65%' },
+            sleepy: { hue: 260, saturation: '40%', lightness: '50%' }
+        };
+
+        function updateDynamicColors(mood) {
+            const palette = ColorPalettes[mood] || ColorPalettes.neutral;
+            document.documentElement.style.setProperty('--dynamic-hue', palette.hue);
+            document.documentElement.style.setProperty('--dynamic-saturation', palette.saturation);
+            document.documentElement.style.setProperty('--dynamic-lightness', palette.lightness);
+        }
+
+        // ============================================
+        // PET RENDERER
+        // ============================================
+        class PetRenderer {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.breathPhase = 0;
+                this.blinkTimer = 0;
+                this.isBlinking = false;
+                this.eyeOpenness = 1;
+                this.animationClass = '';
+                this.currentEmotion = 'happy';
+                
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                this.startRenderLoop();
+            }
+            
+            resize() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+            
+            startRenderLoop() {
+                this.render();
+            }
+            
+            playAnimation(type) {
+                const sprite = this.canvas.previousElementSibling;
+                if (!sprite) return;
+                
+                // Remove existing animations
+                sprite.classList.remove('bounce', 'spin', 'hug', 'jump');
+                void sprite.offsetWidth; // Force reflow
+                
+                // Add new animation
+                sprite.classList.add(type);
+                
+                setTimeout(() => {
+                    sprite.classList.remove(type);
+                }, 2000);
+            }
+            
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                // Breathing
+                this.breathPhase += 0.02;
+                const breathScale = 1 + Math.sin(this.breathPhase) * 0.03;
+                const floatY = Math.sin(this.breathPhase * 0.7) * 5;
+                
+                this.ctx.save();
+                this.ctx.translate(centerX, centerY + floatY);
+                this.ctx.scale(breathScale, breathScale);
+                
+                // Glow
+                const glowGradient = this.ctx.createRadialGradient(0, 0, 30, 0, 0, 100);
+                glowGradient.addColorStop(0, 'rgba(255, 107, 157, 0.4)');
+                glowGradient.addColorStop(1, 'transparent');
+                this.ctx.fillStyle = glowGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, 100, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Body
+                const bodyGradient = this.ctx.createRadialGradient(-15, -20, 0, 0, 0, 80);
+                bodyGradient.addColorStop(0, '#FFE4EC');
+                bodyGradient.addColorStop(0.7, '#E8B4B8');
+                bodyGradient.addColorStop(1, '#C9A0A8');
+                
+                this.ctx.fillStyle = bodyGradient;
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, 10, 60, 70, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Face
+                const faceGradient = this.ctx.createRadialGradient(-5, -10, 0, 0, 0, 50);
+                faceGradient.addColorStop(0, '#FFFFFF');
+                faceGradient.addColorStop(1, '#FFE8F0');
+                
+                this.ctx.fillStyle = faceGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(0, -15, 50, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Blinking
+                this.blinkTimer++;
+                if (this.blinkTimer > 150 && !this.isBlinking) {
+                    this.isBlinking = true;
+                    this.blinkTimer = 0;
+                }
+                if (this.isBlinking) {
+                    this.eyeOpenness = Math.max(0.1, this.eyeOpenness - 0.3);
+                    if (this.eyeOpenness <= 0.1) {
+                        this.isBlinking = false;
+                    }
+                } else {
+                    this.eyeOpenness = Math.min(1, this.eyeOpenness + 0.2);
+                }
+                
+                // Eyes
+                const eyeY = -20;
+                const eyeSpacing = 18;
+                
+                // Eye masks
+                this.ctx.fillStyle = '#2D1B4E';
+                this.ctx.beginPath();
+                this.ctx.ellipse(-eyeSpacing, eyeY, 6, 8 * this.eyeOpenness, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.ellipse(eyeSpacing, eyeY, 6, 8 * this.eyeOpenness, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Eye highlights
+                if (this.eyeOpenness > 0.3) {
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(-eyeSpacing - 1, eyeY - 2, 2.5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.arc(eyeSpacing - 1, eyeY - 2, 2.5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                // Nose
+                this.ctx.fillStyle = '#D4A5A5';
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, -5, 4, 3, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Mouth based on mood
+                this.ctx.strokeStyle = '#D4A5A5';
+                this.ctx.lineWidth = 2;
+                this.ctx.lineCap = 'round';
+                
+                if (this.currentEmotion === 'happy' || this.currentEmotion === 'excited') {
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, -8, 10, 0.2 * Math.PI, 0.8 * Math.PI);
+                    this.ctx.stroke();
+                } else if (this.currentEmotion === 'sad') {
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, 8, 1.2 * Math.PI, 1.8 * Math.PI);
+                    this.ctx.stroke();
+                } else {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(-6, -2);
+                    this.ctx.lineTo(6, -2);
+                    this.ctx.stroke();
+                }
+                
+                // Blush
+                this.ctx.fillStyle = 'rgba(255, 150, 150, 0.3)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(-35, -8, 12, 6, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.ellipse(35, -8, 12, 6, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Ears
+                this.ctx.fillStyle = '#E8B4B8';
+                this.ctx.beginPath();
+                this.ctx.moveTo(-35, -55);
+                this.ctx.quadraticCurveTo(-45, -80, -30, -70);
+                this.ctx.quadraticCurveTo(-25, -60, -35, -55);
+                this.ctx.fill();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(35, -55);
+                this.ctx.quadraticCurveTo(45, -80, 30, -70);
+                this.ctx.quadraticCurveTo(25, -60, 35, -55);
+                this.ctx.fill();
+                
+                // Inner ears
+                this.ctx.fillStyle = '#FFB6C1';
+                this.ctx.beginPath();
+                this.ctx.moveTo(-33, -58);
+                this.ctx.quadraticCurveTo(-40, -72, -32, -67);
+                this.ctx.fill();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(33, -58);
+                this.ctx.quadraticCurveTo(40, -72, 32, -67);
+                this.ctx.fill();
+                
+                // Raccoon mask (eyes mask)
+                this.ctx.strokeStyle = '#4A4A4A';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.ellipse(-eyeSpacing, eyeY, 12, 10, -0.2, 0, Math.PI * 2);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.ellipse(eyeSpacing, eyeY, 12, 10, 0.2, 0, Math.PI * 2);
+                this.ctx.stroke();
+                
+                // Tail (cute fluffy)
+                this.ctx.fillStyle = '#C9A0A8';
+                this.ctx.beginPath();
+                this.ctx.ellipse(-50, 40, 20, 15, 0.3, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Stripes on tail
+                this.ctx.fillStyle = '#8B7B7B';
+                for (let i = 0; i < 3; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(-50 + i * 8, 40, 3, 8, 0.3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+                
+                requestAnimationFrame(() => this.render());
+            }
+            
+            setEmotion(emotion) {
+                this.currentEmotion = emotion;
+                updateDynamicColors(emotion);
+            }
+        }
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        let petRenderer;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            petRenderer = new PetRenderer('pet-canvas');
+            
+            // Touch interactions
+            const petCharacter = document.getElementById('petCharacter');
+            
+            petCharacter.addEventListener('click', (e) => {
+                spawnTouchParticles(e.clientX, e.clientY);
+                petInteraction('tap');
+            });
+            
+            // Prevent double-tap zoom
+            petCharacter.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                spawnTouchParticles(touch.clientX, touch.clientY);
+                petInteraction('tap');
+            });
+        });
+
+        // ============================================
+        // INTERACTIONS
+        // ============================================
+        function petInteraction(type) {
+            const animations = {
+                'head': 'bounce',
+                'poke': 'bounce',
+                'tap': 'hug',
+                'shake': 'spin'
+            };
+            
+            const messages = {
+                'head': ['舒服～', '好开心呀～', '继续摸～', '嘿嘿～'],
+                'poke': ['哎呦！', '别戳我肚子啦～', '痒痒的！'],
+                'tap': ['谢谢你～', '好喜欢你！', '我们是好朋友！'],
+                'shake': ['呜～头晕了...', '转晕了...']
+            };
+            
+            const animation = animations[type] || 'bounce';
+            const message = messages[type][Math.floor(Math.random() * messages[type].length)];
+            
+            petRenderer.playAnimation(animation);
+            
+            if (type === 'shake') {
+                petRenderer.setEmotion('dizzy');
+                setTimeout(() => petRenderer.setEmotion('happy'), 2000);
+            }
+            
+            showToast(`🐾 ${message}`);
+            
+            // Add coins for interaction
+            if (type !== 'shake') {
+                addCoins(2);
+                AppState.petJoy = Math.min(100, AppState.petJoy + 5);
+            }
+        }
+
+        function spawnTouchParticles(x, y) {
+            const emojis = ['💕', '✨', '💗', '⭐'];
+            const container = document.getElementById('petCharacter');
+            
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'touch-particle';
+                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.style.left = (x + (Math.random() - 0.5) * 60) + 'px';
+                particle.style.top = (y + (Math.random() - 0.5) * 60) + 'px';
+                particle.style.fontSize = (16 + Math.random() * 12) + 'px';
+                particle.style.animationDelay = (Math.random() * 0.3) + 's';
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        // ============================================
+        // MEAL TRACKING
+        // ============================================
+        function openMealDialog() {
+            document.getElementById('mealDialog').classList.add('active');
+            document.getElementById('mealDialogMessage').textContent = '拍下你的餐食，AI 会帮你分析并喂养小浣熊～';
+        }
+
+        function closeMealDialog() {
+            document.getElementById('mealDialog').classList.remove('active');
+        }
+
+        async function simulateMealCapture() {
+            const messages = document.getElementById('mealDialogMessage');
+            messages.textContent = '🔄 AI 正在分析中...';
+            
+            // Simulate AI analysis
+            await sleep(1500);
+            
+            // Random food result
+            const foods = [
+                { name: '芝士蛋糕', calories: 420, emoji: '🍰', label: '灵魂充电时间 ⚡' },
+                { name: '蔬菜沙拉', calories: 180, emoji: '🥗', label: '绿色能量满格 🌿' },
+                { name: '巧克力', calories: 550, emoji: '🍫', label: '快乐因子注入中 💫' },
+                { name: '水果拼盘', calories: 150, emoji: '🍎', label: '大自然糖果 🍬' },
+                { name: '披萨', calories: 680, emoji: '🍕', label: '尊享犒劳时刻 👑' }
+            ];
+            
+            const food = foods[Math.floor(Math.random() * foods.length)];
+            
+            messages.innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">${food.emoji}</div>
+                <strong>${food.name}</strong><br>
+                <span style="color: var(--accent-primary);">${food.calories} kcal</span><br>
+                <span style="color: var(--accent-success);">${food.label}</span>
+            `;
+            
+            // Rewards
+            const coins = 10 + Math.floor(Math.random() * 10);
+            addCoins(coins);
+            
+            AppState.mealsToday++;
+            document.getElementById('mealsToday').textContent = AppState.mealsToday;
+            
+            // Animate pet
+            petRenderer.playAnimation('spin');
+            petRenderer.setEmotion('excited');
+            setTimeout(() => petRenderer.setEmotion('happy'), 2000);
+            
+            // Update streak
+            AppState.streak++;
+            document.getElementById('streakCount').textContent = AppState.streak;
+            
+            showToast(`🎉 +${coins} 金币！连续 ${AppState.streak} 天`);
+            
+            await sleep(2000);
+            closeMealDialog();
+        }
+
+        // ============================================
+        // WATER TRACKING
+        // ============================================
+        function addWater() {
+            const amount = 250;
+            AppState.waterIntake += amount;
+            
+            document.getElementById('waterIntake').textContent = AppState.waterIntake;
+            
+            const percentage = Math.min(100, (AppState.waterIntake / AppState.waterGoal) * 100);
+            document.getElementById('waterBar').style.width = percentage + '%';
+            
+            // Ripple effect
+            const container = document.getElementById('rippleContainer');
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = '50%';
+            ripple.style.top = '50%';
+            container.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 2000);
+            
+            if (AppState.waterIntake >= AppState.waterGoal) {
+                showToast('💧 今日水分目标达成！');
+                petRenderer.playAnimation('jump');
+            } else {
+                showToast(`💧 +${amount}ml`);
+            }
+            
+            // Small reward
+            addCoins(2);
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function addCoins(amount) {
+            AppState.coins += amount;
+            document.getElementById('coinCount').textContent = AppState.coins;
+            
+            // Float animation
+            const coinFloat = document.createElement('div');
+            coinFloat.className = 'coin-float';
+            coinFloat.textContent = `+${amount}`;
+            coinFloat.style.left = '50%';
+            coinFloat.style.top = '40%';
+            document.body.appendChild(coinFloat);
+            
+            setTimeout(() => coinFloat.remove(), 1500);
+        }
+
+        function showToast(message, duration = 2500) {
+            const toast = document.getElementById('toast');
+            const [icon, ...textParts] = message.split(' ');
+            const text = textParts.join(' ');
+            
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastText').textContent = text;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Initial color
+        updateDynamicColors('happy');
+    </script>
+</body>
+</html>

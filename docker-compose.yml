@@ -1,0 +1,78 @@
+# ============================================
+# Docker Compose - Aura-Pet Full Stack
+# ============================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # Backend API
+  # ----------------------------------------
+  api:
+    build: ./backend
+    container_name: aura-pet-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aura_pet
+      - SQL_ECHO=false
+      - SECRET_KEY=aura-pet-secret-key-change-in-production
+    depends_on:
+      - db
+    networks:
+      - aura-network
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: aura-pet-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=aura_pet
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - aura-network
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # Redis (for caching & sessions)
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: aura-pet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aura-network
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # Frontend Web (Static)
+  # ----------------------------------------
+  frontend:
+    image: nginx:alpine
+    container_name: aura-pet-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    networks:
+      - aura-network
+    restart: unless-stopped
+
+networks:
+  aura-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

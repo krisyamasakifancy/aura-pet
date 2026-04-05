@@ -1,0 +1,52 @@
+# Aura-Pet Flutter App
+name: aura_pet
+description: 智能宠物养成 - BitePal Parity
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # HTTP & API
+  http: ^1.1.0
+  
+  # Local Storage
+  shared_preferences: ^2.2.2
+  
+  # Animations
+  flutter_animate: ^4.3.0
+  spring: ^2.0.1
+  
+  # Image & Camera
+  image_picker: ^1.0.4
+  cached_network_image: ^3.3.0
+  
+  # UI Components
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+  lottie: ^3.0.0
+  
+  # Utilities
+  intl: ^0.18.1
+  uuid: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/icons/
