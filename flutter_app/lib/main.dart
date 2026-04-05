@@ -11,29 +11,64 @@ import 'screens/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'services/quote_engine.dart';
+import 'services/monet_clock.dart';
+import 'services/haptic_audio.dart';
 import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Quote Engine
+  // Initialize engines
   await QuoteEngine.instance.init();
+  MonetClock.instance.start();
   
   // Lock orientation to portrait
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
-  // Set status bar style
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-    statusBarBrightness: Brightness.light,
-  ));
+  // Enable 120Hz rendering
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  
+  // Set preferred frame rate
+  final window = WidgetsBinding.instance.window;
+  window.setPreferredFrameRate(120);
+  
+  // Set status bar style (will be updated by MonetClock)
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   
   runApp(const AuraPetApp());
 }
 
-class AuraPetApp extends StatelessWidget {
+class AuraPetApp extends StatefulWidget {
   const AuraPetApp({super.key});
+
+  @override
+  State<AuraPetApp> createState() => _AuraPetAppState();
+}
+
+class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
+  MonetColors _currentColors = MonetColors.getCurrentColors();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Listen to MonetClock changes
+    MonetClock.instance.addListener(_onMonetClockChange);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    MonetClock.instance.removeListener(_onMonetClockChange);
+    super.dispose();
+  }
+
+  void _onMonetClockChange() {
+    setState(() {
+      _currentColors = MonetColors.getCurrentColors();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,47 +88,142 @@ class AuraPetApp extends StatelessWidget {
         
         // Achievements - progress, unlocks
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        
+        // MonetClock for time-aware theming
+        ChangeNotifierProvider.value(value: MonetClock.instance),
       ],
       child: MaterialApp(
         title: 'Aura-Pet',
         debugShowCheckedModeBanner: false,
-        theme: AuraPetTheme.lightTheme,
+        
+        // Time-aware Monet theme
+        theme: MonetThemeBuilder.build(_currentColors),
+        darkTheme: MonetThemeBuilder.build(MonetColors.night),
+        themeMode: ThemeMode.system,
         
         // Initial route based on onboarding status
         initialRoute: '/',
+        
+        // Silk-smooth page transitions
+        pageRouteBuilder: (settings, builder) {
+          return _SilkPageRoute(
+            settings: settings,
+            pageBuilder: builder,
+          );
+        },
         
         // Route generator
         onGenerateRoute: (settings) {
           switch (settings.name) {
             case '/':
-              return MaterialPageRoute(
-                builder: (_) => const SplashScreen(),
+              return _SilkPageRoute(
                 settings: settings,
+                pageBuilder: (_) => const SplashScreen(),
               );
             case '/onboarding':
-              return MaterialPageRoute(
-                builder: (_) => const OnboardingScreen(),
+              return _SilkPageRoute(
                 settings: settings,
+                pageBuilder: (_) => const OnboardingScreen(),
               );
             case '/auth/login':
-              return MaterialPageRoute(
-                builder: (_) => const LoginScreen(),
+              return _SilkPageRoute(
                 settings: settings,
+                pageBuilder: (_) => const LoginScreen(),
               );
             case '/main':
             case '/home':
-              return MaterialPageRoute(
-                builder: (_) => const MainNavigation(),
+              return _SilkPageRoute(
                 settings: settings,
+                pageBuilder: (_) => const MainNavigation(),
               );
             default:
-              return MaterialPageRoute(
-                builder: (_) => const MainNavigation(),
+              return _SilkPageRoute(
                 settings: settings,
+                pageBuilder: (_) => const MainNavigation(),
               );
           }
         },
+        
+        // Global error handling
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              // Enable high refresh rate hints
+              preferStationaryColors: true,
+            ),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       ),
     );
+  }
+}
+
+/// 丝绸般顺滑的页面过渡
+class _SilkPageRoute<T> extends PageRouteBuilder<T> {
+  final WidgetBuilder pageBuilder;
+
+  _SilkPageRoute({
+    required RouteSettings settings,
+    required this.pageBuilder,
+  }) : super(
+    settings: settings,
+    pageBuilder: (context, animation, secondaryAnimation) => 
+        pageBuilder(context),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // 丝绸顺滑曲线
+      const silkCurve = _SilkSlideTransitionCurve();
+      
+      // 主页面淡入 + 轻微上移
+      final fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.0, 0.7, curve: silkCurve),
+        ),
+      );
+
+      final slideUp = Tween<Offset>(
+        begin: const Offset(0, 0.05),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.0, 0.7, curve: silkCurve),
+        ),
+      );
+
+      // 次页面淡出
+      final fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.3, 1.0, curve: silkCurve),
+        ),
+      );
+
+      return SlideTransition(
+        position: slideUp,
+        child: FadeTransition(
+          opacity: fadeIn,
+          child: FadeTransition(
+            opacity: fadeOut,
+            child: child,
+          ),
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+  );
+}
+
+/// 丝绸滑动过渡曲线
+class _SilkSlideTransitionCurve extends Curve {
+  const _SilkSlideTransitionCurve();
+  
+  @override
+  double transformInternal(double t) {
+    // 快速启动 → 优雅减速
+    // 类似丝绸滑过手指的感觉
+    return t * t * (3 - 2 * t);
   }
 }
