@@ -130,6 +130,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return WelcomeScreen(onComplete: _nextPage);
                 case 27:
                   return HomeScreen(onComplete: _nextPage);
+                case 28:
+                  return NutrientsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -11099,6 +11101,690 @@ class _BottomNavItem extends StatelessWidget {
       ],
     );
   }
+}
+
+
+/// ============================================
+/// P29: Nutrients Breakdown Screen
+/// ============================================
+class NutrientsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const NutrientsScreen({super.key, required this.onComplete});
+
+  @override
+  State<NutrientsScreen> createState() => _NutrientsScreenState();
+}
+
+class _NutrientsScreenState extends State<NutrientsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late AnimationController _bearController;
+
+  // 营养数据 (模拟)
+  final int _remainingCalories = 1150;
+  final int _totalCarbs = 250; // grams
+  final int _consumedCarbs = 180;
+  final int _totalProtein = 150;
+  final int _consumedProtein = 85;
+  final int _totalFat = 65;
+  final int _consumedFat = 35;
+
+  // 展开状态
+  bool _carbsExpanded = false;
+  bool _proteinExpanded = false;
+  bool _fatExpanded = false;
+
+  // 计算表情状态
+  String get _bearMood {
+    final carbsRatio = _consumedCarbs / _totalCarbs;
+    final proteinRatio = _consumedProtein / _totalProtein;
+    final fatRatio = _consumedFat / _totalFat;
+
+    // 如果碳水超标，显示挠头
+    if (carbsRatio > 0.9) return 'confused';
+    // 如果蛋白质不足，显示担忧
+    if (proteinRatio < 0.3) return 'worried';
+    // 如果脂肪超标，显示惊讶
+    if (fatRatio > 0.9) return 'shocked';
+    // 正常状态开心
+    return 'happy';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..forward();
+
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Macronutrients',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              // 剩余卡路里卡片
+              AnimatedBuilder(
+                animation: _animController,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 0.8 + _animController.value * 0.2,
+                    child: Opacity(
+                      opacity: _animController.value,
+                      child: child,
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Remaining Calories',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$_remainingCalories',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 56,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'kcal today',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Canvas小熊 + 能量条
+              AnimatedBuilder(
+                animation: _bearController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, math.sin(_bearController.value * math.pi * 2) * 3),
+                    child: child,
+                  );
+                },
+                child: Row(
+                  children: [
+                    // Canvas小熊
+                    CustomPaint(
+                      size: const Size(80, 80),
+                      painter: _NutritionBearPainter(mood: _bearMood),
+                    ),
+                    const SizedBox(width: 16),
+                    // 能量条
+                    Expanded(
+                      child: Container(
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: _remainingCalories / 2000,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                _getMoodHint(),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 营养素进度条列表
+              _NutrientBar(
+                name: 'Carbs',
+                icon: '🍞',
+                consumed: _consumedCarbs,
+                total: _totalCarbs,
+                unit: 'g',
+                color: const Color(0xFFFFE066),
+                isExpanded: _carbsExpanded,
+                details: _getCarbsDetails(),
+                onToggle: () => setState(() => _carbsExpanded = !_carbsExpanded),
+                animProgress: _animController.value,
+              ),
+
+              const SizedBox(height: 16),
+
+              _NutrientBar(
+                name: 'Protein',
+                icon: '🥩',
+                consumed: _consumedProtein,
+                total: _totalProtein,
+                unit: 'g',
+                color: const Color(0xFFFF6B6B),
+                isExpanded: _proteinExpanded,
+                details: _getProteinDetails(),
+                onToggle: () => setState(() => _proteinExpanded = !_proteinExpanded),
+                animProgress: _animController.value,
+              ),
+
+              const SizedBox(height: 16),
+
+              _NutrientBar(
+                name: 'Fat',
+                icon: '🥑',
+                consumed: _consumedFat,
+                total: _totalFat,
+                unit: 'g',
+                color: const Color(0xFF4ECDC4),
+                isExpanded: _fatExpanded,
+                details: _getFatDetails(),
+                onToggle: () => setState(() => _fatExpanded = !_fatExpanded),
+                animProgress: _animController.value,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Continue胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getMoodHint() {
+    switch (_bearMood) {
+      case 'confused':
+        return 'Your carbs are a bit high today... 🤔';
+      case 'worried':
+        return 'You might need more protein! 💪';
+      case 'shocked':
+        return 'Fat intake is on the higher side... 😮';
+      default:
+        return 'Great balance today! Keep it up! 🎉';
+    }
+  }
+
+  List<_NutrientDetail> _getCarbsDetails() => [
+    _NutrientDetail(name: 'Whole grains', amount: '45g'),
+    _NutrientDetail(name: 'Fruits', amount: '30g'),
+    _NutrientDetail(name: 'Vegetables', amount: '25g'),
+    _NutrientDetail(name: 'Others', amount: '80g'),
+  ];
+
+  List<_NutrientDetail> _getProteinDetails() => [
+    _NutrientDetail(name: 'Chicken breast', amount: '30g'),
+    _NutrientDetail(name: 'Eggs', amount: '20g'),
+    _NutrientDetail(name: 'Fish', amount: '15g'),
+    _NutrientDetail(name: 'Plant-based', amount: '20g'),
+  ];
+
+  List<_NutrientDetail> _getFatDetails() => [
+    _NutrientDetail(name: 'Healthy fats', amount: '15g'),
+    _NutrientDetail(name: 'Dairy', amount: '10g'),
+    _NutrientDetail(name: 'Oils', amount: '10g'),
+  ];
+}
+
+/// 营养素详情数据
+class _NutrientDetail {
+  final String name;
+  final String amount;
+  _NutrientDetail({required this.name, required this.amount});
+}
+
+/// 营养素进度条
+class _NutrientBar extends StatelessWidget {
+  final String name;
+  final String icon;
+  final int consumed;
+  final int total;
+  final String unit;
+  final Color color;
+  final bool isExpanded;
+  final List<_NutrientDetail> details;
+  final VoidCallback onToggle;
+  final double animProgress;
+
+  const _NutrientBar({
+    required this.name,
+    required this.icon,
+    required this.consumed,
+    required this.total,
+    required this.unit,
+    required this.color,
+    required this.isExpanded,
+    required this.details,
+    required this.onToggle,
+    required this.animProgress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (consumed / total).clamp(0.0, 1.0);
+    final displayPercent = (percent * animProgress).clamp(0.0, 1.0);
+
+    return GestureDetector(
+      onTap: onToggle,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // 顶部行
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(icon, style: const TextStyle(fontSize: 22)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$consumed / $total$unit',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${(percent * 100).toInt()}%',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // 进度条
+            Container(
+              height: 10,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: displayPercent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+            ),
+
+            // 展开详情
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  ...details.map((d) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          d.name,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          d.amount,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 营养小熊 (根据表情状态变化)
+class _NutritionBearPainter extends CustomPainter {
+  final String mood;
+
+  _NutritionBearPainter({required this.mood});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 5;
+
+    // 头
+    canvas.drawCircle(c, r * 0.9, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.65), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.25, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.65), r * 0.14, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 1.0, height: r * 0.85),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 根据心情绘制不同表情
+    switch (mood) {
+      case 'confused':
+        _drawConfusedFace(canvas, c, r);
+        break;
+      case 'worried':
+        _drawWorriedFace(canvas, c, r);
+        break;
+      case 'shocked':
+        _drawShockedFace(canvas, c, r);
+        break;
+      default:
+        _drawHappyFace(canvas, c, r);
+    }
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.4, c.dy + r * 0.15), width: r * 0.2, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+  }
+
+  void _drawHappyFace(Canvas canvas, Offset c, double r) {
+    // 弯弯笑眼
+    _drawHappyEye(canvas, Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15);
+    _drawHappyEye(canvas, Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15);
+    // 开心嘴
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.2, c.dy + r * 0.28);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.45, c.dx + r * 0.2, c.dy + r * 0.28);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2.5..strokeCap = StrokeCap.round);
+  }
+
+  void _drawConfusedFace(Canvas canvas, Offset c, double r) {
+    // 挠头 - 一只手上抬
+    _drawScratchHand(canvas, Offset(c.dx - r * 1.0, c.dy - r * 0.2), r * 0.3);
+    // 大问号
+    _drawQuestionMark(canvas, Offset(c.dx + r * 0.5, c.dy - r * 1.1), r * 0.25);
+    // 大眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.16, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.16, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.08, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.16, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.16, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.08, Paint()..color = Colors.black);
+    // 困惑嘴
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.32), width: r * 0.15, height: r * 0.1), Paint()..color = const Color(0xFF8B4513));
+  }
+
+  void _drawWorriedFace(Canvas canvas, Offset c, double r) {
+    // 担忧眼神
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.02), r * 0.08, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.15, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.02), r * 0.08, Paint()..color = Colors.black);
+    // 皱眉
+    final browPath = Path();
+    browPath.moveTo(c.dx - r * 0.4, c.dy - r * 0.3);
+    browPath.quadraticBezierTo(c.dx - r * 0.28, c.dy - r * 0.38, c.dx - r * 0.15, c.dy - r * 0.32);
+    canvas.drawPath(browPath, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    final browPath2 = Path();
+    browPath2.moveTo(c.dx + r * 0.15, c.dy - r * 0.32);
+    browPath2.quadraticBezierTo(c.dx + r * 0.28, c.dy - r * 0.38, c.dx + r * 0.4, c.dy - r * 0.3);
+    canvas.drawPath(browPath2, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    // 担忧嘴
+    final frownPath = Path();
+    frownPath.moveTo(c.dx - r * 0.15, c.dy + r * 0.35);
+    frownPath.quadraticBezierTo(c.dx, c.dy + r * 0.28, c.dx + r * 0.15, c.dy + r * 0.35);
+    canvas.drawPath(frownPath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2);
+  }
+
+  void _drawShockedFace(Canvas canvas, Offset c, double r) {
+    // 惊讶大眼
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.2, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.2, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = Colors.black);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.2, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.2, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.12, Paint()..color = Colors.black);
+    // O型嘴
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.35), width: r * 0.2, height: r * 0.25), Paint()..color = const Color(0xFF8B4513));
+  }
+
+  void _drawHappyEye(Canvas canvas, Offset center, double size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    path.moveTo(center.dx - size, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - size * 0.8, center.dx + size, center.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawScratchHand(Canvas canvas, Offset center, double size) {
+    canvas.drawOval(Rect.fromCenter(center: center, width: size * 0.6, height: size * 0.8), Paint()..color = const Color(0xFFD4A574));
+    // 小爪痕
+    for (int i = -1; i <= 1; i++) {
+      canvas.drawLine(center + Offset(i * size * 0.15, -size * 0.4), center + Offset(i * size * 0.15, -size * 0.6), Paint()..color = const Color(0xFFE8C4A0)..strokeWidth = 2);
+    }
+  }
+
+  void _drawQuestionMark(Canvas canvas, Offset center, double size) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '?',
+        style: TextStyle(
+          fontSize: size * 2,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFFFFE066),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(covariant _NutritionBearPainter oldDelegate) =>
+      oldDelegate.mood != mood;
 }
 
 /// 占位页
