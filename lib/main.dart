@@ -164,6 +164,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return ProgressReportScreen(onComplete: _nextPage);
                 case 43:
                   return BadgeDetailScreen(onComplete: _nextPage);
+                case 44:
+                  return NotificationSettingsScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -19032,6 +19034,540 @@ class _ShareOption extends StatelessWidget {
       ],
     );
   }
+}
+
+
+/// ============================================
+/// P45: Notification Settings Screen
+/// ============================================
+class NotificationSettingsScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const NotificationSettingsScreen({super.key, required this.onComplete});
+
+  @override
+  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+}
+
+class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
+  bool _mealReminders = true;
+  bool _waterReminders = true;
+  bool _weightReminders = false;
+  bool _weeklyReport = true;
+
+  // 莫奈绿颜色
+  static const Color _monetGreen = Color(0xFF4ECDC4);
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _toggle(int index) {
+    setState(() {
+      switch (index) {
+        case 0:
+          _mealReminders = !_mealReminders;
+          break;
+        case 1:
+          _waterReminders = !_waterReminders;
+          break;
+        case 2:
+          _weightReminders = !_weightReminders;
+          break;
+        case 3:
+          _weeklyReport = !_weeklyReport;
+          break;
+      }
+    });
+    // SharedPreferences would save here
+    HapticFeedback.lightImpact();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // 标题
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Notifications &\nPreferences',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      height: 1.1,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _monetGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.notifications_active, color: _monetGreen, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${[_mealReminders, _waterReminders, _weightReminders, _weeklyReport].where((v) => v).length} active',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _monetGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 设置列表
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _NotificationItem(
+                        icon: '🍽️',
+                        title: 'Meal reminders',
+                        subtitle: 'Get notified before meal times',
+                        value: _mealReminders,
+                        onToggle: () => _toggle(0),
+                        color: const Color(0xFFFF6B6B),
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                      _NotificationItem(
+                        icon: '💧',
+                        title: 'Water reminders',
+                        subtitle: 'Stay hydrated throughout the day',
+                        value: _waterReminders,
+                        onToggle: () => _toggle(1),
+                        color: const Color(0xFF64B5F6),
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                      _NotificationItem(
+                        icon: '⚖️',
+                        title: 'Weight tracking reminder',
+                        subtitle: 'Daily weight check-in prompt',
+                        value: _weightReminders,
+                        onToggle: () => _toggle(2),
+                        color: _monetGreen,
+                      ),
+                      Divider(color: Colors.grey.shade200, height: 1, indent: 70),
+                      _NotificationItem(
+                        icon: '📊',
+                        title: 'Weekly report',
+                        subtitle: 'Summary of your progress',
+                        value: _weeklyReport,
+                        onToggle: () => _toggle(3),
+                        color: const Color(0xFFDDA0DD),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 小熊插画
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size(50, 50),
+                      painter: _NotificationBearPainter(),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Customize your\nnotification preferences',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Next胶囊按钮
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: GestureDetector(
+                  onTap: widget.onComplete,
+                  child: Container(
+                    height: 56,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Next',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 通知项
+class _NotificationItem extends StatefulWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final VoidCallback onToggle;
+  final Color color;
+
+  const _NotificationItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onToggle,
+    required this.color,
+  });
+
+  @override
+  State<_NotificationItem> createState() => _NotificationItemState();
+}
+
+class _NotificationItemState extends State<_NotificationItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onToggle();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    widget.icon,
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _MonetSwitch(value: widget.value, activeColor: widget.color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 莫奈风格开关
+class _MonetSwitch extends StatefulWidget {
+  final bool value;
+  final Color activeColor;
+
+  const _MonetSwitch({required this.value, required this.activeColor});
+
+  @override
+  State<_MonetSwitch> createState() => _MonetSwitchState();
+}
+
+class _MonetSwitchState extends State<_MonetSwitch>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _slideAnim;
+  late Animation<Color?> _colorAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _slideAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _colorAnim = ColorTween(
+      begin: Colors.grey.shade300,
+      end: widget.activeColor,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    
+    if (widget.value) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_MonetSwitch oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      if (widget.value) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: 52,
+          height: 30,
+          decoration: BoxDecoration(
+            color: _colorAnim.value,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 3 + _slideAnim.value * 22,
+                top: 3,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Canvas: 通知小熊
+class _NotificationBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+
+    // 头
+    canvas.drawCircle(c, r * 0.85, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.22, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.7, c.dy - r * 0.6), r * 0.12, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.15), width: r * 0.9, height: r * 0.8),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 眼睛
+    canvas.drawCircle(Offset(c.dx - r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx - r * 0.26, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(c.dx + r * 0.28, c.dy - r * 0.05), r * 0.1, Paint()..color = const Color(0xFF5D4037));
+    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy - r * 0.08), r * 0.04, Paint()..color = Colors.white);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.38, c.dy + r * 0.12), width: r * 0.18, height: r * 0.1), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 微笑
+    final smilePath = Path();
+    smilePath.moveTo(c.dx - r * 0.15, c.dy + r * 0.25);
+    smilePath.quadraticBezierTo(c.dx, c.dy + r * 0.4, c.dx + r * 0.15, c.dy + r * 0.25);
+    canvas.drawPath(smilePath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+
+    // 通知图标装饰
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 0.55), r * 0.15, Paint()..color = const Color(0xFFFF6B6B));
+    canvas.drawCircle(Offset(c.dx + r * 0.65, c.dy - r * 0.55), r * 0.08, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// 占位页
