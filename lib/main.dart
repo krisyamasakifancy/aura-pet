@@ -106,6 +106,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return GoalWeightScreen(onComplete: _nextPage);
                 case 15:
                   return ActivityScreen(onComplete: _nextPage);
+                case 16:
+                  return AnalyzingScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -6204,6 +6206,324 @@ class _ActivityCard extends StatelessWidget {
   }
 }
 
+
+
+/// ============================================
+/// P17: Analyzing Loading Screen
+/// ============================================
+class AnalyzingScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const AnalyzingScreen({super.key, required this.onComplete});
+
+  @override
+  State<AnalyzingScreen> createState() => _AnalyzingScreenState();
+}
+
+class _AnalyzingScreenState extends State<AnalyzingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _progressController;
+  late AnimationController _particleController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 进度动画 (2秒)
+    _progressController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..forward();
+
+    // 粒子动画
+    _particleController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+
+    // 2秒后自动切页
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        widget.onComplete();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    _particleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A1A2E), // 深蓝紫背景
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 莫奈色系粒子背景
+            AnimatedBuilder(
+              animation: _particleController,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: Size.infinite,
+                  painter: _MonetParticlesPainter(
+                    progress: _particleController.value,
+                  ),
+                );
+              },
+            ),
+
+            // 主内容
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Spacer(),
+
+                  // Canvas小熊
+                  AnimatedBuilder(
+                    animation: _particleController,
+                    builder: (context, child) {
+                      final floatY = math.sin(_particleController.value * math.pi * 2) * 5;
+                      return Transform.translate(
+                        offset: Offset(0, floatY),
+                        child: child,
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(150, 150),
+                      painter: _AnalyzingBearPainter(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // 标题
+                  AnimatedBuilder(
+                    animation: _progressController,
+                    builder: (context, child) {
+                      // 文字闪烁效果
+                      final opacity = 0.7 + _progressController.value * 0.3;
+                      return Opacity(
+                        opacity: opacity,
+                        child: child,
+                      );
+                    },
+                    child: const Text(
+                      'Analyzing your profile...',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 进度条
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 48),
+                    child: AnimatedBuilder(
+                      animation: _progressController,
+                      builder: (context, child) {
+                        return Column(
+                          children: [
+                            // 进度条背景
+                            Container(
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                    widthFactor: _progressController.value,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4ECDC4),
+                                            Color(0xFFFF6B6B),
+                                            Color(0xFFFFE66D),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // 百分比
+                            Text(
+                              '${(_progressController.value * 100).toInt()}%',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+
+                  const Spacer(flex: 2),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Canvas: 莫奈色系粒子
+class _MonetParticlesPainter extends CustomPainter {
+  final double progress;
+
+  _MonetParticlesPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 莫奈色系
+    final colors = [
+      const Color(0xFF4ECDC4), // 青色
+      const Color(0xFFFF6B6B), // 珊瑚红
+      const Color(0xFFFFE66D), // 金黄
+      const Color(0xFFA8E6CF), // 薄荷绿
+      const Color(0xFFDDA0DD), // 梅红
+      const Color(0xFF87CEEB), // 天蓝
+    ];
+
+    // 生成粒子
+    final random = math.Random(42);
+    for (int i = 0; i < 30; i++) {
+      final baseX = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
+      final particleSize = 5.0 + random.nextDouble() * 10;
+      final color = colors[i % colors.length];
+
+      // 浮动动画
+      final floatX = math.sin((progress * 2 + i) * math.pi) * 20;
+      final floatY = math.cos((progress * 2 + i * 0.5) * math.pi) * 30;
+
+      // 透明度变化
+      final opacity = 0.3 + 0.4 * math.sin((progress + i * 0.1) * math.pi * 2);
+
+      final paint = Paint()
+        ..color = color.withOpacity(opacity)
+        ..style = PaintingStyle.fill;
+
+      // 绘制圆形粒子
+      canvas.drawCircle(
+        Offset(baseX + floatX, baseY + floatY),
+        particleSize,
+        paint,
+      );
+
+      // 绘制数据流线条
+      if (i % 3 == 0) {
+        final linePaint = Paint()
+          ..color = color.withOpacity(opacity * 0.5)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
+
+        final path = Path();
+        final startX = baseX + floatX;
+        final startY = baseY + floatY;
+        path.moveTo(startX, startY);
+
+        for (int j = 1; j <= 3; j++) {
+          final px = startX + j * 15 + math.sin((progress * 3 + i + j) * math.pi) * 5;
+          final py = startY - j * 10 + math.cos((progress * 2 + i + j) * math.pi) * 8;
+          path.lineTo(px, py);
+        }
+
+        canvas.drawPath(path, linePaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MonetParticlesPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// Canvas: 分析中的小熊
+class _AnalyzingBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 15;
+
+    // 身体
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.9), width: r * 1.6, height: r * 1.2),
+      Paint()..color = const Color(0xFFD4A574),
+    );
+
+    // 头
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9),
+      Paint()..color = const Color(0xFFE8C4A0),
+    );
+
+    // 分析眼神 - 眯眼思考
+    _drawThinkingEye(canvas, Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.12);
+    _drawThinkingEye(canvas, Offset(c.dx + r * 0.3, c.dy - r * 0.1), r * 0.12);
+
+    // 思考嘴 (抿嘴)
+    canvas.drawLine(
+      Offset(c.dx - r * 0.1, c.dy + r * 0.4),
+      Offset(c.dx + r * 0.1, c.dy + r * 0.4),
+      Paint()
+        ..color = const Color(0xFF8B4513)
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.5));
+
+    // 思考手势 (托腮)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.85, c.dy + r * 0.3), width: r * 0.35, height: r * 0.4), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.85, c.dy + r * 0.3), width: r * 0.35, height: r * 0.4), Paint()..color = const Color(0xFFD4A574));
+  }
+
+  void _drawThinkingEye(Canvas canvas, Offset center, double radius) {
+    // 眯眼
+    final path = Path();
+    path.moveTo(center.dx - radius, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy - radius * 0.5, center.dx + radius, center.dy);
+    canvas.drawPath(path, Paint()..color = const Color(0xFF5D4037)..style = PaintingStyle.stroke..strokeWidth = 2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 /// 占位页
 /// ============================================
