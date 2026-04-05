@@ -122,6 +122,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return HabitAnalysisScreen(onComplete: _nextPage);
                 case 23:
                   return PremiumPaywallScreen(onComplete: _nextPage);
+                case 24:
+                  return PricingScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -9226,6 +9228,415 @@ class _ShimmerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ShimmerPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+
+/// ============================================
+/// P25: Pricing Screen
+/// ============================================
+class PricingScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const PricingScreen({super.key, required this.onComplete});
+
+  @override
+  State<PricingScreen> createState() => _PricingScreenState();
+}
+
+class _PricingScreenState extends State<PricingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  int _selectedPlan = 1; // 0 = Weekly, 1 = Yearly
+
+  final List<_PricingPlan> _plans = [
+    _PricingPlan(
+      id: 0,
+      name: 'Weekly',
+      price: '\$9.99',
+      period: '/week',
+      badge: null,
+      features: [
+        'Full app access',
+        'Diet tracking',
+        'Basic analytics',
+        'Email support',
+      ],
+    ),
+    _PricingPlan(
+      id: 1,
+      name: 'Yearly',
+      price: '\$49.99',
+      period: '/year',
+      badge: 'Most Popular',
+      features: [
+        'Everything in Weekly',
+        'Advanced analytics',
+        'Personalized plans',
+        'Priority support',
+        'Exclusive content',
+      ],
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _selectPlan(int index) {
+    if (_selectedPlan != index) {
+      setState(() {
+        _selectedPlan = index;
+      });
+      _animController.reset();
+      _animController.forward();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDF6FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              // 标题
+              const Text(
+                'Choose your\npath',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 36,
+                  height: 1.1,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Select the plan that works best for you',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 订阅选项卡
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _animController,
+                  builder: (context, child) {
+                    return Column(
+                      children: _plans.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final plan = entry.value;
+                        final isSelected = _selectedPlan == index;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => _selectPlan(index),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              margin: EdgeInsets.only(
+                                bottom: 16,
+                                left: isSelected ? 0 : 8,
+                                right: isSelected ? 0 : 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF4CAF50)
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isSelected
+                                        ? const Color(0xFF4CAF50).withOpacity(0.2)
+                                        : Colors.black.withOpacity(0.08),
+                                    blurRadius: isSelected ? 20 : 16,
+                                    offset: const Offset(0, 8),
+                                    spreadRadius: isSelected ? 2 : 0,
+                                  ),
+                                ],
+                              ),
+                              child: _PlanCard(
+                                plan: plan,
+                                isSelected: isSelected,
+                                animProgress: _animController.value,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 节省金额提示
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Container(
+                  key: ValueKey(_selectedPlan),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    _selectedPlan == 1 ? '🎉 You save \$1.99 per week!' : 'Upgrade to yearly for better savings',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: _selectedPlan == 1
+                          ? const Color(0xFF4CAF50)
+                          : Colors.grey.shade600,
+                      fontWeight: _selectedPlan == 1 ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Continue胶囊按钮
+              GestureDetector(
+                onTap: widget.onComplete,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 订阅计划数据
+class _PricingPlan {
+  final int id;
+  final String name;
+  final String price;
+  final String period;
+  final String? badge;
+  final List<String> features;
+
+  _PricingPlan({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.period,
+    required this.badge,
+    required this.features,
+  });
+}
+
+/// 计划卡片
+class _PlanCard extends StatelessWidget {
+  final _PricingPlan plan;
+  final bool isSelected;
+  final double animProgress;
+
+  const _PlanCard({
+    required this.plan,
+    required this.isSelected,
+    required this.animProgress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 顶部行: 名称 + Badge + 价格
+          Row(
+            children: [
+              // 选中指示器
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? const Color(0xFF4CAF50)
+                      : Colors.grey.shade300,
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey.shade400,
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    : null,
+              ),
+
+              const SizedBox(width: 12),
+
+              Text(
+                plan.name,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Badge
+              if (plan.badge != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    plan.badge!,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // 价格
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                plan.price,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  color: isSelected
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                plan.period,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // 功能列表
+          Expanded(
+            child: Column(
+              children: plan.features.asMap().entries.map((entry) {
+                final index = entry.key;
+                final feature = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: isSelected
+                            ? const Color(0xFF4CAF50)
+                            : Colors.grey.shade400,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        feature,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: isSelected
+                              ? const Color(0xFF2D3748)
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 占位页
