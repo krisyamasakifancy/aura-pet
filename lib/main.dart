@@ -12,6 +12,7 @@ class UserMetrics {
   static double? height;
   static double? weight;
   static int? age;
+  static double? goalWeight;
 }
 
 void main() {
@@ -100,6 +101,8 @@ class _OnboardingNavigatorState extends State<OnboardingNavigator> {
                   return HeightScreen(onComplete: _nextPage);
                 case 13:
                   return WeightScreen(onComplete: _nextPage);
+                case 14:
+                  return GoalWeightScreen(onComplete: _nextPage);
                 default:
                   return _PlaceholderPage(pageNumber: index + 1);
               }
@@ -5436,6 +5439,460 @@ class _ScaleBearPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// ============================================
+/// P15: Goal Weight Screen
+/// ============================================
+class GoalWeightScreen extends StatefulWidget {
+  final VoidCallback onComplete;
+  const GoalWeightScreen({super.key, required this.onComplete});
+
+  @override
+  State<GoalWeightScreen> createState() => _GoalWeightScreenState();
+}
+
+class _GoalWeightScreenState extends State<GoalWeightScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _bearController;
+  
+  double _goalWeight = 60.0;
+  final double _minWeight = 30.0;
+  final double _maxWeight = 200.0;
+  final double _precision = 0.5;
+
+  // 从UserMetrics获取当前体重
+  double get _currentWeight => UserMetrics.weight ?? 65.0;
+  double get _weightDiff => _currentWeight - _goalWeight;
+  String get _diffText {
+    final diff = _weightDiff;
+    if (diff > 0) {
+      return '目标：减重 ${diff.toStringAsFixed(1)} kg';
+    } else if (diff < 0) {
+      return '目标：增重 ${(-diff).toStringAsFixed(1)} kg';
+    } else {
+      return '目标：保持当前体重';
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 初始目标比当前少5kg
+    _goalWeight = (_currentWeight - 5.0).clamp(_minWeight, _maxWeight);
+    _goalWeight = double.parse(_goalWeight.toStringAsFixed(1));
+    
+    _bearController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _bearController.dispose();
+    super.dispose();
+  }
+
+  void _updateWeight(double delta) {
+    setState(() {
+      _goalWeight = (_goalWeight + delta).clamp(_minWeight, _maxWeight);
+      _goalWeight = double.parse(_goalWeight.toStringAsFixed(1));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF4A3728), // 暖色深棕背景
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              
+              // 标题
+              const Text(
+                "What's your\ngoal weight?",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  height: 1.1,
+                  color: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 自动计算的副标题
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _diffText,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFFFB74D), // 暖橙色
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // 主内容区
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Canvas期待小熊
+                    AnimatedBuilder(
+                      animation: _bearController,
+                      builder: (context, child) {
+                        final tilt = math.sin(_bearController.value * math.pi * 2) * 0.03;
+                        final bounce = math.sin(_bearController.value * math.pi * 4) * 3;
+                        return Transform.translate(
+                          offset: Offset(0, bounce),
+                          child: Transform.rotate(
+                            angle: tilt,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: CustomPaint(
+                        size: const Size(120, 120),
+                        painter: _HopefulBearPainter(),
+                      ),
+                    ),
+
+                    const SizedBox(width: 32),
+
+                    // 弧形转盘 (暖色调)
+                    GestureDetector(
+                      onPanUpdate: (details) {
+                        final delta = -details.delta.dy * 0.2;
+                        _updateWeight(delta);
+                      },
+                      child: CustomPaint(
+                        size: const Size(240, 240),
+                        painter: _GoalDialPainter(
+                          weight: _goalWeight,
+                          minWeight: _minWeight,
+                          maxWeight: _maxWeight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // +/- 按钮 + 体重显示
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _GoalWeightButton(
+                    icon: Icons.remove,
+                    onTap: () => _updateWeight(-_precision),
+                  ),
+                  const SizedBox(width: 24),
+                  
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${_goalWeight.toStringAsFixed(1)}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 48,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          'kg',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 24),
+                  
+                  _GoalWeightButton(
+                    icon: Icons.add,
+                    onTap: () => _updateWeight(_precision),
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              // Next胶囊按钮
+              GestureDetector(
+                onTap: () {
+                  UserMetrics.goalWeight = _goalWeight;
+                  widget.onComplete();
+                },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFFFF8A65), Color(0xFFFFB74D)]), // 暖色渐变
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: const Color(0xFFFF8A65).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))],
+                  ),
+                  child: const Center(child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Next', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  )),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 加减按钮
+class _GoalWeightButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _GoalWeightButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.5), width: 2),
+        ),
+        child: Icon(icon, color: const Color(0xFFFFB74D), size: 28),
+      ),
+    );
+  }
+}
+
+/// Canvas: 暖色转盘
+class _GoalDialPainter extends CustomPainter {
+  final double weight;
+  final double minWeight;
+  final double maxWeight;
+
+  _GoalDialPainter({required this.weight, required this.minWeight, required this.maxWeight});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+
+    // 外圈 (暖色调)
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = const Color(0xFF5D4037)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 刻度环
+    canvas.drawCircle(
+      center,
+      radius - 5,
+      Paint()
+        ..color = const Color(0xFF4A3728)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 绘制刻度
+    final totalRange = maxWeight - minWeight;
+    const angleRange = 270.0;
+    const startAngle = 135.0;
+
+    for (int i = 0; i <= (totalRange / 5).toInt(); i++) {
+      final tickWeight = minWeight + i * 5;
+      final progress = (tickWeight - minWeight) / totalRange;
+      final angle = (startAngle + progress * angleRange) * math.pi / 180;
+
+      final isMainTick = i % 2 == 0;
+      final tickLength = isMainTick ? 15.0 : 8.0;
+      final tickWidth = isMainTick ? 3.0 : 1.5;
+
+      final outerRadius = radius - 15;
+      final innerRadius = outerRadius - tickLength;
+
+      final outerX = center.dx + outerRadius * math.cos(angle);
+      final outerY = center.dy + outerRadius * math.sin(angle);
+      final innerX = center.dx + innerRadius * math.cos(angle);
+      final innerY = center.dy + innerRadius * math.sin(angle);
+
+      canvas.drawLine(
+        Offset(outerX, outerY),
+        Offset(innerX, innerY),
+        Paint()
+          ..color = isMainTick ? const Color(0xFFFFB74D) : const Color(0xFFBCAAA4)
+          ..strokeWidth = tickWidth
+          ..strokeCap = StrokeCap.round,
+      );
+
+      if (isMainTick) {
+        final textRadius = innerRadius - 15;
+        final textX = center.dx + textRadius * math.cos(angle);
+        final textY = center.dy + textRadius * math.sin(angle);
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: '${tickWeight.toInt()}',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              color: Color(0xFFBCAAA4),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        canvas.save();
+        canvas.translate(textX - textPainter.width / 2, textY - textPainter.height / 2);
+        canvas.rotate(angle + math.pi / 2);
+        textPainter.paint(canvas, Offset.zero);
+        canvas.restore();
+      }
+    }
+
+    // 中心圆
+    canvas.drawCircle(
+      center,
+      radius * 0.35,
+      Paint()
+        ..color = const Color(0xFF3E2723)
+        ..style = PaintingStyle.fill,
+    );
+
+    // 指针 (暖橙色)
+    final progress = (weight - minWeight) / totalRange;
+    final pointerAngle = (startAngle + progress * angleRange) * math.pi / 180;
+    final pointerRadius = radius - 30;
+
+    canvas.drawLine(
+      center,
+      Offset(
+        center.dx + pointerRadius * math.cos(pointerAngle),
+        center.dy + pointerRadius * math.sin(pointerAngle),
+      ),
+      Paint()
+        ..color = const Color(0xFFFFB74D)
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round,
+    );
+
+    canvas.drawCircle(
+      Offset(
+        center.dx + pointerRadius * math.cos(pointerAngle),
+        center.dy + pointerRadius * math.sin(pointerAngle),
+      ),
+      6,
+      Paint()..color = const Color(0xFFFF8A65),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoalDialPainter oldDelegate) =>
+      oldDelegate.weight != weight;
+}
+
+/// Canvas: 期待眼神小熊
+class _HopefulBearPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 10;
+
+    // 身体
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.8), width: r * 1.6, height: r * 1.2), Paint()..color = const Color(0xFFD4A574));
+
+    // 头
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFFD4A574));
+
+    // 耳朵
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx - r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.28, Paint()..color = const Color(0xFFD4A574));
+    canvas.drawCircle(Offset(c.dx + r * 0.75, c.dy - r * 0.75), r * 0.16, Paint()..color = const Color(0xFFE8C4A0));
+
+    // 面部
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.12), width: r * 1.1, height: r * 0.9), Paint()..color = const Color(0xFFE8C4A0));
+
+    // 期待眼睛 - 星星眼
+    _drawStarEye(canvas, Offset(c.dx - r * 0.3, c.dy - r * 0.1), r * 0.2);
+    _drawStarEye(canvas, Offset(c.dx + r * 0.3, c.dy - r * 0.1), r * 0.2);
+
+    // 期待嘴 (W型)
+    final mouthPath = Path();
+    mouthPath.moveTo(c.dx - r * 0.15, c.dy + r * 0.3);
+    mouthPath.quadraticBezierTo(c.dx - r * 0.08, c.dy + r * 0.45, c.dx, c.dy + r * 0.35);
+    mouthPath.quadraticBezierTo(c.dx + r * 0.08, c.dy + r * 0.45, c.dx + r * 0.15, c.dy + r * 0.3);
+    canvas.drawPath(mouthPath, Paint()..color = const Color(0xFF8B4513)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+
+    // 腮红
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.45, c.dy + r * 0.1), width: r * 0.25, height: r * 0.12), Paint()..color = const Color(0xFFFFCDD2).withOpacity(0.6));
+
+    // 手 (双手捧脸期待)
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx - r * 0.9, c.dy + r * 0.3), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+    canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + r * 0.9, c.dy + r * 0.3), width: r * 0.4, height: r * 0.25), Paint()..color = const Color(0xFFD4A574));
+  }
+
+  void _drawStarEye(Canvas canvas, Offset center, double size) {
+    // 星星眼 - 期待效果
+    canvas.drawCircle(center, size * 0.8, Paint()..color = Colors.white);
+    // 星星形状瞳孔
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 4 * math.pi / 5) - math.pi / 2;
+      final r = i % 2 == 0 ? size : size * 0.4;
+      final x = center.dx + r * math.cos(angle);
+      final y = center.dy + r * math.sin(angle);
+      if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, Paint()..color = const Color(0xFFFFD700));
+    // 高光
+    canvas.drawCircle(center + Offset(-size * 0.2, -size * 0.3), size * 0.2, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 
 /// 占位页
 /// ============================================
