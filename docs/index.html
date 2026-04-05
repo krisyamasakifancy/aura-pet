@@ -2,860 +2,571 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aura-Pet 可爱小熊版</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura-Pet - 健康伙伴</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #FF9B7B;
-            --primary-dark: #FF8255;
-            --secondary: #FFD93D;
-            --accent: #6BCB77;
-            --water: #4D96FF;
-            --danger: #FF6B6B;
-            --bg-cream: #FFF8F0;
-            --bg-pink: #FFE5E0;
-            --text-dark: #4A4A4A;
-            --text-light: #888888;
-            --white: #FFFFFF;
-            --shadow: rgba(255, 107, 107, 0.2);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-cream);
-            min-height: 100vh;
-            overflow-x: hidden;
-            color: var(--text-dark);
-        }
-        .app-container {
-            max-width: 430px;
-            margin: 0 auto;
-            min-height: 100vh;
-            background: var(--bg-cream);
-            position: relative;
-            overflow: hidden;
-        }
-        .floating-shapes { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-        .shape { position: absolute; border-radius: 50%; opacity: 0.3; animation: float 6s ease-in-out infinite; }
-        .shape-1 { width: 100px; height: 100px; background: var(--secondary); top: 10%; left: -20px; animation-delay: 0s; }
-        .shape-2 { width: 60px; height: 60px; background: var(--accent); top: 30%; right: -10px; animation-delay: 1s; }
-        .shape-3 { width: 80px; height: 80px; background: var(--water); top: 60%; left: -30px; animation-delay: 2s; }
-        .shape-4 { width: 50px; height: 50px; background: var(--primary); top: 80%; right: 10px; animation-delay: 3s; }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
-        .page { display: none; min-height: 100vh; position: relative; z-index: 1; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* ONBOARDING */
-        .onboarding-page { background: linear-gradient(180deg, #FFF0E8 0%, var(--bg-cream) 100%); padding: 60px 24px 100px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .progress-bar { width: 100%; max-width: 300px; height: 6px; background: rgba(255, 155, 123, 0.2); border-radius: 3px; margin-bottom: 40px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 3px; transition: width 0.5s ease; }
-        .onboarding-bear { width: 200px; height: 200px; margin-bottom: 30px; }
-        .onboarding-title { font-size: 26px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
-        .onboarding-subtitle { font-size: 15px; color: var(--text-light); margin-bottom: 40px; line-height: 1.5; }
-        .option-grid { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-        .option-card { background: var(--white); border-radius: 20px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.3s ease; border: 3px solid transparent; box-shadow: 0 4px 15px var(--shadow); }
-        .option-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
-        .option-card.selected { border-color: var(--primary); background: var(--bg-pink); }
-        .option-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-        .option-content { flex: 1; text-align: left; }
-        .option-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
-        .option-desc { font-size: 12px; color: var(--text-light); }
-        .btn-primary { width: 100%; max-width: 300px; padding: 16px; border-radius: 30px; border: none; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 30px; box-shadow: 0 8px 25px var(--shadow); transition: all 0.3s ease; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--shadow); }
-        
-        /* HOME */
-        .home-page { background: linear-gradient(180deg, #FFF5F0 0%, var(--bg-cream) 100%); padding-bottom: 100px; }
-        .home-header { padding: 50px 24px 30px; text-align: center; }
-        .home-greeting { font-size: 14px; color: var(--text-light); margin-bottom: 6px; }
-        .home-title { font-size: 24px; font-weight: 800; color: var(--text-dark); }
-        .pet-container { width: 260px; height: 260px; margin: 0 auto 30px; position: relative; }
-        .pet-canvas { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(145deg, #FFEEDD, #FFF5EE); box-shadow: 0 15px 40px var(--shadow), inset 0 -5px 20px rgba(255,155,123,0.1); }
-        .pet-status-badge { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--white); padding: 7px 18px; border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--primary); box-shadow: 0 4px 15px var(--shadow); display: flex; align-items: center; gap: 6px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+        :root { --primary: #FF9B7B; --primary-dark: #FF8255; --secondary: #FFD93D; --accent: #6BCB77; --water: #4D96FF; --danger: #FF6B6B; --bg-cream: #FFF8F0; --bg-pink: #FFE5E0; --bg-green: #E8F5E8; --bg-blue: #D4ECFF; --text-dark: #2D3436; --text-light: #636E72; --white: #FFFFFF; --shadow: rgba(255,107,107,0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg-cream); min-height: 100vh; color: var(--text-dark); }
+        .app { max-width: 430px; margin: 0 auto; min-height: 100vh; background: var(--bg-cream); position: relative; }
+        .page { display: none; min-height: 100vh; padding-bottom: 100px; }
+        .page.active { display: block; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes wave { 0%, 100% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+        @keyframes scan { 0%, 100% { top: 15%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 85%; opacity: 0; } }
+
+        .onboarding { background: linear-gradient(180deg,#FFF5F0 0%,var(--bg-cream) 100%); padding: 50px 24px 120px; text-align: center; }
+        .ob-progress { width: 100%; max-width: 300px; height: 5px; background: rgba(255,155,123,0.2); border-radius: 3px; margin: 0 auto 50px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg,#FF9B7B,#FF8255); border-radius: 3px; transition: width 0.5s; }
+        .ob-bear { width: 200px; height: 200px; margin: 0 auto 30px; animation: breathe 4s ease-in-out infinite; }
+        .ob-title { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
+        .ob-subtitle { font-size: 15px; color: var(--text-light); margin-bottom: 35px; }
+        .option-list { display: flex; flex-direction: column; gap: 12px; }
+        .option-card { background: var(--white); border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; border: 3px solid transparent; box-shadow: 0 4px 20px var(--shadow); transition: all 0.3s; }
+        .option-card.selected { border-color: var(--primary); background: var(--bg-pink); }
+        .option-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; background: linear-gradient(135deg,#FFE5D0,#FFD8C0); }
+        .option-content { text-align: left; }
+        .option-title { font-size: 16px; font-weight: 700; }
+        .option-desc { font-size: 13px; color: var(--text-light); }
+        .btn { display: block; width: 100%; max-width: 300px; margin: 30px auto 0; padding: 18px; border-radius: 30px; border: none; background: linear-gradient(135deg,#FF9B7B,#FF8255); color: white; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 30px var(--shadow); }
+
+        .home-header { padding: 50px 24px 20px; }
+        .greeting { font-size: 14px; color: var(--text-light); }
+        .home-title { font-size: 26px; font-weight: 800; }
+        .pet-area { padding: 10px 24px 30px; display: flex; flex-direction: column; align-items: center; }
+        .pet-wrapper { width: 260px; height: 260px; position: relative; }
+        .pet-canvas { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(145deg,#FFF8F0,#FFE8DC); box-shadow: 0 20px 60px var(--shadow); animation: breathe 4s ease-in-out infinite; }
+        .pet-level-badge { position: absolute; top: 10px; right: 10px; background: var(--secondary); color: #8B6914; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+        .pet-badge { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--white); padding: 8px 20px; border-radius: 25px; font-size: 13px; font-weight: 700; color: var(--primary); box-shadow: 0 4px 20px var(--shadow); display: flex; align-items: center; gap: 8px; }
+        .xp-bar { width: 200px; height: 6px; background: rgba(255,217,61,0.3); border-radius: 3px; margin-top: 15px; overflow: hidden; }
+        .xp-fill { height: 100%; background: var(--secondary); border-radius: 3px; transition: width 0.5s; }
         .stats-row { display: flex; gap: 10px; padding: 0 24px; margin-bottom: 20px; }
-        .stat-card { flex: 1; background: var(--white); border-radius: 18px; padding: 14px 10px; text-align: center; box-shadow: 0 4px 15px var(--shadow); }
-        .stat-icon { width: 40px; height: 40px; border-radius: 12px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .stat-icon.calories { background: linear-gradient(135deg, #FFE5D0, #FFDCC8); }
-        .stat-icon.water { background: linear-gradient(135deg, #D4ECFF, #B8DFFF); }
-        .stat-icon.hearts { background: linear-gradient(135deg, #FFD4D4, #FFBDBD); }
-        .stat-value { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 3px; }
-        .stat-label { font-size: 11px; color: var(--text-light); }
-        .section-title { font-size: 17px; font-weight: 700; color: var(--text-dark); padding: 0 24px; margin-bottom: 14px; }
-        .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 24px; }
-        .action-card { background: var(--white); border-radius: 18px; padding: 18px 14px; text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px var(--shadow); }
-        .action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px var(--shadow); }
-        .action-icon { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; }
-        .action-icon.log-food { background: linear-gradient(135deg, #FFE5D0, #FFDCC8); }
-        .action-icon.fasting { background: linear-gradient(135deg, #E8F5E8, #D4EDDA); }
-        .action-icon.water { background: linear-gradient(135deg, #D4ECFF, #B8DFFF); }
-        .action-icon.shop { background: linear-gradient(135deg, #FFF4D4, #FFE9B8); }
-        .action-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
-        .action-desc { font-size: 10px; color: var(--text-light); }
-        
-        /* FOOD LOG */
-        .food-log-page { background: var(--bg-cream); }
-        .page-header { padding: 50px 24px 20px; display: flex; align-items: center; gap: 14px; }
-        .back-btn { width: 42px; height: 42px; border-radius: 13px; background: var(--white); border: none; font-size: 18px; cursor: pointer; box-shadow: 0 4px 15px var(--shadow); }
-        .page-title { font-size: 20px; font-weight: 800; color: var(--text-dark); }
-        .camera-container { margin: 20px 24px; border-radius: 22px; overflow: hidden; background: #1A1A1A; aspect-ratio: 4/3; position: relative; cursor: pointer; }
-        .camera-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #2A2A2A, #1A1A1A); }
-        .camera-icon { font-size: 56px; margin-bottom: 14px; opacity: 0.8; }
-        .camera-text { color: white; font-size: 15px; opacity: 0.7; }
-        .scan-line { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scan 2s ease-in-out infinite; }
-        @keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
-        .food-result { margin: 20px 24px; background: var(--white); border-radius: 22px; padding: 22px; box-shadow: 0 4px 20px var(--shadow); display: none; }
-        .food-result.show { display: block; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .food-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-        .food-emoji { width: 55px; height: 55px; border-radius: 14px; background: var(--bg-pink); display: flex; align-items: center; justify-content: center; font-size: 28px; }
-        .food-info h3 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
-        .food-info p { font-size: 13px; color: var(--text-light); }
-        .nutrition-bars { display: flex; flex-direction: column; gap: 10px; }
-        .nutrition-item { display: flex; align-items: center; gap: 10px; }
-        .nutrition-label { width: 55px; font-size: 12px; font-weight: 600; color: var(--text-dark); }
-        .nutrition-bar-bg { flex: 1; height: 10px; background: #F0F0F0; border-radius: 5px; overflow: hidden; }
-        .nutrition-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
-        .nutrition-bar-fill.protein { background: var(--accent); }
-        .nutrition-bar-fill.carbs { background: var(--secondary); }
-        .nutrition-bar-fill.fat { background: var(--primary); }
-        .nutrition-value { width: 45px; font-size: 12px; font-weight: 700; color: var(--text-dark); text-align: right; }
-        .calorie-display { text-align: center; padding: 18px; background: linear-gradient(135deg, var(--bg-pink), #FFF5F0); border-radius: 14px; margin-top: 14px; }
-        .calorie-value { font-size: 38px; font-weight: 800; color: var(--primary); }
-        .calorie-unit { font-size: 15px; color: var(--text-light); }
-        
-        /* FASTING */
-        .fasting-page { background: linear-gradient(180deg, #E8F5E8 0%, var(--bg-cream) 100%); min-height: 100vh; }
-        .fasting-timer { text-align: center; padding: 50px 24px 30px; }
-        .timer-circle { width: 240px; height: 240px; margin: 0 auto 30px; position: relative; }
+        .stat-card { flex: 1; background: var(--white); border-radius: 20px; padding: 16px 10px; text-align: center; box-shadow: 0 4px 20px var(--shadow); cursor: pointer; }
+        .stat-icon { width: 44px; height: 44px; border-radius: 14px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .stat-value { font-size: 22px; font-weight: 900; }
+        .stat-label { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+        .section { padding: 0 24px; margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+        .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .action-item { background: var(--white); border-radius: 20px; padding: 16px 8px; text-align: center; cursor: pointer; box-shadow: 0 4px 15px var(--shadow); }
+        .action-icon { width: 50px; height: 50px; border-radius: 14px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .action-label { font-size: 11px; font-weight: 700; }
+        .progress-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .progress-card { background: var(--white); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 8px 30px var(--shadow); cursor: pointer; }
+        .progress-card-icon { width: 50px; height: 50px; border-radius: 14px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .progress-card-value { font-size: 28px; font-weight: 900; }
+        .progress-card-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+        .page-header { padding: 50px 24px 20px; display: flex; align-items: center; gap: 16px; }
+        .back-btn { width: 44px; height: 44px; border-radius: 14px; background: var(--white); border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 15px var(--shadow); }
+        .page-title { font-size: 22px; font-weight: 800; }
+        .camera-section { margin: 20px 24px; }
+        .camera-btn { width: 100%; aspect-ratio: 4/3; border-radius: 24px; background: linear-gradient(145deg,#2A2A2A,#1A1A1A); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        .camera-icon { font-size: 72px; margin-bottom: 16px; }
+        .camera-text { color: rgba(255,255,255,0.7); font-size: 16px; }
+        .scan-line { position: absolute; left: 20px; right: 20px; height: 3px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scan 2.5s ease-in-out infinite; }
+        .food-result { margin: 20px 24px; background: var(--white); border-radius: 24px; padding: 24px; box-shadow: 0 8px 30px var(--shadow); display: none; }
+        .food-result.show { display: block; }
+        .food-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+        .food-emoji-large { width: 64px; height: 64px; border-radius: 18px; background: var(--bg-pink); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .food-details h3 { font-size: 20px; font-weight: 800; }
+        .food-details p { font-size: 14px; color: var(--text-light); }
+        .calorie-hero { text-align: center; padding: 24px; background: linear-gradient(135deg,var(--bg-pink),#FFF5F0); border-radius: 20px; margin-bottom: 20px; }
+        .calorie-number { font-size: 56px; font-weight: 900; color: var(--primary); }
+        .calorie-unit { font-size: 18px; color: var(--text-light); }
+        .calorie-goal { font-size: 14px; color: var(--text-light); margin-top: 8px; }
+        .aura-score { display: inline-block; padding: 8px 16px; background: var(--accent); color: white; border-radius: 20px; font-size: 14px; font-weight: 700; margin-top: 12px; }
+        .nutrition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .nutrition-item { text-align: center; padding: 12px; background: var(--bg-cream); border-radius: 14px; }
+        .nutrition-value { font-size: 22px; font-weight: 900; }
+        .nutrition-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+        .pet-reaction { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-green); border-radius: 16px; margin-top: 16px; }
+        .pet-reaction-emoji { font-size: 32px; }
+        .pet-reaction-text { flex: 1; font-size: 14px; }
+        .pet-reaction-coins { font-size: 16px; font-weight: 800; color: #8B6914; }
+
+        .fasting { background: linear-gradient(180deg,var(--bg-green) 0%,var(--bg-cream) 100%); }
+        .timer-hero { text-align: center; padding: 40px 24px; }
+        .timer-circle { width: 260px; height: 260px; margin: 0 auto 30px; position: relative; }
         .timer-circle canvas { width: 100%; height: 100%; }
-        .timer-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-        .timer-time { font-size: 42px; font-weight: 800; color: var(--text-dark); }
-        .timer-label { font-size: 13px; color: var(--text-light); }
-        .fasting-status { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: var(--white); border-radius: 25px; font-size: 13px; font-weight: 700; color: var(--accent); box-shadow: 0 4px 15px rgba(107, 203, 119, 0.3); }
-        .fasting-options { padding: 0 24px; }
-        .fasting-option-card { background: var(--white); border-radius: 18px; padding: 18px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; border: 3px solid transparent; box-shadow: 0 4px 15px var(--shadow); }
-        .fasting-option-card.selected { border-color: var(--accent); }
-        .fasting-option-info { display: flex; align-items: center; gap: 14px; }
-        .fasting-option-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #E8F5E8, #D4EDDA); display: flex; align-items: center; justify-content: center; font-size: 22px; }
-        .fasting-option-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
-        .fasting-option-desc { font-size: 11px; color: var(--text-light); }
-        .start-fasting-btn { width: 100%; padding: 16px; border-radius: 30px; border: none; background: linear-gradient(135deg, var(--accent), #5BBF68); color: white; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 24px; box-shadow: 0 8px 25px rgba(107, 203, 119, 0.3); }
-        
-        /* WATER */
-        .water-page { background: linear-gradient(180deg, #D4ECFF 0%, var(--bg-cream) 100%); }
-        .water-content { text-align: center; padding: 30px 24px; }
-        .water-cup { width: 160px; height: 220px; margin: 0 auto 24px; position: relative; }
-        .water-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, #7BC4FF, var(--water)); border-radius: 0 0 30px 30px; transition: height 0.5s ease; }
-        .water-cup-outline { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: 4px solid var(--water); border-radius: 18px 18px 38px 38px; background: transparent; }
-        .water-stats { font-size: 56px; font-weight: 800; color: var(--water); margin-bottom: 6px; }
-        .water-target { font-size: 14px; color: var(--text-light); margin-bottom: 24px; }
-        .water-buttons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .water-btn { padding: 12px 24px; border-radius: 25px; border: 3px solid var(--water); background: var(--white); color: var(--water); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
-        .water-btn:hover, .water-btn.active { background: var(--water); color: white; }
-        
-        /* SHOP */
-        .shop-page { background: var(--bg-cream); padding-bottom: 100px; }
-        .shop-header { padding: 50px 24px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .shop-coins { display: flex; align-items: center; gap: 7px; background: var(--white); padding: 8px 16px; border-radius: 25px; box-shadow: 0 4px 15px var(--shadow); }
-        .coin-icon { font-size: 18px; }
-        .coin-value { font-size: 17px; font-weight: 800; color: var(--secondary); }
-        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 0 24px; }
-        .shop-item { background: var(--white); border-radius: 22px; padding: 18px 14px; text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px var(--shadow); position: relative; }
-        .shop-item:hover { transform: translateY(-3px); box-shadow: 0 8px 25px var(--shadow); }
-        .shop-item.owned { background: linear-gradient(135deg, #FFF5E8, #FFF0E6); }
-        .shop-item-badge { position: absolute; top: -7px; right: -7px; background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 11px; }
-        .item-preview { width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 18px; background: var(--bg-pink); display: flex; align-items: center; justify-content: center; font-size: 36px; }
-        .item-name { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 7px; }
-        .item-price { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: linear-gradient(135deg, var(--secondary), #FFE066); border-radius: 13px; font-size: 13px; font-weight: 700; color: #8B6914; }
-        
-        /* SUBSCRIPTION */
-        .sub-page { background: linear-gradient(180deg, var(--primary) 0%, #FF8255 100%); min-height: 100vh; padding: 60px 24px 120px; }
-        .sub-close { position: absolute; top: 50px; right: 24px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.3); border: none; color: white; font-size: 18px; cursor: pointer; }
-        .sub-header { text-align: center; color: white; margin-bottom: 35px; }
-        .sub-bear { width: 110px; height: 110px; margin: 0 auto 18px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 54px; }
-        .sub-title { font-size: 28px; font-weight: 800; margin-bottom: 7px; }
-        .sub-highlight { font-size: 16px; opacity: 0.9; }
-        .sub-card { background: var(--white); border-radius: 26px; padding: 26px 22px; margin-bottom: 18px; }
-        .sub-plan-name { display: inline-block; background: linear-gradient(135deg, var(--secondary), #FFE066); color: #8B6914; font-size: 11px; font-weight: 700; padding: 5px 13px; border-radius: 18px; margin-bottom: 10px; }
-        .sub-price { font-size: 38px; font-weight: 800; color: var(--text-dark); }
-        .sub-price span { font-size: 14px; font-weight: 600; color: var(--text-light); }
-        .sub-features { margin: 18px 0; }
-        .sub-feature { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid #F0F0F0; }
+        .timer-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+        .timer-time { font-size: 48px; font-weight: 900; font-variant-numeric: tabular-nums; }
+        .timer-label { font-size: 14px; color: var(--text-light); }
+        .fasting-status { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--white); border-radius: 25px; font-size: 14px; font-weight: 700; color: var(--accent); box-shadow: 0 4px 20px rgba(107,203,119,0.3); }
+        .fasting-plans { padding: 0 24px; }
+        .fasting-plan { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 3px solid transparent; box-shadow: 0 4px 20px var(--shadow); }
+        .fasting-plan.selected { border-color: var(--accent); background: var(--bg-green); }
+        .fasting-plan-info { display: flex; align-items: center; gap: 14px; }
+        .fasting-plan-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-green); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .fasting-plan-title { font-size: 16px; font-weight: 800; }
+        .fasting-plan-desc { font-size: 12px; color: var(--text-light); }
+        .fasting-btn { display: block; width: calc(100% - 48px); margin: 24px; padding: 18px; border-radius: 30px; border: none; background: linear-gradient(135deg,#6BCB77,#5BBF68); color: white; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 30px rgba(107,203,119,0.4); }
+
+        .water { background: linear-gradient(180deg,var(--bg-blue) 0%,var(--bg-cream) 100%); }
+        .water-content { text-align: center; padding: 40px 24px; }
+        .water-cup-visual { width: 160px; height: 220px; margin: 0 auto 30px; position: relative; }
+        .water-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg,#7BC4FF,var(--water)); border-radius: 0 0 30px 30px; transition: height 0.8s; }
+        .water-cup-border { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: 5px solid var(--water); border-radius: 20px 20px 40px 40px; background: transparent; }
+        .water-waves { position: absolute; top: -10px; left: 0; right: 0; height: 20px; background: linear-gradient(180deg,rgba(255,255,255,0.3),transparent); border-radius: 50%; animation: wave 2s ease-in-out infinite; }
+        .water-big-number { font-size: 72px; font-weight: 900; color: var(--water); }
+        .water-target-text { font-size: 18px; color: var(--text-light); margin-bottom: 30px; }
+        .water-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .water-add-btn { padding: 14px 28px; border-radius: 25px; border: 3px solid var(--water); background: var(--white); color: var(--water); font-size: 15px; font-weight: 700; cursor: pointer; }
+        .water-add-btn:hover { background: var(--water); color: white; }
+
+        .bmi-display { margin: 20px 24px; background: var(--white); border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 8px 30px var(--shadow); }
+        .bmi-title { font-size: 14px; color: var(--text-light); margin-bottom: 8px; }
+        .bmi-value { font-size: 56px; font-weight: 900; color: var(--primary); }
+        .bmi-category { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; margin-top: 8px; background: var(--bg-green); color: var(--accent); }
+        .bmi-scale { margin: 20px 0; height: 12px; border-radius: 6px; background: linear-gradient(90deg,#3498DB 0%,#2ECC71 30%,#F1C40F 60%,#E74C3C 100%); }
+        .bmi-marker { width: 24px; height: 24px; background: var(--white); border: 4px solid var(--primary); border-radius: 50%; display: inline-block; transform: translateY(-6px) translateX(-50%); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .bmi-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-light); }
+        .weight-chart { margin: 20px 24px; background: var(--white); border-radius: 24px; padding: 20px; box-shadow: 0 8px 30px var(--shadow); }
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+        .chart-title { font-size: 16px; font-weight: 700; }
+        .chart-period { font-size: 13px; color: var(--text-light); }
+        .chart-placeholder { height: 120px; display: flex; align-items: flex-end; justify-content: space-around; padding-top: 20px; border-bottom: 2px solid #F0F0F0; }
+        .chart-bar { width: 30px; background: linear-gradient(180deg,var(--primary),var(--bg-pink)); border-radius: 6px 6px 0 0; }
+        .weight-log-btn { display: block; width: calc(100% - 48px); margin: 20px 24px; padding: 16px; border-radius: 20px; border: 2px dashed var(--primary); background: transparent; color: var(--primary); font-size: 15px; font-weight: 700; cursor: pointer; }
+
+        .shop-header { padding: 50px 24px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .shop-coins { display: flex; align-items: center; gap: 8px; background: var(--white); padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 15px var(--shadow); }
+        .coin-icon { font-size: 20px; }
+        .coin-value { font-size: 18px; font-weight: 900; color: #8B6914; }
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 0 24px; }
+        .shop-item { background: var(--white); border-radius: 24px; padding: 20px 16px; text-align: center; cursor: pointer; box-shadow: 0 4px 20px var(--shadow); position: relative; }
+        .shop-item.owned { background: linear-gradient(135deg,#FFF5E8,#FFF0E0); }
+        .shop-badge { position: absolute; top: -8px; right: -8px; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; background: var(--danger); color: white; }
+        .shop-badge.new { background: var(--water); }
+        .shop-badge.owned { background: var(--accent); }
+        .item-preview { width: 80px; height: 80px; margin: 0 auto 12px; border-radius: 20px; background: var(--bg-pink); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+        .item-name { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+        .item-price { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; background: linear-gradient(135deg,var(--secondary),#FFE066); border-radius: 15px; font-size: 14px; font-weight: 800; color: #8B6914; }
+
+        .subscription { background: linear-gradient(180deg,var(--primary) 0%,#FF8255 100%); min-height: 100vh; padding: 50px 24px 120px; }
+        .sub-close { position: absolute; top: 50px; right: 24px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 20px; cursor: pointer; }
+        .sub-header { text-align: center; color: white; margin-bottom: 30px; }
+        .sub-bear-icon { width: 100px; height: 100px; margin: 0 auto 16px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+        .sub-title { font-size: 28px; font-weight: 900; }
+        .sub-subtitle { font-size: 16px; opacity: 0.9; margin-top: 8px; }
+        .sub-card { background: var(--white); border-radius: 28px; padding: 28px 24px; margin-bottom: 20px; }
+        .sub-plan-tag { display: inline-block; background: linear-gradient(135deg,var(--secondary),#FFE066); color: #8B6914; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; }
+        .sub-price { font-size: 42px; font-weight: 900; }
+        .sub-price span { font-size: 16px; font-weight: 600; color: var(--text-light); }
+        .sub-features { margin: 20px 0; }
+        .sub-feature { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
         .sub-feature:last-child { border-bottom: none; }
-        .feature-check { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; }
-        .feature-text { flex: 1; font-size: 13px; color: var(--text-dark); }
-        .sub-btn { width: 100%; padding: 16px; border-radius: 30px; border: none; background: var(--text-dark); color: white; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 18px; }
-        .sub-footer { text-align: center; color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 18px; }
-        
-        /* BOTTOM NAV */
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--white); padding: 10px 16px 28px; display: flex; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); border-radius: 24px 24px 0 0; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 7px 14px; border-radius: 14px; transition: all 0.3s ease; }
+        .feature-check-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .feature-text { flex: 1; font-size: 14px; }
+        .sub-main-btn { width: 100%; padding: 18px; border-radius: 30px; border: none; background: var(--text-dark); color: white; font-size: 17px; font-weight: 700; cursor: pointer; }
+        .sub-footer { text-align: center; color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 20px; }
+
+        .progress-hero { background: linear-gradient(135deg,var(--primary),var(--primary-dark)); color: white; padding: 40px 24px 60px; border-radius: 0 0 40px 40px; text-align: center; }
+        .progress-main-number { font-size: 64px; font-weight: 900; }
+        .progress-sub { font-size: 16px; opacity: 0.9; margin-top: 8px; }
+        .progress-cards-advanced { margin: -40px 24px 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; position: relative; z-index: 1; }
+        .achievements-section { padding: 0 24px; }
+        .achievements-list { background: var(--white); border-radius: 20px; padding: 16px; box-shadow: 0 4px 20px var(--shadow); }
+        .achievement-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
+        .achievement-item:last-child { border-bottom: none; }
+        .achievement-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .achievement-name { font-size: 14px; font-weight: 700; }
+        .achievement-desc { font-size: 12px; color: var(--text-light); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--white); padding: 10px 16px 30px; display: flex; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); border-radius: 24px 24px 0 0; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 8px 16px; border-radius: 16px; }
         .nav-item.active { background: var(--bg-pink); }
-        .nav-icon { font-size: 22px; }
-        .nav-label { font-size: 10px; font-weight: 600; color: var(--text-light); }
+        .nav-icon { font-size: 24px; }
+        .nav-label { font-size: 10px; font-weight: 700; color: var(--text-light); }
         .nav-item.active .nav-label { color: var(--primary); }
-        
-        /* TOAST */
-        .toast { position: fixed; top: 90px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--text-dark); color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; z-index: 300; display: flex; align-items: center; gap: 9px; }
+
+        .toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--text-dark); color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 700; opacity: 0; transition: all 0.3s; z-index: 300; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-        </div>
-
+    <div class="app">
         <!-- ONBOARDING -->
-        <div class="page onboarding-page active" id="onboarding">
-            <div class="progress-bar">
-                <div class="progress-fill" id="onboarding-progress" style="width: 25%"></div>
-            </div>
-            <svg class="onboarding-bear" viewBox="0 0 200 200">
+        <div class="page onboarding active" id="page-onboarding">
+            <div class="ob-progress"><div class="progress-fill" id="ob-progress" style="width:10%"></div></div>
+            <svg class="ob-bear" viewBox="0 0 200 200">
                 <circle cx="100" cy="110" r="70" fill="#D4A574"/>
-                <circle cx="45" cy="55" r="28" fill="#D4A574"/>
-                <circle cx="155" cy="55" r="28" fill="#D4A574"/>
-                <circle cx="45" cy="55" r="18" fill="#C49A6C"/>
-                <circle cx="155" cy="55" r="18" fill="#C49A6C"/>
-                <ellipse cx="100" cy="130" rx="40" ry="35" fill="#F5E6D3"/>
-                <circle cx="75" cy="100" r="10" fill="#4A4A4A"/>
-                <circle cx="125" cy="100" r="10" fill="#4A4A4A"/>
-                <circle cx="78" cy="97" r="4" fill="white"/>
-                <circle cx="128" cy="97" r="4" fill="white"/>
-                <ellipse cx="100" cy="120" rx="12" ry="8" fill="#4A4A4A"/>
-                <path d="M 90 135 Q 100 145 110 135" stroke="#4A4A4A" stroke-width="3" fill="none" stroke-linecap="round"/>
-                <circle cx="60" cy="125" r="12" fill="#FFB5B5" opacity="0.5"/>
-                <circle cx="140" cy="125" r="12" fill="#FFB5B5" opacity="0.5"/>
+                <circle cx="40" cy="50" r="28" fill="#D4A574"/><circle cx="160" cy="50" r="28" fill="#D4A574"/>
+                <circle cx="40" cy="50" r="18" fill="#C49A6C"/><circle cx="160" cy="50" r="18" fill="#C49A6C"/>
+                <ellipse cx="100" cy="130" rx="42" ry="36" fill="#F5E6D3"/>
+                <circle cx="72" cy="100" r="12" fill="#4A4A4A"/><circle cx="128" cy="100" r="12" fill="#4A4A4A"/>
+                <circle cx="76" cy="96" r="5" fill="white"/><circle cx="132" cy="96" r="5" fill="white"/>
+                <ellipse cx="100" cy="122" rx="14" ry="10" fill="#4A4A4A"/>
+                <path d="M 88 138 Q 100 150 112 138" stroke="#4A4A4A" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <circle cx="55" cy="125" r="14" fill="#FFB5B5" opacity="0.5"/><circle cx="145" cy="125" r="14" fill="#FFB5B5" opacity="0.5"/>
             </svg>
-            <h1 class="onboarding-title" id="onboarding-title">你好！我是小熊 🐻</h1>
-            <p class="onboarding-subtitle" id="onboarding-subtitle">你的健康伙伴今天也很期待见到你！</p>
-            <div class="option-grid" id="onboarding-options"></div>
-            <button class="btn-primary" id="onboarding-btn" onclick="nextOnboarding()">开始旅程 🐻</button>
+            <h1 class="ob-title" id="ob-title">你好！我是小熊</h1>
+            <p class="ob-subtitle" id="ob-subtitle">你的健康伙伴今天也很期待见到你！</p>
+            <div class="option-list" id="ob-options"></div>
+            <button class="btn" onclick="obNext()">继续</button>
         </div>
 
-        <!-- HOME PAGE -->
-        <div class="page home-page" id="home">
+        <!-- HOME -->
+        <div class="page" id="page-home">
             <div class="home-header">
-                <p class="home-greeting" id="greeting">早上好呀！</p>
+                <p class="greeting" id="greeting-text">早上好呀！</p>
                 <h1 class="home-title">今天感觉怎么样？</h1>
             </div>
-            <div class="pet-container">
-                <canvas class="pet-canvas" id="petCanvas" width="260" height="260"></canvas>
-                <div class="pet-status-badge">
-                    <span class="status-dot"></span>
-                    <span id="pet-status">开心快乐</span>
+            <div class="pet-area">
+                <div class="pet-wrapper">
+                    <canvas class="pet-canvas" id="petCanvas" width="260" height="260"></canvas>
+                    <div class="pet-level-badge" id="pet-level">Lv.3</div>
+                    <div class="pet-badge"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2s infinite"></span><span id="pet-status-text">开心快乐</span></div>
                 </div>
+                <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:65%"></div></div>
             </div>
             <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon calories">🔥</div>
-                    <div class="stat-value" id="calorie-progress">0</div>
-                    <div class="stat-label">今日卡路里</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon water">💧</div>
-                    <div class="stat-value" id="water-progress">2/8</div>
-                    <div class="stat-label">喝水量</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon hearts">❤️</div>
-                    <div class="stat-value" id="hearts-count">0</div>
-                    <div class="stat-label">爱心</div>
+                <div class="stat-card" onclick="showPage('food')"><div class="stat-icon" style="background:linear-gradient(135deg,#FFE5D0,#FFD8C0)">🔥</div><div class="stat-value" id="calorie-display">1,245</div><div class="stat-label">卡路里</div></div>
+                <div class="stat-card" onclick="showPage('water')"><div class="stat-icon" style="background:linear-gradient(135deg,#D4ECFF,#B8DFFF)">💧</div><div class="stat-value" id="water-display">5/8</div><div class="stat-label">喝水量</div></div>
+                <div class="stat-card"><div class="stat-icon" style="background:linear-gradient(135deg,#E8F5E8,#D4EDDA)">💪</div><div class="stat-value" id="protein-display">65g</div><div class="stat-label">蛋白质</div></div>
+            </div>
+            <div class="section">
+                <div class="section-title">快捷操作</div>
+                <div class="action-grid">
+                    <div class="action-item" onclick="showPage('food')"><div class="action-icon" style="background:linear-gradient(135deg,#FFE5D0,#FFD8C0)">📸</div><div class="action-label">拍照</div></div>
+                    <div class="action-item" onclick="showPage('fasting')"><div class="action-icon" style="background:linear-gradient(135deg,#E8F5E8,#D4EDDA)">⏰</div><div class="action-label">禁食</div></div>
+                    <div class="action-item" onclick="showPage('water')"><div class="action-icon" style="background:linear-gradient(135deg,#D4ECFF,#B8DFFF)">🚰</div><div class="action-label">喝水</div></div>
+                    <div class="action-item" onclick="showPage('weight')"><div class="action-icon" style="background:linear-gradient(135deg,#F4E8FF,#E8D4FF)">⚖️</div><div class="action-label">体重</div></div>
                 </div>
             </div>
-            <h2 class="section-title">快捷操作</h2>
-            <div class="action-grid">
-                <div class="action-card" onclick="showPage('food')">
-                    <div class="action-icon log-food">📸</div>
-                    <div class="action-title">记录饮食</div>
-                    <div class="action-desc">拍照识别食物</div>
-                </div>
-                <div class="action-card" onclick="showPage('fasting')">
-                    <div class="action-icon fasting">⏰</div>
-                    <div class="action-title">禁食计时</div>
-                    <div class="action-desc">开启轻断食</div>
-                </div>
-                <div class="action-card" onclick="showPage('water')">
-                    <div class="action-icon water">🚰</div>
-                    <div class="action-title">喝水追踪</div>
-                    <div class="action-desc">记录饮水量</div>
-                </div>
-                <div class="action-card" onclick="showPage('shop')">
-                    <div class="action-icon shop">🛒</div>
-                    <div class="action-title">小熊商店</div>
-                    <div class="action-desc">用金币兑换</div>
+            <div class="section">
+                <div class="section-title">今日进度</div>
+                <div class="progress-cards">
+                    <div class="progress-card" onclick="showPage('progress')"><div class="progress-card-icon" style="background:var(--bg-pink)">🎯</div><div class="progress-card-value" id="goal-progress">72%</div><div class="progress-card-label">目标完成</div></div>
+                    <div class="progress-card" onclick="showPage('shop')"><div class="progress-card-icon" style="background:linear-gradient(135deg,var(--secondary),#FFE066)">🪙</div><div class="progress-card-value" id="coins-display">280</div><div class="progress-card-label">金币</div></div>
                 </div>
             </div>
         </div>
 
-        <!-- FOOD LOG -->
-        <div class="page food-log-page" id="food">
-            <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">←</button>
-                <h1 class="page-title">记录饮食</h1>
-            </div>
-            <div class="camera-container" onclick="simulateFoodScan()">
-                <div class="camera-placeholder">
-                    <div class="camera-icon">📸</div>
-                    <div class="camera-text">点击拍摄食物</div>
-                </div>
-                <div class="scan-line"></div>
-            </div>
+        <!-- FOOD -->
+        <div class="page" id="page-food">
+            <div class="page-header"><button class="back-btn" onclick="showPage('home')">←</button><h1 class="page-title">记录饮食</h1></div>
+            <div class="camera-section" onclick="simulateFoodScan()"><div class="camera-btn"><div class="camera-icon">📸</div><div class="camera-text">点击拍摄食物</div><div class="scan-line"></div></div></div>
             <div class="food-result" id="food-result">
-                <div class="food-header">
-                    <div class="food-emoji" id="food-emoji">🍎</div>
-                    <div class="food-info">
-                        <h3 id="food-name">苹果</h3>
-                        <p id="food-portion">1个中等大小</p>
-                    </div>
-                </div>
-                <div class="nutrition-bars">
-                    <div class="nutrition-item">
-                        <span class="nutrition-label">蛋白质</span>
-                        <div class="nutrition-bar-bg"><div class="nutrition-bar-fill protein" id="protein-bar" style="width:0%"></div></div>
-                        <span class="nutrition-value" id="protein-value">0g</span>
-                    </div>
-                    <div class="nutrition-item">
-                        <span class="nutrition-label">碳水</span>
-                        <div class="nutrition-bar-bg"><div class="nutrition-bar-fill carbs" id="carbs-bar" style="width:0%"></div></div>
-                        <span class="nutrition-value" id="carbs-value">0g</span>
-                    </div>
-                    <div class="nutrition-item">
-                        <span class="nutrition-label">脂肪</span>
-                        <div class="nutrition-bar-bg"><div class="nutrition-bar-fill fat" id="fat-bar" style="width:0%"></div></div>
-                        <span class="nutrition-value" id="fat-value">0g</span>
-                    </div>
-                </div>
-                <div class="calorie-display">
-                    <span class="calorie-value" id="calorie-value">52</span>
-                    <span class="calorie-unit"> kcal</span>
-                </div>
-                <button class="btn-primary" onclick="saveFood()">保存记录 🐻</button>
+                <div class="food-header"><div class="food-emoji-large" id="food-emoji-result">🍗</div><div class="food-details"><h3 id="food-name-result">鸡胸肉沙拉</h3><p id="food-portion-result">1份 · 约250g</p></div></div>
+                <div class="calorie-hero"><div class="calorie-number" id="food-calories-result">285</div><span class="calorie-unit">kcal</span><div class="calorie-goal">今日已摄入 1,245 / 2,000 kcal</div><div class="aura-score">✨ Aura: <span id="aura-score">88</span></div></div>
+                <div class="nutrition-grid"><div class="nutrition-item"><div class="nutrition-value" id="result-protein">31g</div><div class="nutrition-label">蛋白质</div></div><div class="nutrition-item"><div class="nutrition-value" id="result-carbs">12g</div><div class="nutrition-label">碳水</div></div><div class="nutrition-item"><div class="nutrition-value" id="result-fat">8g</div><div class="nutrition-label">脂肪</div></div></div>
+                <div class="pet-reaction"><div class="pet-reaction-emoji">🐻</div><div class="pet-reaction-text" id="pet-reaction-text">高蛋白低脂肪，营养很棒！</div><div class="pet-reaction-coins">+5🪙</div></div>
+                <button class="btn" onclick="saveMeal()">保存记录</button>
             </div>
         </div>
 
         <!-- FASTING -->
-        <div class="page fasting-page" id="fasting">
-            <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">←</button>
-                <h1 class="page-title">禁食计时</h1>
-            </div>
-            <div class="fasting-timer">
-                <div class="timer-circle">
-                    <canvas id="timerCanvas" width="240" height="240"></canvas>
-                    <div class="timer-display">
-                        <div class="timer-time" id="timer-display">16:00:00</div>
-                        <div class="timer-label">剩余时间</div>
-                    </div>
-                </div>
+        <div class="page fasting" id="page-fasting">
+            <div class="page-header"><button class="back-btn" onclick="showPage('home')">←</button><h1 class="page-title">轻断食</h1></div>
+            <div class="timer-hero">
+                <div class="timer-circle"><canvas id="timerCanvas" width="260" height="260"></canvas><div class="timer-content"><div class="timer-time" id="timer-display">16:00:00</div><div class="timer-label">剩余时间</div></div></div>
                 <div class="fasting-status" id="fasting-status"><span>●</span> 准备开始</div>
             </div>
-            <div class="fasting-options">
-                <div class="fasting-option-card selected" onclick="selectFastingPlan(this, 16)">
-                    <div class="fasting-option-info">
-                        <div class="fasting-option-icon">🕐</div>
-                        <div><div class="fasting-option-title">16:8 轻断食</div><div class="fasting-option-desc">16小时禁食，8小时进食窗口</div></div>
-                    </div>
-                </div>
-                <div class="fasting-option-card" onclick="selectFastingPlan(this, 18)">
-                    <div class="fasting-option-info">
-                        <div class="fasting-option-icon">🌙</div>
-                        <div><div class="fasting-option-title">18:6 进阶</div><div class="fasting-option-desc">18小时禁食，更强效</div></div>
-                    </div>
-                </div>
-                <div class="fasting-option-card" onclick="selectFastingPlan(this, 20)">
-                    <div class="fasting-option-info">
-                        <div class="fasting-option-icon">🔥</div>
-                        <div><div class="fasting-option-title">20:4 燃脂</div><div class="fasting-option-desc">20小时禁食，极致燃脂</div></div>
-                    </div>
-                </div>
-                <button class="start-fasting-btn" id="fasting-btn" onclick="toggleFasting()">开始禁食 🌙</button>
+            <div class="fasting-plans">
+                <div class="fasting-plan selected" onclick="selectFastingPlan(this,16)"><div class="fasting-plan-info"><div class="fasting-plan-icon">🕐</div><div><div class="fasting-plan-title">16:8 轻断食</div><div class="fasting-plan-desc">16小时禁食，8小时进食窗口</div></div></div></div>
+                <div class="fasting-plan" onclick="selectFastingPlan(this,18)"><div class="fasting-plan-info"><div class="fasting-plan-icon">🌙</div><div><div class="fasting-plan-title">18:6 进阶断食</div><div class="fasting-plan-desc">18小时禁食，更强效</div></div></div></div>
+                <div class="fasting-plan" onclick="selectFastingPlan(this,20)"><div class="fasting-plan-info"><div class="fasting-plan-icon">🔥</div><div><div class="fasting-plan-title">20:4 燃脂挑战</div><div class="fasting-plan-desc">20小时禁食，极致效果</div></div></div></div>
             </div>
+            <button class="fasting-btn" id="fasting-btn" onclick="toggleFasting()">🌙 开始禁食</button>
         </div>
 
         <!-- WATER -->
-        <div class="page water-page" id="water">
-            <div class="page-header">
-                <button class="back-btn" onclick="showPage('home')">←</button>
-                <h1 class="page-title">喝水追踪</h1>
-            </div>
+        <div class="page water" id="page-water">
+            <div class="page-header"><button class="back-btn" onclick="showPage('home')">←</button><h1 class="page-title">喝水追踪</h1></div>
             <div class="water-content">
-                <div class="water-cup">
-                    <div class="water-fill" id="water-fill" style="height:25%"></div>
-                    <div class="water-cup-outline"></div>
-                </div>
-                <div class="water-stats" id="water-stats">2/8</div>
-                <p class="water-target">杯 / 每日目标 8 杯</p>
-                <div class="water-buttons">
-                    <button class="water-btn" onclick="addWater(1)">🥛 1杯</button>
-                    <button class="water-btn" onclick="addWater(2)">🥤 2杯</button>
-                    <button class="water-btn" onclick="addWater(0.5)">☕ 半杯</button>
+                <div class="water-cup-visual"><div class="water-fill" id="water-fill" style="height:62%"></div><div class="water-cup-border"><div class="water-waves"></div></div></div>
+                <div class="water-big-number" id="water-big-number">5<span style="font-size:36px;color:var(--text-light)">/8</span></div>
+                <p class="water-target-text">杯 / 每日目标 8 杯</p>
+                <div class="water-buttons"><button class="water-add-btn" onclick="addWater(1)">🥛 +1杯</button><button class="water-add-btn" onclick="addWater(2)">🥤 +2杯</button><button class="water-add-btn" onclick="addWater(0.5)">☕ +半杯</button></div>
+            </div>
+        </div>
+
+        <!-- WEIGHT -->
+        <div class="page" id="page-weight">
+            <div class="page-header"><button class="back-btn" onclick="showPage('home')">←</button><h1 class="page-title">体重追踪</h1></div>
+            <div class="bmi-display"><div class="bmi-title">你的 BMI</div><div class="bmi-value" id="bmi-value">24.5</div><div class="bmi-category" id="bmi-category">正常体重</div><div class="bmi-scale"><span class="bmi-marker" id="bmi-marker" style="left:55%"></span></div><div class="bmi-labels"><span>偏瘦</span><span>正常</span><span>超重</span><span>肥胖</span></div></div>
+            <div class="weight-chart"><div class="chart-header"><div class="chart-title">📈 体重趋势</div><div class="chart-period">近7天</div></div><div class="chart-placeholder"><div class="chart-bar" style="height:60%"></div><div class="chart-bar" style="height:55%"></div><div class="chart-bar" style="height:58%"></div><div class="chart-bar" style="height:52%"></div><div class="chart-bar" style="height:48%"></div><div class="chart-bar" style="height:45%"></div><div class="chart-bar" style="height:42%"></div></div></div>
+            <button class="weight-log-btn" onclick="showToast('功能即将上线！')">📝 记录今日体重</button>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="page" id="page-progress">
+            <div class="progress-hero"><div class="progress-main-number" id="total-calories-week">8,715</div><div class="progress-sub">本周总摄入 (kcal)</div></div>
+            <div class="progress-cards-advanced">
+                <div class="progress-card"><div class="progress-card-icon" style="background:linear-gradient(135deg,#FFE5D0,#FFD8C0)">🔥</div><div class="progress-card-value">1,245</div><div class="progress-card-label">日均摄入</div></div>
+                <div class="progress-card"><div class="progress-card-icon" style="background:linear-gradient(135deg,#E8F5E8,#D4EDDA)">⚖️</div><div class="progress-card-value">65g</div><div class="progress-card-label">日均蛋白</div></div>
+                <div class="progress-card"><div class="progress-card-icon" style="background:linear-gradient(135deg,#D4ECFF,#B8DFFF)">💧</div><div class="progress-card-value">5天</div><div class="progress-card-label">喝水达标</div></div>
+                <div class="progress-card"><div class="progress-card-icon" style="background:linear-gradient(135deg,#F4E8FF,#E8D4FF)">⏰</div><div class="progress-card-value">3次</div><div class="progress-card-label">完成禁食</div></div>
+            </div>
+            <div class="achievements-section">
+                <div class="section-title">🏆 成就</div>
+                <div class="achievements-list">
+                    <div class="achievement-item"><div class="achievement-icon" style="background:var(--bg-pink)">🔥</div><div><div class="achievement-name">连续7天</div><div class="achievement-desc">坚持使用一周</div></div></div>
+                    <div class="achievement-item"><div class="achievement-icon" style="background:var(--bg-blue)">💧</div><div><div class="achievement-name">喝水达人</div><div class="achievement-desc">单日喝满8杯水</div></div></div>
+                    <div class="achievement-item"><div class="achievement-icon" style="background:var(--bg-green)">🎯</div><div><div class="achievement-name">营养均衡</div><div class="achievement-desc">连续3天均衡饮食</div></div></div>
                 </div>
             </div>
         </div>
 
         <!-- SHOP -->
-        <div class="page shop-page" id="shop">
-            <div class="shop-header">
-                <button class="back-btn" onclick="showPage('home')">←</button>
-                <h1 class="page-title">小熊商店</h1>
-                <div class="shop-coins"><span class="coin-icon">🪙</span><span class="coin-value" id="coin-balance">280</span></div>
-            </div>
+        <div class="page" id="page-shop">
+            <div class="shop-header"><button class="back-btn" onclick="showPage('home')">←</button><h1 class="page-title">小熊商店</h1><div class="shop-coins"><span class="coin-icon">🪙</span><span class="coin-value" id="shop-coins">280</span></div></div>
             <div class="shop-grid">
-                <div class="shop-item" onclick="buyItem('hat')">
-                    <div class="shop-item-badge">热门</div>
-                    <div class="item-preview">🎩</div>
-                    <div class="item-name">绅士帽子</div>
-                    <div class="item-price"><span>🪙</span> 50</div>
-                </div>
-                <div class="shop-item" onclick="buyItem('bow')">
-                    <div class="item-preview">🎀</div>
-                    <div class="item-name">可爱蝴蝶结</div>
-                    <div class="item-price"><span>🪙</span> 40</div>
-                </div>
-                <div class="shop-item" onclick="buyItem('glasses')">
-                    <div class="item-preview">🕶️</div>
-                    <div class="item-name">酷炫墨镜</div>
-                    <div class="item-price"><span>🪙</span> 60</div>
-                </div>
-                <div class="shop-item" onclick="buyItem('crown')">
-                    <div class="item-preview">👑</div>
-                    <div class="item-name">小熊皇冠</div>
-                    <div class="item-price"><span>🪙</span> 100</div>
-                </div>
-                <div class="shop-item owned">
-                    <div class="shop-item-badge">已拥有</div>
-                    <div class="item-preview">🧣</div>
-                    <div class="item-name">温暖围巾</div>
-                    <div class="item-price"><span>🪙</span> 免费</div>
-                </div>
-                <div class="shop-item" onclick="buyItem('backpack')">
-                    <div class="item-preview">🎒</div>
-                    <div class="item-name">背包</div>
-                    <div class="item-price"><span>🪙</span> 80</div>
-                </div>
+                <div class="shop-item" onclick="buyItem('hat')"><div class="shop-badge">热门</div><div class="item-preview">🎩</div><div class="item-name">绅士帽子</div><div class="item-price">🪙 50</div></div>
+                <div class="shop-item" onclick="buyItem('bow')"><div class="shop-badge new">新</div><div class="item-preview">🎀</div><div class="item-name">蝴蝶结</div><div class="item-price">🪙 40</div></div>
+                <div class="shop-item" onclick="buyItem('glasses')"><div class="item-preview">🕶️</div><div class="item-name">墨镜</div><div class="item-price">🪙 60</div></div>
+                <div class="shop-item" onclick="buyItem('crown')"><div class="item-preview">👑</div><div class="item-name">皇冠</div><div class="item-price">🪙 100</div></div>
+                <div class="shop-item owned"><div class="shop-badge owned">已拥有</div><div class="item-preview">🧣</div><div class="item-name">围巾</div><div class="item-price">免费</div></div>
+                <div class="shop-item" onclick="buyItem('backpack')"><div class="item-preview">🎒</div><div class="item-name">背包</div><div class="item-price">🪙 80</div></div>
             </div>
         </div>
 
         <!-- SUBSCRIPTION -->
-        <div class="page sub-page" id="subscription">
+        <div class="page subscription" id="page-subscription">
             <button class="sub-close" onclick="showPage('home')">×</button>
-            <div class="sub-header">
-                <div class="sub-bear">🐻✨</div>
-                <h1 class="sub-title">升级到小熊会员</h1>
-                <p class="sub-highlight">解锁全部功能，加速达成目标！</p>
-            </div>
-            <div class="sub-card">
-                <div class="sub-plan-name">⭐ 年度会员</div>
-                <div class="sub-price">¥228<span>/年</span></div>
-                <p style="color:var(--text-light);font-size:13px;margin-top:6px">每月仅 ¥19，折合每天 ¥0.6</p>
-                <div class="sub-features">
-                    <div class="sub-feature"><div class="feature-check">✓</div><div class="feature-text">无限食物识别</div></div>
-                    <div class="sub-feature"><div class="feature-check">✓</div><div class="feature-text">深度营养分析</div></div>
-                    <div class="sub-feature"><div class="feature-check">✓</div><div class="feature-text">高级禁食方案</div></div>
-                    <div class="sub-feature"><div class="feature-check">✓</div><div class="feature-text">小熊进化路线</div></div>
-                    <div class="sub-feature"><div class="feature-check">✓</div><div class="feature-text">专属装饰商城</div></div>
-                </div>
-                <button class="sub-btn" onclick="subscribe()">立即开通 💎</button>
+            <div class="sub-header"><div class="sub-bear-icon">🐻✨</div><h1 class="sub-title">升级到小熊会员</h1><p class="sub-subtitle">解锁全部功能，加速达成目标！</p></div>
+            <div class="sub-card"><div class="sub-plan-tag">⭐ 年度会员</div><div class="sub-price">¥228<span>/年</span></div><p style="color:var(--text-light);font-size:14px;margin-top:8px">每月仅 ¥19，折合每天 ¥0.6</p>
+                <div class="sub-features"><div class="sub-feature"><div class="feature-check-icon">✓</div><div class="feature-text">无限食物识别</div></div><div class="sub-feature"><div class="feature-check-icon">✓</div><div class="feature-text">深度营养分析</div></div><div class="sub-feature"><div class="feature-check-icon">✓</div><div class="feature-text">高级禁食方案</div></div><div class="sub-feature"><div class="feature-check-icon">✓</div><div class="feature-text">小熊进化路线</div></div><div class="sub-feature"><div class="feature-check-icon">✓</div><div class="feature-text">专属装饰商城</div></div></div>
+                <button class="sub-main-btn" onclick="showToast('会员功能即将上线！💎')">立即开通 💎</button>
             </div>
             <p class="sub-footer">轻松取消 · 安全支付 · 7天退款保证</p>
         </div>
 
         <!-- BOTTOM NAV -->
         <nav class="bottom-nav" id="bottom-nav" style="display:none">
-            <div class="nav-item active" onclick="showPage('home')"><span class="nav-icon">🏠</span><span class="nav-label">首页</span></div>
-            <div class="nav-item" onclick="showPage('food')"><span class="nav-icon">📊</span><span class="nav-label">饮食</span></div>
+            <div class="nav-item" onclick="showPage('home')"><span class="nav-icon">🏠</span><span class="nav-label">首页</span></div>
+            <div class="nav-item" onclick="showPage('food')"><span class="nav-icon">📸</span><span class="nav-label">饮食</span></div>
             <div class="nav-item" onclick="showPage('fasting')"><span class="nav-icon">⏰</span><span class="nav-label">禁食</span></div>
             <div class="nav-item" onclick="showPage('shop')"><span class="nav-icon">🛒</span><span class="nav-label">商店</span></div>
             <div class="nav-item" onclick="showPage('subscription')"><span class="nav-icon">💎</span><span class="nav-label">会员</span></div>
         </nav>
 
         <!-- TOAST -->
-        <div class="toast" id="toast"><span class="toast-icon">✅</span><span class="toast-text" id="toast-text">操作成功！</span></div>
+        <div class="toast" id="toast"><span>✅</span><span id="toast-text">操作成功！</span></div>
     </div>
 
-    <script>
-        // ============ STATE ============
-        const state = {
-            onboardingStep: 0,
-            onboardingComplete: false,
-            goal: null,
-            calorieGoal: 2000,
-            caloriesToday: 0,
-            waterToday: 2,
-            waterGoal: 8,
-            hearts: 0,
-            coins: 280,
-            fastingActive: false,
-            fastingHours: 16,
-            fastingStart: null,
-            petAccessories: ['scarf'],
-            foodLog: []
-        };
+<script>
+const state = { obStep: 0, coins: 280, hearts: 3, xp: 65, level: 3, calories: 1245, water: 5, protein: 65, fastingActive: false, fastingHours: 16, fastingStart: null, petMood: 'happy', petAccessories: ['scarf'] };
+const obSteps = [
+    { title: '你好！我是小熊 🐻', subtitle: '你的健康伙伴今天也很期待见到你！', options: [{ icon: '🎯', title: '减重', desc: '健康地减少体脂', val: 'lose' }, { icon: '⚖️', title: '维持体重', desc: '保持当前体重稳定', val: 'maintain' }, { icon: '💪', title: '增肌', desc: '增加肌肉量', val: 'gain' }] },
+    { title: '你想要什么功能？', subtitle: '选择你最关心的健康功能', options: [{ icon: '📸', title: '拍照记录', desc: 'AI识别食物', val: 'photo' }, { icon: '⏰', title: '轻断食', desc: '16:8间歇性禁食', val: 'fasting' }, { icon: '💧', title: '多喝水', desc: '追踪每日饮水', val: 'water' }] },
+    { title: '你的身高？', subtitle: '帮助计算最适合你的卡路里', options: [{ icon: '📏', title: '175 cm', desc: '继续', val: '175' }] },
+    { title: '准备好了吗？', subtitle: '小熊已经迫不及待要帮助你了！', options: [{ icon: '🎉', title: '开始使用', desc: '出发！', val: 'start' }] }
+];
+const foodDB = [
+    { name: '鸡胸肉沙拉', emoji: '🍗', cal: 285, protein: 31, carbs: 12, fat: 8, aura: 88 },
+    { name: '三文鱼便当', emoji: '🍣', cal: 420, protein: 35, carbs: 25, fat: 18, aura: 75 },
+    { name: '蔬菜沙拉', emoji: '🥗', cal: 120, protein: 5, carbs: 20, fat: 3, aura: 92 },
+    { name: '牛肉汉堡', emoji: '🍔', cal: 550, protein: 28, carbs: 45, fat: 28, aura: 45 }
+];
 
-        // ============ NAVIGATION ============
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            const nav = document.getElementById('bottom-nav');
-            nav.style.display = (pageId === 'onboarding' || pageId === 'subscription') ? 'none' : 'flex';
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            const navMap = { 'home': 0, 'food': 1, 'fasting': 2, 'shop': 3, 'subscription': 4 };
-            if (navMap[pageId] !== undefined) document.querySelectorAll('.nav-item')[navMap[pageId]].classList.add('active');
-            if (pageId === 'home') { drawPet(); updateGreeting(); }
-            if (pageId === 'fasting') initFasting();
-        }
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('bottom-nav').style.display = (id === 'onboarding' || id === 'subscription') ? 'none' : 'flex';
+    document.querySelectorAll('.nav-item').forEach((n, i) => {
+        const map = { home: 0, food: 1, fasting: 2, shop: 3 };
+        n.classList.toggle('active', map[id] === i);
+    });
+    if (id === 'home') drawPet();
+    if (id === 'fasting') initTimer();
+}
 
-        // ============ ONBOARDING ============
-        const onboardingSteps = [
-            { title: '你好！我是小熊 🐻', subtitle: '你的健康伙伴今天也很期待见到你！', options: [{ icon: '🎯', title: '减重', desc: '健康地减少体脂', value: 'lose' }, { icon: '⚖️', title: '维持体重', desc: '保持当前体重稳定', value: 'maintain' }, { icon: '💪', title: '增肌', desc: '增加肌肉量', value: 'gain' }] },
-            { title: '你想要什么功能？', subtitle: '选择你最关心的健康功能', options: [{ icon: '📸', title: '拍照记录', desc: 'AI识别食物', value: 'photo' }, { icon: '⏰', title: '轻断食', desc: '16:8间歇性禁食', value: 'fasting' }, { icon: '💧', title: '多喝水', desc: '追踪每日饮水', value: 'water' }] },
-            { title: '你的身高？', subtitle: '帮助计算最适合你的卡路里', options: [{ icon: '📏', title: '175 cm', desc: '继续', value: 'height' }] },
-            { title: '准备好了吗？', subtitle: '小熊已经迫不及待要帮助你了！', options: [{ icon: '🎉', title: '开始使用', desc: '出发！', value: 'start' }] }
-        ];
+function updateOB() {
+    const step = obSteps[state.obStep];
+    document.getElementById('ob-progress').style.width = ((state.obStep + 1) / obSteps.length * 100) + '%';
+    document.getElementById('ob-title').textContent = step.title;
+    document.getElementById('ob-subtitle').textContent = step.subtitle;
+    document.getElementById('ob-options').innerHTML = step.options.map(o =>
+        `<div class="option-card" onclick="selectOB(this,'${o.val}')"><div class="option-icon">${o.icon}</div><div class="option-content"><div class="option-title">${o.title}</div><div class="option-desc">${o.desc}</div></div></div>`
+    ).join('');
+}
 
-        function nextOnboarding() {
-            state.onboardingStep++;
-            if (state.onboardingStep >= onboardingSteps.length) { completeOnboarding(); return; }
-            updateOnboardingUI();
-        }
+function selectOB(el, val) {
+    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    state.goal = val;
+    if (val === 'start') obNext();
+}
 
-        function updateOnboardingUI() {
-            const step = onboardingSteps[state.onboardingStep];
-            document.getElementById('onboarding-progress').style.width = ((state.onboardingStep + 1) / onboardingSteps.length * 100) + '%';
-            document.getElementById('onboarding-title').textContent = step.title;
-            document.getElementById('onboarding-subtitle').textContent = step.subtitle;
-            let html = '';
-            step.options.forEach(opt => {
-                html += `<div class="option-card" onclick="selectOption(this,'${opt.value}')"><div class="option-icon" style="background:linear-gradient(135deg,#FFE5D0,#FFDCC8)">${opt.icon}</div><div class="option-content"><div class="option-title">${opt.title}</div><div class="option-desc">${opt.desc}</div></div></div>`;
-            });
-            document.getElementById('onboarding-options').innerHTML = html;
-        }
+function obNext() {
+    state.obStep++;
+    if (state.obStep >= obSteps.length) { showPage('home'); drawPet(); return; }
+    updateOB();
+}
 
-        function selectOption(el, value) {
-            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            state.goal = value;
-            if (value === 'start') nextOnboarding();
-        }
+function drawPet() {
+    const c = document.getElementById('petCanvas');
+    if (!c) return;
+    const ctx = c.getContext('2d'), w = c.width, h = c.height;
+    ctx.clearRect(0, 0, w, h);
+    const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
+    g.addColorStop(0, '#FFF8F0'); g.addColorStop(1, '#FFE8DC');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    const cx = w/2, cy = h/2 + 15;
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.beginPath(); ctx.ellipse(cx, cy + 85, 55, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath(); ctx.ellipse(cx, cy + 45, 50, 60, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#F5E6D3';
+    ctx.beginPath(); ctx.ellipse(cx, cy + 55, 32, 38, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath(); ctx.arc(cx, cy - 18, 55, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - 45, cy - 55, 23, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 45, cy - 55, 23, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#C49A6C';
+    ctx.beginPath(); ctx.arc(cx - 45, cy - 55, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 45, cy - 55, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#F5E6D3';
+    ctx.beginPath(); ctx.ellipse(cx, cy, 32, 28, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4A4A4A';
+    ctx.beginPath(); ctx.arc(cx - 20, cy - 22, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 20, cy - 22, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(cx - 17, cy - 25, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 23, cy - 25, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4A4A4A';
+    ctx.beginPath(); ctx.ellipse(cx, cy - 5, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#4A4A4A'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx - 9, cy + 7); ctx.quadraticCurveTo(cx, cy + 16, cx + 9, cy + 7); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,181,181,0.5)';
+    ctx.beginPath(); ctx.arc(cx - 42, cy - 5, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 42, cy - 5, 11, 0, Math.PI * 2); ctx.fill();
+    if (state.petAccessories.includes('scarf')) {
+        ctx.fillStyle = '#FF6B6B';
+        ctx.beginPath(); ctx.ellipse(cx, cy + 32, 46, 14, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(cx + 28, cy + 32, 13, 32);
+        ctx.fillStyle = '#FF8585';
+        ctx.beginPath(); ctx.arc(cx + 34, cy + 66, 7, 0, Math.PI * 2); ctx.fill();
+    }
+}
 
-        function completeOnboarding() {
-            state.onboardingComplete = true;
-            showPage('home');
-            drawPet();
-        }
+setInterval(() => { if (document.getElementById('page-home').classList.contains('active')) drawPet(); }, 100);
 
-        // ============ PET DRAWING ============
-        function drawPet() {
-            const canvas = document.getElementById('petCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width, h = canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            
-            // Background
-            const gradient = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
-            gradient.addColorStop(0, '#FFF8F0');
-            gradient.addColorStop(1, '#FFE8DC');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, w, h);
+function simulateFoodScan() {
+    const food = foodDB[Math.floor(Math.random() * foodDB.length)];
+    document.getElementById('food-emoji-result').textContent = food.emoji;
+    document.getElementById('food-name-result').textContent = food.name;
+    document.getElementById('food-calories-result').textContent = food.cal;
+    document.getElementById('aura-score').textContent = food.aura;
+    document.getElementById('result-protein').textContent = food.protein + 'g';
+    document.getElementById('result-carbs').textContent = food.carbs + 'g';
+    document.getElementById('result-fat').textContent = food.fat + 'g';
+    document.getElementById('food-result').classList.add('show');
+    const reactions = [
+        { emoji: '🐻', text: '高蛋白低脂肪，营养很棒！', coins: 5 },
+        { emoji: '🐻💕', text: '小熊最爱健康食物了！', coins: 3 },
+        { emoji: '🐻✨', text: '继续保持，营养均衡！', coins: 4 }
+    ];
+    const r = reactions[Math.floor(Math.random() * reactions.length)];
+    document.getElementById('pet-reaction-emoji').textContent = r.emoji;
+    document.getElementById('pet-reaction-text').textContent = r.text;
+}
 
-            const cx = w / 2, cy = h / 2 + 15;
+function saveMeal() {
+    state.calories += parseInt(document.getElementById('food-calories-result').textContent);
+    state.hearts++;
+    state.coins += 3;
+    state.xp = Math.min(100, state.xp + 10);
+    document.getElementById('calorie-display').textContent = state.calories.toLocaleString();
+    document.getElementById('coins-display').textContent = state.coins;
+    document.getElementById('xp-fill').style.width = state.xp + '%';
+    document.getElementById('food-result').classList.remove('show');
+    showToast('记录成功！小熊很开心 🐻');
+    setTimeout(() => drawPet(), 300);
+}
 
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 85, 55, 14, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Body
-            ctx.fillStyle = '#D4A574';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 45, 50, 60, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Belly
-            ctx.fillStyle = '#F5E6D3';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 55, 32, 38, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Head
-            ctx.fillStyle = '#D4A574';
-            ctx.beginPath();
-            ctx.arc(cx, cy - 18, 55, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Ears
-            ctx.beginPath();
-            ctx.arc(cx - 45, cy - 55, 23, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx + 45, cy - 55, 23, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Inner ears
-            ctx.fillStyle = '#C49A6C';
-            ctx.beginPath();
-            ctx.arc(cx - 45, cy - 55, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx + 45, cy - 55, 14, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Face patch
-            ctx.fillStyle = '#F5E6D3';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, 32, 28, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eyes
-            ctx.fillStyle = '#4A4A4A';
-            ctx.beginPath();
-            ctx.arc(cx - 20, cy - 22, 9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx + 20, cy - 22, 9, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eye highlights
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(cx - 17, cy - 25, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx + 23, cy - 25, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Nose
-            ctx.fillStyle = '#4A4A4A';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 5, 9, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Mouth
-            ctx.strokeStyle = '#4A4A4A';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(cx - 9, cy + 7);
-            ctx.quadraticCurveTo(cx, cy + 16, cx + 9, cy + 7);
-            ctx.stroke();
-
-            // Blush
-            ctx.fillStyle = 'rgba(255, 181, 181, 0.5)';
-            ctx.beginPath();
-            ctx.arc(cx - 42, cy - 5, 11, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx + 42, cy - 5, 11, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Scarf
-            if (state.petAccessories.includes('scarf')) {
-                ctx.fillStyle = '#FF6B6B';
-                ctx.beginPath();
-                ctx.ellipse(cx, cy + 32, 46, 14, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillRect(cx + 28, cy + 32, 13, 32);
-                ctx.fillStyle = '#FF8585';
-                ctx.beginPath();
-                ctx.arc(cx + 34, cy + 66, 7, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Floating hearts
-            if (state.hearts > 0) {
-                const time = Date.now() / 1000;
-                for (let i = 0; i < Math.min(state.hearts, 3); i++) {
-                    const angle = (time + i * 2.1) % (Math.PI * 2);
-                    const hx = cx + Math.cos(angle) * 75;
-                    const hy = cy - 45 + Math.sin(angle) * 28;
-                    ctx.font = '18px Arial';
-                    ctx.fillText('❤️', hx - 9, hy);
-                }
-            }
-        }
-
-        setInterval(() => { if (document.getElementById('home').classList.contains('active')) drawPet(); }, 100);
-
-        // ============ GREETING ============
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            let greeting = '你好呀！';
-            if (hour < 12) greeting = '早上好呀！☀️';
-            else if (hour < 18) greeting = '下午好呀！🌤️';
-            else greeting = '晚上好呀！🌙';
-            document.getElementById('greeting').textContent = greeting;
-        }
-
-        // ============ FOOD LOG ============
-        const foodDatabase = [
-            { name: '苹果', emoji: '🍎', calories: 52, protein: 0.3, carbs: 14, fat: 0.2 },
-            { name: '香蕉', emoji: '🍌', calories: 89, protein: 1.1, carbs: 23, fat: 0.3 },
-            { name: '鸡胸肉', emoji: '🍗', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
-            { name: '米饭', emoji: '🍚', calories: 130, protein: 2.7, carbs: 28, fat: 0.3 },
-            { name: '西兰花', emoji: '🥦', calories: 34, protein: 2.8, carbs: 7, fat: 0.4 },
-            { name: '鸡蛋', emoji: '🥚', calories: 78, protein: 6, carbs: 0.6, fat: 5 },
-            { name: '三文鱼', emoji: '🍣', calories: 208, protein: 20, carbs: 0, fat: 13 },
-            { name: '沙拉', emoji: '🥗', calories: 45, protein: 2, carbs: 8, fat: 1 }
-        ];
-
-        function simulateFoodScan() {
-            const food = foodDatabase[Math.floor(Math.random() * foodDatabase.length)];
-            document.getElementById('food-emoji').textContent = food.emoji;
-            document.getElementById('food-name').textContent = food.name;
-            document.getElementById('food-portion').textContent = '1份';
-            document.getElementById('calorie-value').textContent = food.calories;
-            document.getElementById('protein-value').textContent = food.protein + 'g';
-            document.getElementById('carbs-value').textContent = food.carbs + 'g';
-            document.getElementById('fat-value').textContent = food.fat + 'g';
-            setTimeout(() => {
-                document.getElementById('protein-bar').style.width = (food.protein / 50 * 100) + '%';
-                document.getElementById('carbs-bar').style.width = (food.carbs / 100 * 100) + '%';
-                document.getElementById('fat-bar').style.width = (food.fat / 30 * 100) + '%';
-            }, 100);
-            document.getElementById('food-result').classList.add('show');
-            state.foodLog.push(food);
-        }
-
-        function saveFood() {
-            const lastFood = state.foodLog[state.foodLog.length - 1];
-            state.caloriesToday += lastFood.calories;
-            state.hearts++;
-            document.getElementById('calorie-progress').textContent = state.caloriesToday;
-            document.getElementById('hearts-count').textContent = state.hearts;
-            showToast('记录成功！小熊很开心 🐻');
-            document.getElementById('food-result').classList.remove('show');
-        }
-
-        // ============ FASTING ============
-        let fastingInterval;
-
-        function initFasting() {
-            drawFastingTimer(1);
-        }
-
-        function drawFastingTimer(progress) {
-            const canvas = document.getElementById('timerCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width, h = canvas.height;
-            const cx = w / 2, cy = h / 2, radius = 95;
-            ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = '#E8E8E8';
-            ctx.lineWidth = 14;
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.stroke();
-            const endAngle = (progress * Math.PI * 2) - Math.PI / 2;
-            ctx.strokeStyle = '#6BCB77';
-            ctx.lineWidth = 14;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, -Math.PI / 2, endAngle);
-            ctx.stroke();
-        }
-
-        function selectFastingPlan(el, hours) {
-            document.querySelectorAll('.fasting-option-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            state.fastingHours = hours;
-            const h = String(hours).padStart(2, '0');
-            document.getElementById('timer-display').textContent = h + ':00:00';
-        }
-
-        function toggleFasting() {
-            if (state.fastingActive) {
-                state.fastingActive = false;
+let fastingInterval;
+function initTimer() { drawTimerCircle(1); }
+function drawTimerCircle(p) {
+    const c = document.getElementById('timerCanvas');
+    if (!c) return;
+    const ctx = c.getContext('2d'), w = c.width, h = c.height, cx = w/2, cy = h/2, r = 95;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#E8E8E8'; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    const end = (p * Math.PI * 2) - Math.PI / 2;
+    ctx.strokeStyle = '#6BCB77'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, end); ctx.stroke();
+}
+function selectFastingPlan(el, h) {
+    document.querySelectorAll('.fasting-plan').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    state.fastingHours = h;
+    document.getElementById('timer-display').textContent = h + ':00:00';
+    drawTimerCircle(1);
+}
+function toggleFasting() {
+    if (state.fastingActive) {
+        state.fastingActive = false;
+        clearInterval(fastingInterval);
+        document.getElementById('fasting-btn').textContent = '🌙 开始禁食';
+        document.getElementById('fasting-status').innerHTML = '<span>●</span> 准备开始';
+        drawTimerCircle(1);
+    } else {
+        state.fastingActive = true;
+        state.fastingStart = Date.now();
+        document.getElementById('fasting-btn').textContent = '✓ 结束禁食';
+        document.getElementById('fasting-status').innerHTML = '<span>●</span> 禁食进行中';
+        fastingInterval = setInterval(() => {
+            const elapsed = Date.now() - state.fastingStart;
+            const total = state.fastingHours * 60 * 60 * 1000;
+            const remaining = Math.max(0, total - elapsed);
+            const hours = Math.floor(remaining / 3600000);
+            const mins = Math.floor((remaining % 3600000) / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('timer-display').textContent = hours.toString().padStart(2,'0') + ':' + mins.toString().padStart(2,'0') + ':' + secs.toString().padStart(2,'0');
+            drawTimerCircle(elapsed / total);
+            if (remaining <= 0) {
                 clearInterval(fastingInterval);
-                document.getElementById('fasting-btn').textContent = '开始禁食 🌙';
+                state.fastingActive = false;
+                showToast('禁食完成！🎉');
+                state.hearts += 5;
+                document.getElementById('fasting-btn').textContent = '🌙 开始禁食';
                 document.getElementById('fasting-status').innerHTML = '<span>●</span> 准备开始';
-                const h = String(state.fastingHours).padStart(2, '0');
-                document.getElementById('timer-display').textContent = h + ':00:00';
-                drawFastingTimer(1);
-            } else {
-                state.fastingActive = true;
-                state.fastingStart = Date.now();
-                document.getElementById('fasting-btn').textContent = '结束禁食 ✓';
-                document.getElementById('fasting-status').innerHTML = '<span>●</span> 禁食进行中';
-                fastingInterval = setInterval(() => {
-                    const elapsed = Date.now() - state.fastingStart;
-                    const total = state.fastingHours * 60 * 60 * 1000;
-                    const remaining = Math.max(0, total - elapsed);
-                    const hours = Math.floor(remaining / 3600000);
-                    const mins = Math.floor((remaining % 3600000) / 60000);
-                    const secs = Math.floor((remaining % 60000) / 1000);
-                    document.getElementById('timer-display').textContent = hours.toString().padStart(2,'0') + ':' + mins.toString().padStart(2,'0') + ':' + secs.toString().padStart(2,'0');
-                    drawFastingTimer(elapsed / total);
-                    if (remaining <= 0) {
-                        clearInterval(fastingInterval);
-                        state.fastingActive = false;
-                        showToast('禁食完成！🎉');
-                        state.hearts += 5;
-                        document.getElementById('hearts-count').textContent = state.hearts;
-                        document.getElementById('fasting-btn').textContent = '开始禁食 🌙';
-                        document.getElementById('fasting-status').innerHTML = '<span>●</span> 准备开始';
-                    }
-                }, 1000);
             }
-        }
+        }, 1000);
+    }
+}
 
-        // ============ WATER ============
-        function addWater(amount) {
-            state.waterToday = Math.min(state.waterGoal, state.waterToday + amount);
-            document.getElementById('water-stats').textContent = state.waterToday + '/' + state.waterGoal;
-            document.getElementById('water-fill').style.height = (state.waterToday / state.waterGoal * 100) + '%';
-            document.getElementById('water-progress').textContent = state.waterToday + '/' + state.waterGoal;
-            if (state.waterToday >= state.waterGoal) {
-                showToast('喝水目标达成！💧');
-                state.hearts++;
-                document.getElementById('hearts-count').textContent = state.hearts;
-            }
-        }
+function addWater(amount) {
+    state.water = Math.min(8, state.water + amount);
+    document.getElementById('water-display').textContent = state.water + '/8';
+    document.getElementById('water-big-number').innerHTML = state.water + '<span style="font-size:36px;color:var(--text-light)">/8</span>';
+    document.getElementById('water-fill').style.height = (state.water / 8 * 100) + '%';
+    if (state.water >= 8) {
+        showToast('喝水目标达成！💧');
+        state.hearts++;
+    }
+}
 
-        // ============ SHOP ============
-        const shopPrices = { hat: 50, bow: 40, glasses: 60, crown: 100, backpack: 80 };
+const shopPrices = { hat: 50, bow: 40, glasses: 60, crown: 100, backpack: 80 };
+function buyItem(item) {
+    if (state.petAccessories.includes(item)) { showToast('已经拥有啦！✅'); return; }
+    const price = shopPrices[item];
+    if (state.coins >= price) {
+        state.coins -= price;
+        state.petAccessories.push(item);
+        document.getElementById('shop-coins').textContent = state.coins;
+        document.getElementById('coins-display').textContent = state.coins;
+        showToast('购买成功！🎉');
+        drawPet();
+    } else {
+        showToast('金币不够哦 💰');
+    }
+}
 
-        function buyItem(item) {
-            if (state.petAccessories.includes(item)) {
-                showToast('已经拥有啦！✅');
-                return;
-            }
-            const price = shopPrices[item];
-            if (state.coins >= price) {
-                state.coins -= price;
-                state.petAccessories.push(item);
-                document.getElementById('coin-balance').textContent = state.coins;
-                showToast('购买成功！🎉');
-                drawPet();
-            } else {
-                showToast('金币不够哦 💰');
-            }
-        }
+function showToast(text) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = text;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
 
-        function subscribe() {
-            showToast('会员开通功能即将上线！💎');
-        }
-
-        // ============ TOAST ============
-        function showToast(text) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-text').textContent = text;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        // ============ INIT ============
-        updateOnboardingUI();
-        document.getElementById('coin-balance').textContent = state.coins;
-    </script>
+updateOB();
+</script>
 </body>
 </html>
