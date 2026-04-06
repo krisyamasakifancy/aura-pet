@@ -3,6 +3,11 @@ import 'dart:ui';
 
 /// Monet Colors - Monet-inspired palette for BitePal
 class MonetColors {
+  // Default colors object for compatibility
+  static Color getCurrentColors() {
+    return airBlue;
+  }
+  
   // Primary air blue (background base)
   static const Color airBlue = Color(0xFFEDF6FA);
   

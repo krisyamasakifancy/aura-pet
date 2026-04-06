@@ -91,7 +91,7 @@ class MonetSkeletonCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: (colors ?? MonetColors.getCurrentColors()).surface,
+        color: colors ?? MonetColors.getCurrentColors(),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

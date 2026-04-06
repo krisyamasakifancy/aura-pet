@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../utils/aura_theme.dart';
 
@@ -30,10 +30,10 @@ class _SpeakingBubbleState extends State<SpeakingBubble>
   late AnimationController _heartController;
   late AnimationController _typewriterController;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
+  late Animation<Offset> _slideAnimation;
   late List<_HeartParticle> _heartParticles;
   String _displayedText = '';
-  final Random _random = Random();
+  final math.Random _random = math.Random();
 
   @override
   void initState() {

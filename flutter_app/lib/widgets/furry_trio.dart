@@ -66,7 +66,7 @@ class FurryTheme {
   static LinearGradient get bearGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [bearBrown, bearLight],
+    colors: [FurryColors.bearBrown, FurryColors.bearLight],
   );
   
   // 阴影 - 毛绒软绵感
@@ -164,7 +164,9 @@ class FurryCharacterState<T extends FurryCharacter> extends State<T>
   }
   
   /// 子类必须实现此方法
-  CustomPainter getPainter();
+  CustomPainter getPainter() {
+    throw UnimplementedError('子类必须实现 getPainter()');
+  }
 }
 
 // ========== 🐻 熊仔 - Data Bear ==========

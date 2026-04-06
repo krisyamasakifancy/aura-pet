@@ -114,7 +114,7 @@ class _PetAnimationControllerState extends State<PetAnimationController>
   }
 
   void _scheduleBlink() {
-    Future.delayed(Duration(milliseconds: 2000 + Random().nextInt(3000)), () {
+    Future.delayed(Duration(milliseconds: 2000 + math.Random().nextInt(3000)), () {
       if (mounted) {
         _blinkController.forward().then((_) {
           _blinkController.reverse().then((_) {
@@ -125,7 +125,7 @@ class _PetAnimationControllerState extends State<PetAnimationController>
     });
 
     // 耳朵随机抖动
-    Future.delayed(Duration(milliseconds: 1000 + Random().nextInt(5000)), () {
+    Future.delayed(Duration(milliseconds: 1000 + math.Random().nextInt(5000)), () {
       if (mounted) {
         _earController.forward().then((_) => _earController.reverse());
         _scheduleBlink();
@@ -187,7 +187,7 @@ class _PetAnimationControllerState extends State<PetAnimationController>
     
     // 显示随机台词
     final phrases = _getPhrasesForEmotion(_currentEmotion);
-    _showSpeechBubble(phrases[Random().nextInt(phrases.length)]);
+    _showSpeechBubble(phrases[math.Random().nextInt(phrases.length)]);
     
     widget.onTap?.call();
   }
