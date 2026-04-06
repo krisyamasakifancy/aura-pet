@@ -267,11 +267,11 @@ class _AuraPageNavigatorState extends State<AuraPageNavigator>
             decoration: BoxDecoration(
               color: isActive 
                   ? _pageData[_currentPage]['color']
-                  : Colors.white.withValues(alpha: isNearby ? 0.5 : 0.3),
+                  : Colors.white.withOpacity(isNearby ? 0.5 : 0.3),
               borderRadius: BorderRadius.circular(4),
               boxShadow: isActive
                   ? [BoxShadow(
-                      color: _pageData[_currentPage]['color'].withValues(alpha: 0.5),
+                      color: _pageData[_currentPage]['color'].withOpacity(0.5),
                       blurRadius: 8,
                     )]
                   : null,
@@ -309,11 +309,11 @@ class _AuraPageNavigatorState extends State<AuraPageNavigator>
                         child: Container(
                           height: 56,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(28),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                                color: Colors.black.withOpacity(0.1),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -356,7 +356,7 @@ class _AuraPageNavigatorState extends State<AuraPageNavigator>
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: data['color'].withValues(alpha: 0.4),
+                        color: data['color'].withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),

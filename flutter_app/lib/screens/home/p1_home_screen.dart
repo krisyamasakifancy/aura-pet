@@ -109,7 +109,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFB5B5).withValues(alpha: 0.3),
+                  color: const Color(0xFFFFB5B5).withOpacity(0.3),
                   blurRadius: 12,
                 ),
               ],
@@ -149,7 +149,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                 ),
               ],
@@ -174,8 +174,8 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
             gradient: RadialGradient(
               colors: [
                 Color.lerp(
-                  const Color(0xFFFFB5B5)!.withValues(alpha: _glowAnimation.value),
-                  const Color(0xFFFFD700)!.withValues(alpha: _glowAnimation.value),
+                  const Color(0xFFFFB5B5)!.withOpacity(_glowAnimation.value),
+                  const Color(0xFFFFD700)!.withOpacity(_glowAnimation.value),
                   0.5,
                 )!,
                 Colors.transparent,
@@ -194,12 +194,12 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFB5B5).withValues(alpha: _glowAnimation.value * 0.6),
+                        color: const Color(0xFFFFB5B5).withOpacity(_glowAnimation.value * 0.6),
                         blurRadius: 40,
                         spreadRadius: 10,
                       ),
                       BoxShadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: _glowAnimation.value * 0.3),
+                        color: const Color(0xFFFFD700).withOpacity(_glowAnimation.value * 0.3),
                         blurRadius: 60,
                         spreadRadius: 20,
                       ),
@@ -318,7 +318,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
                           width: 18,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                            color: const Color(0xFFFFB5B5).withOpacity(0.6),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -330,7 +330,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
                           width: 18,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                            color: const Color(0xFFFFB5B5).withOpacity(0.6),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -370,7 +370,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFFB5B5).withValues(alpha: 0.5),
+                                    color: const Color(0xFFFFB5B5).withOpacity(0.5),
                                     blurRadius: 10,
                                   ),
                                 ],
@@ -420,7 +420,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+            color: const Color(0xFFFFD700).withOpacity(0.15),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -467,7 +467,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+              color: const Color(0xFFFFD700).withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
@@ -518,7 +518,7 @@ class _HomeP1ScreenState extends State<HomeP1Screen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.2),
+            color: color.withOpacity(0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),

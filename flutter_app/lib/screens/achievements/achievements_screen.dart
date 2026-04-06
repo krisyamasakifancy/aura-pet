@@ -36,7 +36,7 @@ class AchievementsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AuraPetTheme.secondary.withValues(alpha: 0.4),
+                        color: AuraPetTheme.secondary.withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -48,7 +48,7 @@ class AchievementsScreen extends StatelessWidget {
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color: AuraPetTheme.white.withValues(alpha: 0.3),
+                          color: AuraPetTheme.white.withOpacity(0.3),
                           shape: BoxShape.circle,
                         ),
                         child: const Center(
@@ -142,7 +142,7 @@ class _AchievementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: achievement.isUnlocked
             ? AuraPetTheme.white
-            : AuraPetTheme.white.withValues(alpha: 0.7),
+            : AuraPetTheme.white.withOpacity(0.7),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AuraPetTheme.shadowSm,
         border: achievement.isUnlocked
@@ -214,9 +214,9 @@ class _AchievementCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: achievement.progress,
-                      backgroundColor: achievement.bgColor.withValues(alpha: 0.3),
+                      backgroundColor: achievement.bgColor.withOpacity(0.3),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        achievement.bgColor.withValues(alpha: 0.8),
+                        achievement.bgColor.withOpacity(0.8),
                       ),
                       minHeight: 6,
                     ),
@@ -239,7 +239,7 @@ class _AchievementCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AuraPetTheme.secondary.withValues(alpha: 0.2),
+              color: AuraPetTheme.secondary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(

@@ -62,7 +62,8 @@ class FurryTheme {
     colors: [primary, secondary],
   );
   
-  static const LinearGradient bearGradient = LinearGradient(
+  // 渐变 - 熊仔
+  static LinearGradient get bearGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [bearBrown, bearLight],
@@ -153,7 +154,7 @@ class FurryCharacterState<T extends FurryCharacter> extends State<T>
               scale: widget.animate ? _breath.value : 1.0,
               child: CustomPaint(
                 size: Size(widget.size, widget.size),
-                painter: _getPainter(),
+                painter: getPainter(),
               ),
             ),
           );
@@ -162,7 +163,8 @@ class FurryCharacterState<T extends FurryCharacter> extends State<T>
     );
   }
   
-  CustomPainter _getPainter();
+  /// 子类必须实现此方法
+  CustomPainter getPainter();
 }
 
 // ========== 🐻 熊仔 - Data Bear ==========
@@ -187,7 +189,7 @@ class DataBear extends FurryCharacter {
 
 class _DataBearState extends FurryCharacterState<DataBear> {
   @override
-  CustomPainter _getPainter() {
+  CustomPainter getPainter() {
     return _DataBearPainter(
       sleeping: widget.sleeping,
       celebrating: widget.celebrating,
@@ -516,7 +518,7 @@ class ChefBunny extends FurryCharacter {
 
 class _ChefBunnyState extends FurryCharacterState<ChefBunny> {
   @override
-  CustomPainter _getPainter() {
+  CustomPainter getPainter() {
     return _ChefBunnyPainter(
       thinking: widget.thinking,
       excited: widget.excited,
@@ -815,7 +817,7 @@ class CheerEll extends FurryCharacter {
 
 class _CheerEllState extends FurryCharacterState<CheerEll> {
   @override
-  CustomPainter _getPainter() {
+  CustomPainter getPainter() {
     return _CheerEllPainter(
       celebrating: widget.celebrating,
       waving: widget.waving,

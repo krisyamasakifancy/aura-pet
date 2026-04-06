@@ -65,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.all(24),
               child: LinearProgressIndicator(
                 value: ((_currentStep + 1) / _steps.length),
-                backgroundColor: AuraPetTheme.primary.withValues(alpha: 0.2),
+                backgroundColor: AuraPetTheme.primary.withOpacity(0.2),
                 valueColor:
                     const AlwaysStoppedAnimation<Color>(AuraPetTheme.primary),
                 borderRadius: BorderRadius.circular(3),

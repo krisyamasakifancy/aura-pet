@@ -180,7 +180,7 @@ class _AuraFastingScreenState extends State<AuraFastingScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AuraPetTheme.success.withValues(alpha: 0.15),
+                          color: AuraPetTheme.success.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -362,7 +362,7 @@ class _AuraFastingScreenState extends State<AuraFastingScreen>
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: isActive ? color : color.withValues(alpha: 0.15),
+            color: isActive ? color : color.withOpacity(0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(

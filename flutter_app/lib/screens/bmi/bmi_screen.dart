@@ -113,7 +113,7 @@ class _BmiScreenState extends State<BmiScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: _bmiColor.withValues(alpha: 0.2),
+                      color: _bmiColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -159,7 +159,7 @@ class _BmiScreenState extends State<BmiScreen> {
                             border: Border.all(color: _bmiColor, width: 4),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
+                                color: Colors.black.withOpacity(0.2),
                                 blurRadius: 8,
                               ),
                             ],
@@ -399,9 +399,9 @@ class _SliderCard extends StatelessWidget {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: AuraPetTheme.primary,
-              inactiveTrackColor: AuraPetTheme.primary.withValues(alpha: 0.2),
+              inactiveTrackColor: AuraPetTheme.primary.withOpacity(0.2),
               thumbColor: AuraPetTheme.primary,
-              overlayColor: AuraPetTheme.primary.withValues(alpha: 0.2),
+              overlayColor: AuraPetTheme.primary.withOpacity(0.2),
               trackHeight: 8,
             ),
             child: Slider(

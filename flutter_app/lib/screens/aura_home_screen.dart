@@ -92,7 +92,7 @@ class _AuraHomeScreenState extends State<AuraHomeScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AuraPetTheme.auraGlow.withValues(alpha: 0.3),
+                  color: AuraPetTheme.auraGlow.withOpacity(0.3),
                   blurRadius: 15,
                 ),
               ],
@@ -219,7 +219,7 @@ class _AuraHomeScreenState extends State<AuraHomeScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? AuraPetTheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isActive ? AuraPetTheme.primary.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -410,7 +410,7 @@ class _HomeContent extends StatelessWidget {
           child: Container(
             height: 6,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
+              color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(3),
             ),
             child: FractionallySizedBox(
@@ -483,7 +483,7 @@ class _HomeContent extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -591,8 +591,8 @@ class _HomeContent extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AuraPetTheme.auraGlow.withValues(alpha: 0.2),
-            AuraPetTheme.accent.withValues(alpha: 0.1),
+            AuraPetTheme.auraGlow.withOpacity(0.2),
+            AuraPetTheme.accent.withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -715,7 +715,7 @@ class _FastingContent extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AuraPetTheme.primary.withValues(alpha: 0.3),
+                  color: AuraPetTheme.primary.withOpacity(0.3),
                   blurRadius: 30,
                   spreadRadius: 5,
                 ),

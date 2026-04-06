@@ -51,7 +51,7 @@ class AuraPetTheme {
   // Shadows
   static List<BoxShadow> get shadowSm => [
         BoxShadow(
-          color: primary.withValues(alpha: 0.15),
+          color: primary.withOpacity(0.15),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -59,7 +59,7 @@ class AuraPetTheme {
 
   static List<BoxShadow> get shadowMd => [
         BoxShadow(
-          color: primary.withValues(alpha: 0.15),
+          color: primary.withOpacity(0.15),
           blurRadius: 30,
           offset: const Offset(0, 8),
         ),
@@ -67,7 +67,7 @@ class AuraPetTheme {
 
   static List<BoxShadow> get shadowLg => [
         BoxShadow(
-          color: primary.withValues(alpha: 0.25),
+          color: primary.withOpacity(0.25),
           blurRadius: 40,
           offset: const Offset(0, 12),
         ),

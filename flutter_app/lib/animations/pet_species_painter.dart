@@ -67,7 +67,7 @@ class PetSpeciesPainter extends CustomPainter {
   
   void _drawShadow(Canvas canvas) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = Colors.black.withOpacity(0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 80), width: 100, height: 25),
@@ -254,14 +254,14 @@ class PetSpeciesPainter extends CustomPainter {
     );
     
     // 高光
-    final highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.3);
+    final highlightPaint = Paint()..color = Colors.white.withOpacity(0.3);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(-25, 5), width: 50, height: 80),
       highlightPaint,
     );
     
     // 肚子
-    final bellyPaint = Paint()..color = Colors.white.withValues(alpha: 0.4);
+    final bellyPaint = Paint()..color = Colors.white.withOpacity(0.4);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 45), width: 60, height: 50),
       bellyPaint,
@@ -307,7 +307,7 @@ class PetSpeciesPainter extends CustomPainter {
     }
     
     if (blinkProgress > 0.3) {
-      final highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.95);
+      final highlightPaint = Paint()..color = Colors.white.withOpacity(0.95);
       canvas.drawCircle(Offset(-eyeSpacing - 2, eyeY - 3), 3, highlightPaint);
       canvas.drawCircle(Offset(eyeSpacing - 2, eyeY - 3), 3, highlightPaint);
     }
@@ -340,7 +340,7 @@ class PetSpeciesPainter extends CustomPainter {
   }
   
   void _drawBlush(Canvas canvas) {
-    final blushPaint = Paint()..color = const Color(0xFFFF9696).withValues(alpha: 0.35);
+    final blushPaint = Paint()..color = const Color(0xFFFF9696).withOpacity(0.35);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(-38, -8), width: 28, height: 16),
       blushPaint,
@@ -526,7 +526,7 @@ class PetSpeciesPainter extends CustomPainter {
   void _drawFluffyTail(Canvas canvas, Color color) {
     final tailGrad = Paint()
       ..shader = RadialGradient(
-        colors: [color, color.withValues(alpha: 0.8)],
+        colors: [color, color.withOpacity(0.8)],
       ).createShader(const Rect.fromLTWH(-25, -20, 50, 40));
     
     for (int i = -2; i <= 2; i++) {
@@ -614,7 +614,7 @@ class PetSpeciesPainter extends CustomPainter {
   
   void _drawWings(Canvas canvas) {
     final wingPaint = Paint()
-      ..color = secondaryColor.withValues(alpha: 0.6)
+      ..color = secondaryColor.withOpacity(0.6)
       ..style = PaintingStyle.fill];
     
     // 左翼
@@ -662,7 +662,7 @@ class PetSpeciesPainter extends CustomPainter {
       canvas.drawPath(rightEye, eyePaint);
       
       // 高光
-      final highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.9);
+      final highlightPaint = Paint()..color = Colors.white.withOpacity(0.9);
       canvas.drawCircle(Offset(-eyeSpacing - 2, eyeY - 4), 2.5, highlightPaint);
       canvas.drawCircle(Offset(eyeSpacing - 2, eyeY - 4), 2.5, highlightPaint);
     }

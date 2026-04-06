@@ -133,7 +133,7 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Colors.white.withOpacity(0.8),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -161,7 +161,7 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8BA0).withValues(alpha: 0.15),
+            color: const Color(0xFFFF8BA0).withOpacity(0.15),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -218,7 +218,7 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    color: const Color(0xFF4CAF50).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Row(
@@ -304,7 +304,7 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -350,14 +350,14 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.7),
+            Colors.white.withOpacity(0.9),
+            Colors.white.withOpacity(0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -453,7 +453,7 @@ class _ProgressP7ScreenState extends State<ProgressP7Screen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.2),
+            color: color.withOpacity(0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -561,8 +561,8 @@ class _MonetChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFF8BA0).withValues(alpha: 0.4),
-          const Color(0xFFFF8BA0).withValues(alpha: 0.05),
+          const Color(0xFFFF8BA0).withOpacity(0.4),
+          const Color(0xFFFF8BA0).withOpacity(0.05),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     
@@ -615,7 +615,7 @@ class _MonetChartPainter extends CustomPainter {
       
       // 光晕
       final glowPaint = Paint()
-        ..color = const Color(0xFFFF8BA0).withValues(alpha: 0.3)
+        ..color = const Color(0xFFFF8BA0).withOpacity(0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
       canvas.drawCircle(Offset(x, y), 12, glowPaint);
       
@@ -631,7 +631,7 @@ class _MonetChartPainter extends CustomPainter {
       final flowGlow = Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFFFB4C4).withValues(alpha: 0.4),
+            const Color(0xFFFFB4C4).withOpacity(0.4),
             Colors.transparent,
           ],
         ).createShader(Rect.fromCircle(center: Offset(glowX, size.height / 2), radius: 60));

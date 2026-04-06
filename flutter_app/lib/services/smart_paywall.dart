@@ -127,7 +127,7 @@ class _SmartPaywallState extends State<SmartPaywall>
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withOpacity(0.8),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.close, size: 20),
@@ -174,9 +174,9 @@ class _SmartPaywallState extends State<SmartPaywall>
                           gradient: RadialGradient(
                             colors: [
                               _plans[_currentIndex].accentColor
-                                  .withValues(alpha: 0.4),
+                                  .withOpacity(0.4),
                               _plans[_currentIndex].accentColor
-                                  .withValues(alpha: 0.0),
+                                  .withOpacity(0.0),
                             ],
                           ),
                         ),
@@ -340,7 +340,7 @@ class _PlanCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: plan.accentColor.withValues(alpha: isSelected ? 0.3 : 0.1),
+            color: plan.accentColor.withOpacity(isSelected ? 0.3 : 0.1),
             blurRadius: isSelected ? 20 : 10,
             offset: const Offset(0, 4),
           ),

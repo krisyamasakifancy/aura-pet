@@ -148,7 +148,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Colors.white.withOpacity(0.8),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -178,7 +178,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
         boxShadow: [
           BoxShadow(
             color: (isBalanced ? const Color(0xFFFFD700) : const Color(0xFFFFB74D))
-                .withValues(alpha: 0.4),
+                .withOpacity(0.4),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -236,7 +236,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -306,7 +306,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF8BA0).withValues(alpha: 0.4 * _heartAnimation.value),
+                              color: const Color(0xFFFF8BA0).withOpacity(0.4 * _heartAnimation.value),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
@@ -413,7 +413,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
                                 width: 14,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                  color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
@@ -425,7 +425,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
                                 width: 14,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                  color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
@@ -465,7 +465,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFFFF8BA0).withValues(alpha: 0.5),
+                                          color: const Color(0xFFFF8BA0).withOpacity(0.5),
                                           blurRadius: 10,
                                         ),
                                       ],
@@ -524,7 +524,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -568,7 +568,7 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
               Container(
                 height: 10,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(5),
                 ),
               ),
@@ -624,10 +624,10 @@ class _NutritionP8ScreenState extends State<NutritionP8Screen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFD700).withValues(alpha: 0.1),
+        color: const Color(0xFFFFD700).withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+          color: const Color(0xFFFFD700).withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -747,8 +747,8 @@ class _NutritionRadarPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFF8BA0).withValues(alpha: 0.4),
-          const Color(0xFFFFB74D).withValues(alpha: 0.2),
+          const Color(0xFFFF8BA0).withOpacity(0.4),
+          const Color(0xFFFFB74D).withOpacity(0.2),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
     
@@ -803,8 +803,8 @@ class _ConnectionLinePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFFFF8BA0).withValues(alpha: 0.6 * heartPulse),
-          const Color(0xFFFFD700).withValues(alpha: 0.3 * radarProgress),
+          const Color(0xFFFF8BA0).withOpacity(0.6 * heartPulse),
+          const Color(0xFFFFD700).withOpacity(0.3 * radarProgress),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..strokeWidth = 2
@@ -825,7 +825,7 @@ class _ConnectionLinePainter extends CustomPainter {
     // 闪光点
     final glowX = size.width * 0.7 + radarProgress * size.width * 0.3;
     final glowPaint = Paint()
-      ..color = const Color(0xFFFFD700).withValues(alpha: 0.8 * heartPulse)
+      ..color = const Color(0xFFFFD700).withOpacity(0.8 * heartPulse)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     
     canvas.drawCircle(Offset(glowX, size.height * 0.6), 4, glowPaint);

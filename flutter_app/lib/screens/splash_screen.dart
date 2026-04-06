@@ -172,7 +172,7 @@ class _AuraSplashScreenState extends State<AuraSplashScreen>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AuraPetTheme.primaryLight.withValues(alpha: 0.4),
+                  AuraPetTheme.primaryLight.withOpacity(0.4),
                   Colors.transparent,
                 ],
               ),
@@ -190,7 +190,7 @@ class _AuraSplashScreenState extends State<AuraSplashScreen>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AuraPetTheme.accentLight.withValues(alpha: 0.3),
+                  AuraPetTheme.accentLight.withOpacity(0.3),
                   Colors.transparent,
                 ],
               ),

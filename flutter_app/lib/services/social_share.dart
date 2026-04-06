@@ -69,7 +69,7 @@ class MonetGardenShare {
 
     // 添加纹理效果
     final texturePaint = Paint()
-      ..color = colors.texture.withValues(alpha: 0.1)
+      ..color = colors.texture.withOpacity(0.1)
       ..style = PaintingStyle.fill;
 
     // 绘制莫奈风格的模糊圆形装饰
@@ -79,7 +79,7 @@ class MonetGardenShare {
       canvas.drawCircle(
         Offset(x, y),
         100 + (i * 20).toDouble(),
-        texturePaint..color = colors.accent.withValues(alpha: 0.05 + (i * 0.01)),
+        texturePaint..color = colors.accent.withOpacity(0.05 + (i * 0.01)),
       );
     }
   }
@@ -92,8 +92,8 @@ class MonetGardenShare {
     final glowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          colors.accent.withValues(alpha: 0.4),
-          colors.accent.withValues(alpha: 0.0),
+          colors.accent.withOpacity(0.4),
+          colors.accent.withOpacity(0.0),
         ],
       ).createShader(
         Rect.fromCircle(center: Offset(size.width / 2, size.height * 0.3), radius: 400),
@@ -135,8 +135,8 @@ class MonetGardenShare {
     final glowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          _getAuraColor(auraScore).withValues(alpha: 0.6),
-          _getAuraColor(auraScore).withValues(alpha: 0.0),
+          _getAuraColor(auraScore).withOpacity(0.6),
+          _getAuraColor(auraScore).withOpacity(0.0),
         ],
       ).createShader(
         Rect.fromCircle(center: Offset(centerX, avatarY), radius: avatarSize),
@@ -242,7 +242,7 @@ class MonetGardenShare {
 
     // 成就徽章
     final badgePaint = Paint()
-      ..color = const Color(0xFFFFB5B5).withValues(alpha: 0.2)
+      ..color = const Color(0xFFFFB5B5).withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     canvas.drawRRect(
@@ -276,7 +276,7 @@ class MonetGardenShare {
 
     // 每日金句
     final quotePaint = Paint()
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.9)
+      ..color = const Color(0xFFFFFFFF).withOpacity(0.9)
       ..style = PaintingStyle.fill;
 
     canvas.drawRRect(

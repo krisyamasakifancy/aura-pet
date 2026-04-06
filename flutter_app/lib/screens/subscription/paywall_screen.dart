@@ -138,7 +138,7 @@ class _PaywallScreenState extends State<PaywallScreen>
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: Colors.white.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -184,7 +184,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: (plan['color'] as Color).withValues(alpha: _glowAnimation.value * (1 - index * 0.3)),
+                      color: (plan['color'] as Color).withOpacity(_glowAnimation.value * (1 - index * 0.3)),
                       width: 2,
                     ),
                   ),
@@ -199,7 +199,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      (plan['color'] as Color).withValues(alpha: 0.4 * _glowAnimation.value),
+                      (plan['color'] as Color).withOpacity(0.4 * _glowAnimation.value),
                       Colors.transparent,
                     ],
                   ),
@@ -225,7 +225,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: (plan['color'] as Color).withValues(alpha: 0.5),
+                            color: (plan['color'] as Color).withOpacity(0.5),
                             blurRadius: 30,
                             spreadRadius: 10,
                           ),
@@ -318,7 +318,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                               width: 14,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
@@ -330,7 +330,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                               width: 14,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
@@ -407,7 +407,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      color: const Color(0xFFFFD700).withOpacity(0.5),
                       blurRadius: 10,
                     ),
                   ],
@@ -436,7 +436,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF9B59B6).withValues(alpha: 0.5),
+                      color: const Color(0xFF9B59B6).withOpacity(0.5),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -465,13 +465,13 @@ class _PaywallScreenState extends State<PaywallScreen>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (plan['color'] as Color).withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.05),
+                    ? (plan['color'] as Color).withOpacity(0.2)
+                    : Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? plan['color'] as Color
-                      : Colors.white.withValues(alpha: 0.1),
+                      : Colors.white.withOpacity(0.1),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -539,10 +539,10 @@ class _PaywallScreenState extends State<PaywallScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withOpacity(0.1),
         ),
       ),
       child: Column(
@@ -571,7 +571,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: (plan['color'] as Color).withValues(alpha: 0.2),
+                    color: (plan['color'] as Color).withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -613,7 +613,7 @@ class _PaywallScreenState extends State<PaywallScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: (plan['color'] as Color).withValues(alpha: 0.4),
+                color: (plan['color'] as Color).withOpacity(0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -668,14 +668,14 @@ class _PaywallScreenState extends State<PaywallScreen>
               'Welcome to the premium family!',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: (plan['color'] as Color).withValues(alpha: 0.2),
+                color: (plan['color'] as Color).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(

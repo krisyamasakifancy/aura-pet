@@ -153,7 +153,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
               height: 44,
               decoration: BoxDecoration(
                 color: _isFasting 
-                    ? Colors.white.withValues(alpha: 0.1)
+                    ? Colors.white.withOpacity(0.1)
                     : Colors.white,
                 shape: BoxShape.circle,
               ),
@@ -198,7 +198,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                      color: const Color(0xFF6C63FF).withOpacity(0.3),
                       blurRadius: 50,
                       spreadRadius: 20,
                     ),
@@ -279,7 +279,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                               '⭐',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.white.withValues(alpha: _starAnimation.value),
+                                color: Colors.white.withOpacity(_starAnimation.value),
                               ),
                             ),
                           ),
@@ -402,7 +402,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                         width: 18,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFB5B5).withValues(alpha: _isFasting ? 0.8 : 0.4),
+                          color: const Color(0xFFFFB5B5).withOpacity(_isFasting ? 0.8 : 0.4),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -414,7 +414,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                         width: 18,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFB5B5).withValues(alpha: _isFasting ? 0.8 : 0.4),
+                          color: const Color(0xFFFFB5B5).withOpacity(_isFasting ? 0.8 : 0.4),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -466,11 +466,11 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _isFasting 
-                      ? Colors.white.withValues(alpha: 0.05)
+                      ? Colors.white.withOpacity(0.05)
                       : Colors.white,
                   border: Border.all(
                     color: _isFasting 
-                        ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
+                        ? const Color(0xFF6C63FF).withOpacity(0.3)
                         : const Color(0xFFDEE2E6),
                     width: 2,
                   ),
@@ -511,7 +511,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
                     style: TextStyle(
                       fontSize: 14,
                       color: _isFasting 
-                          ? Colors.white.withValues(alpha: 0.7)
+                          ? Colors.white.withOpacity(0.7)
                           : const Color(0xFF636E72),
                     ),
                   ),
@@ -530,14 +530,14 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _isFasting 
-            ? Colors.white.withValues(alpha: 0.1)
+            ? Colors.white.withOpacity(0.1)
             : Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           _buildPhaseItem(Icons.nightlight_round, 'Deep Sleep', const Color(0xFF6C63FF), true),
-          Expanded(child: Container(height: 2, color: const Color(0xFF6C63FF).withValues(alpha: 0.3))),
+          Expanded(child: Container(height: 2, color: const Color(0xFF6C63FF).withOpacity(0.3))),
           _buildPhaseItem(Icons.wb_sunny_outlined, 'Awake', const Color(0xFFFFD700), false),
         ],
       ),
@@ -551,7 +551,7 @@ class _FastingP6ScreenState extends State<FastingP6Screen>
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: isActive ? color : color.withValues(alpha: 0.2),
+            color: isActive ? color : color.withOpacity(0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: isActive ? Colors.white : color, size: 22),
@@ -627,7 +627,7 @@ class _StarFieldPainter extends CustomPainter {
       final starSize = random.nextDouble() * 2 + 1;
       final opacity = (random.nextDouble() * 0.5 + 0.5) * twinkle;
       
-      paint.color = Colors.white.withValues(alpha: opacity);
+      paint.color = Colors.white.withOpacity(opacity);
       canvas.drawCircle(Offset(x, y), starSize, paint);
     }
   }

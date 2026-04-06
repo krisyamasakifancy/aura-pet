@@ -340,17 +340,17 @@ class _QuoteBubbleState extends State<QuoteBubble>
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.white,
-                    categoryColor.withValues(alpha: 0.1),
+                    categoryColor.withOpacity(0.1),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: categoryColor.withValues(alpha: _glowAnimation.value),
+                  color: categoryColor.withOpacity(_glowAnimation.value),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: categoryColor.withValues(alpha: _glowAnimation.value * 0.5),
+                    color: categoryColor.withOpacity(_glowAnimation.value * 0.5),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -363,7 +363,7 @@ class _QuoteBubbleState extends State<QuoteBubble>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.2),
+                      color: categoryColor.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Center(

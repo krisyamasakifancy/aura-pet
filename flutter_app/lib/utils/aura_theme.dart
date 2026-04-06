@@ -63,8 +63,8 @@ class AuraPetTheme {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      auraGlow.withValues(alpha: 0.6),
-      auraGlowSoft.withValues(alpha: 0.3),
+      auraGlow.withOpacity(0.6),
+      auraGlowSoft.withOpacity(0.3),
       Colors.transparent,
     ],
   );
@@ -74,8 +74,8 @@ class AuraPetTheme {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      heartLight.withValues(alpha: 0.8),
-      heartPink.withValues(alpha: 0.6),
+      heartLight.withOpacity(0.8),
+      heartPink.withOpacity(0.6),
     ],
   );
 
@@ -84,7 +84,7 @@ class AuraPetTheme {
   /// 轻柔阴影 (空气感)
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: primary.withValues(alpha: 0.08),
+      color: primary.withOpacity(0.08),
       blurRadius: 20,
       offset: const Offset(0, 8),
       spreadRadius: 0,
@@ -94,7 +94,7 @@ class AuraPetTheme {
   /// 中等阴影
   static List<BoxShadow> get mediumShadow => [
     BoxShadow(
-      color: primary.withValues(alpha: 0.12),
+      color: primary.withOpacity(0.12),
       blurRadius: 30,
       offset: const Offset(0, 12),
       spreadRadius: 0,
@@ -104,7 +104,7 @@ class AuraPetTheme {
   /// 心形阴影
   static List<BoxShadow> get heartShadow => [
     BoxShadow(
-      color: heartPink.withValues(alpha: 0.3),
+      color: heartPink.withOpacity(0.3),
       blurRadius: 15,
       offset: const Offset(0, 5),
     ),

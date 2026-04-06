@@ -24,7 +24,7 @@ class PetDetailScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AuraPetTheme.bgPink.withValues(alpha: 0.5),
+                    AuraPetTheme.bgPink.withOpacity(0.5),
                     AuraPetTheme.bgCream,
                   ],
                 ),
@@ -100,7 +100,7 @@ class PetDetailScreen extends StatelessWidget {
                         icon: '❤️',
                         label: '爱心',
                         value: '${state.hearts} 个',
-                        color: AuraPetTheme.danger.withValues(alpha: 0.2),
+                        color: AuraPetTheme.danger.withOpacity(0.2),
                       ),
                       const SizedBox(height: 12),
 
@@ -109,7 +109,7 @@ class PetDetailScreen extends StatelessWidget {
                         icon: '🪙',
                         label: '金币',
                         value: '${state.coins}',
-                        color: const Color(0xFFFFD93D).withValues(alpha: 0.3),
+                        color: const Color(0xFFFFD93D).withOpacity(0.3),
                       ),
                       const SizedBox(height: 12),
 
@@ -219,7 +219,7 @@ class _LevelCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: AuraPetTheme.secondary.withValues(alpha: 0.3),
+              backgroundColor: AuraPetTheme.secondary.withOpacity(0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(AuraPetTheme.secondary),
               minHeight: 12,
             ),
@@ -389,13 +389,13 @@ class _EvolutionPreview extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFFFD93D).withValues(alpha: 0.2),
-            const Color(0xFFFFE066).withValues(alpha: 0.2),
+            const Color(0xFFFFD93D).withOpacity(0.2),
+            const Color(0xFFFFE066).withOpacity(0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AuraPetTheme.secondary.withValues(alpha: 0.5),
+          color: AuraPetTheme.secondary.withOpacity(0.5),
           width: 2,
         ),
       ),

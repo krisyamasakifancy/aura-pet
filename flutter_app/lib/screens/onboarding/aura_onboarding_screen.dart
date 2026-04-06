@@ -166,7 +166,7 @@ class _AuraOnboardingScreenState extends State<AuraOnboardingScreen>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AuraPetTheme.auraGlow.withValues(alpha: 0.3),
+                  AuraPetTheme.auraGlow.withOpacity(0.3),
                   Colors.transparent,
                 ],
               ),

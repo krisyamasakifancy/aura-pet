@@ -89,7 +89,7 @@ class HomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: AuraPetTheme.secondary.withValues(alpha: 0.4),
+                            color: AuraPetTheme.secondary.withOpacity(0.4),
                             blurRadius: 15,
                           ),
                         ],
@@ -154,7 +154,7 @@ class HomeScreen extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: state.xpProgress,
                         backgroundColor:
-                            AuraPetTheme.secondary.withValues(alpha: 0.3),
+                            AuraPetTheme.secondary.withOpacity(0.3),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           AuraPetTheme.secondary,
                         ),

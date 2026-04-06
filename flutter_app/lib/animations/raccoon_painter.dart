@@ -76,7 +76,7 @@ class RaccoonPainter extends CustomPainter {
   
   void _drawShadow(Canvas canvas) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = Colors.black.withOpacity(0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     
     canvas.drawOval(
@@ -99,7 +99,7 @@ class RaccoonPainter extends CustomPainter {
     
     final tailGrad = Paint()
       ..shader = RadialGradient(
-        colors: [tailColor, tailColor.withValues(alpha: 0.8)],
+        colors: [tailColor, tailColor.withOpacity(0.8)],
       ).createShader(const Rect.fromLTWH(-25, -18, 50, 36));
     
     // 毛茸茸的尾巴
@@ -143,14 +143,14 @@ class RaccoonPainter extends CustomPainter {
     
     // 高光
     final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3);
+      ..color = Colors.white.withOpacity(0.3);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(-25, 5), width: 50, height: 80),
       highlightPaint,
     );
     
     // 肚子
-    final bellyPaint = Paint()..color = Colors.white.withValues(alpha: 0.4);
+    final bellyPaint = Paint()..color = Colors.white.withOpacity(0.4);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 40), width: 60, height: 50),
       bellyPaint,
@@ -260,7 +260,7 @@ class RaccoonPainter extends CustomPainter {
     
     if (blinkProgress > 0.3) {
       // 高光
-      final highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.95);
+      final highlightPaint = Paint()..color = Colors.white.withOpacity(0.95);
       canvas.drawCircle(
         Offset(-eyeSpacing - 2, eyeY - 3),
         3,
@@ -273,7 +273,7 @@ class RaccoonPainter extends CustomPainter {
       );
       
       // 次高光
-      final smallHighlight = Paint()..color = Colors.white.withValues(alpha: 0.5);
+      final smallHighlight = Paint()..color = Colors.white.withOpacity(0.5);
       canvas.drawCircle(
         Offset(-eyeSpacing + 2, eyeY + 2),
         1.5,
@@ -300,7 +300,7 @@ class RaccoonPainter extends CustomPainter {
     );
     
     // 鼻头高光
-    final noseHighlight = Paint()..color = Colors.white.withValues(alpha: 0.5);
+    final noseHighlight = Paint()..color = Colors.white.withOpacity(0.5);
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(-1, -7), width: 4, height: 3),
       noseHighlight,
@@ -322,7 +322,7 @@ class RaccoonPainter extends CustomPainter {
   }
   
   void _drawBlush(Canvas canvas) {
-    final blushPaint = Paint()..color = const Color(0xFFFF9696).withValues(alpha: 0.35);
+    final blushPaint = Paint()..color = const Color(0xFFFF9696).withOpacity(0.35);
     
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(-40, -10), width: 28, height: 16),

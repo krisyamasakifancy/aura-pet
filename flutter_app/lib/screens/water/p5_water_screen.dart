@@ -168,7 +168,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Colors.white.withOpacity(0.8),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -206,7 +206,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.8),
+                color: Colors.white.withOpacity(0.8),
                 width: 4,
               ),
             ),
@@ -287,7 +287,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF64B5F6).withValues(alpha: 0.4),
+                        color: const Color(0xFF64B5F6).withOpacity(0.4),
                         blurRadius: 30,
                         spreadRadius: 10,
                       ),
@@ -339,7 +339,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                             width: 28,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF64B5F6).withValues(alpha: 0.5),
+                              color: const Color(0xFF64B5F6).withOpacity(0.5),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Colors.white, width: 2),
                             ),
@@ -352,7 +352,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                             width: 28,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF64B5F6).withValues(alpha: 0.5),
+                              color: const Color(0xFF64B5F6).withOpacity(0.5),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Colors.white, width: 2),
                             ),
@@ -442,7 +442,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                           width: 14,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFB5B5).withValues(alpha: isDiving ? 0.9 : 0.4),
+                            color: const Color(0xFFFFB5B5).withOpacity(isDiving ? 0.9 : 0.4),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -454,7 +454,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                           width: 14,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFB5B5).withValues(alpha: isDiving ? 0.9 : 0.4),
+                            color: const Color(0xFFFFB5B5).withOpacity(isDiving ? 0.9 : 0.4),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -515,7 +515,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
           width: 12,
           height: 12 + _bubbleAnimation.value * 4,
           decoration: BoxDecoration(
-            color: const Color(0xFF64B5F6).withValues(alpha: 0.6),
+            color: const Color(0xFF64B5F6).withOpacity(0.6),
             shape: BoxShape.circle,
           ),
         );
@@ -553,11 +553,11 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1976D2).withValues(alpha: 0.2),
+            color: const Color(0xFF1976D2).withOpacity(0.2),
             blurRadius: 20,
           ),
         ],
@@ -616,7 +616,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF1976D2).withValues(alpha: 0.2),
+                    color: const Color(0xFF1976D2).withOpacity(0.2),
                     blurRadius: 15,
                   ),
                 ],
@@ -647,7 +647,7 @@ class _WaterP5ScreenState extends State<WaterP5Screen>
                     BoxShadow(
                       color: (_glasses >= _targetGlasses
                           ? const Color(0xFF4CAF50)
-                          : const Color(0xFF1976D2)).withValues(alpha: 0.4),
+                          : const Color(0xFF1976D2)).withOpacity(0.4),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -694,8 +694,8 @@ class _WavePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFF64B5F6).withValues(alpha: 0.1),
-          const Color(0xFF1976D2).withValues(alpha: 0.2),
+          const Color(0xFF64B5F6).withOpacity(0.1),
+          const Color(0xFF1976D2).withOpacity(0.2),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     
@@ -732,7 +732,7 @@ class _GlassWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
+      ..color = Colors.white.withOpacity(0.3)
       ..style = PaintingStyle.fill;
     
     final path = Path();

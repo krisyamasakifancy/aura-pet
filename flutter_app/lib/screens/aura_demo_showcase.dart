@@ -158,11 +158,11 @@ class _AuraDemoShowcaseState extends State<AuraDemoShowcase>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
             ),
           ],
@@ -209,11 +209,11 @@ class _AuraDemoShowcaseState extends State<AuraDemoShowcase>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
             ),
           ],
@@ -376,7 +376,7 @@ class _DemoPage extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFFFB4C4).withValues(alpha: 0.3),
+                    const Color(0xFFFFB4C4).withOpacity(0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -393,7 +393,7 @@ class _DemoPage extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF8FBDD3).withValues(alpha: 0.3),
+                    const Color(0xFF8FBDD3).withOpacity(0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -486,11 +486,11 @@ class _DemoPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
           ),
         ],
@@ -514,7 +514,7 @@ class _DemoPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6B9EB8).withValues(alpha: 0.1),
+            color: const Color(0xFF6B9EB8).withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -545,8 +545,8 @@ class _DemoPage extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFFF9EC4).withValues(alpha: 0.2),
-            const Color(0xFFFFB4C4).withValues(alpha: 0.1),
+            const Color(0xFFFF9EC4).withOpacity(0.2),
+            const Color(0xFFFFB4C4).withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -608,7 +608,7 @@ class _DemoPage extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF9EC4).withValues(alpha: 0.3),
+            color: const Color(0xFFFF9EC4).withOpacity(0.3),
             blurRadius: 15,
             spreadRadius: 2,
           ),
@@ -775,7 +775,7 @@ class _DemoPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -789,7 +789,7 @@ class _DemoPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: isActive
-                  ? const Color(0xFF6B9EB8).withValues(alpha: 0.1)
+                  ? const Color(0xFF6B9EB8).withOpacity(0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),

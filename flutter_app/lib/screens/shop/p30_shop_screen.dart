@@ -121,7 +121,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+              color: const Color(0xFFFFD700).withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Row(
@@ -154,7 +154,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
           decoration: BoxDecoration(
             gradient: RadialGradient(
               colors: [
-                const Color(0xFFFFD700).withValues(alpha: 0.2 * _sparkleAnimation.value),
+                const Color(0xFFFFD700).withOpacity(0.2 * _sparkleAnimation.value),
                 Colors.transparent,
               ],
             ),
@@ -194,7 +194,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.3 * _sparkleAnimation.value),
+                            color: const Color(0xFFFFD700).withOpacity(0.3 * _sparkleAnimation.value),
                             blurRadius: 40,
                             spreadRadius: 15,
                           ),
@@ -301,7 +301,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
                               width: 16,
                               height: 9,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                 borderRadius: BorderRadius.circular(9),
                               ),
                             ),
@@ -313,7 +313,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
                               width: 16,
                               height: 9,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFB5B5).withValues(alpha: 0.6),
+                                color: const Color(0xFFFFB5B5).withOpacity(0.6),
                                 borderRadius: BorderRadius.circular(9),
                               ),
                             ),
@@ -410,7 +410,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
         child: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: (accessory['color'] as Color).withValues(alpha: 0.3),
+            color: (accessory['color'] as Color).withOpacity(0.3),
             shape: BoxShape.circle,
           ),
           child: Text(
@@ -428,7 +428,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
         margin: const EdgeInsets.all(20),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(28),
         ),
         child: GridView.builder(
@@ -453,7 +453,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
                 duration: const Duration(milliseconds: 300),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (accessory['color'] as Color).withValues(alpha: 0.2)
+                      ? (accessory['color'] as Color).withOpacity(0.2)
                       : const Color(0xFFF5F5F5),
                   borderRadius: BorderRadius.circular(16),
                   border: isSelected
@@ -462,7 +462,7 @@ class _ShopP30ScreenState extends State<ShopP30Screen>
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: (accessory['color'] as Color).withValues(alpha: 0.3),
+                            color: (accessory['color'] as Color).withOpacity(0.3),
                             blurRadius: 10,
                           ),
                         ]

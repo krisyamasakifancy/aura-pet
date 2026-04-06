@@ -118,7 +118,7 @@ class _FastingScreenState extends State<FastingScreen>
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: AuraPetTheme.accent.withValues(alpha: 0.3),
+                              color: AuraPetTheme.accent.withOpacity(0.3),
                               blurRadius: 20,
                             ),
                           ],
@@ -255,7 +255,7 @@ class _FastingScreenState extends State<FastingScreen>
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AuraPetTheme.accent.withValues(alpha: 0.4),
+                          color: AuraPetTheme.accent.withOpacity(0.4),
                           blurRadius: 30,
                           offset: const Offset(0, 8),
                         ),
@@ -440,7 +440,7 @@ class _TimerPainter extends CustomPainter {
     // Animated glow when active
     if (isActive) {
       final glowPaint = Paint()
-        ..color = AuraPetTheme.accent.withValues(alpha: 0.2 + animValue * 0.2)
+        ..color = AuraPetTheme.accent.withOpacity(0.2 + animValue * 0.2)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 20
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);

@@ -158,7 +158,7 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -182,7 +182,7 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFB5B5).withValues(alpha: 0.2),
+                          color: const Color(0xFFFFB5B5).withOpacity(0.2),
                           blurRadius: 20,
                         ),
                       ],
@@ -440,13 +440,13 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
               color: Colors.white,
               borderRadius: BorderRadius.circular(28),
               border: isActive
-                  ? Border.all(color: color.withValues(alpha: _glowAnimation.value), width: 2)
+                  ? Border.all(color: color.withOpacity(_glowAnimation.value), width: 2)
                   : null,
               boxShadow: [
                 BoxShadow(
                   color: isActive
-                      ? color.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.05),
+                      ? color.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.05),
                   blurRadius: isActive ? 30 : 20,
                   offset: const Offset(0, 10),
                 ),
@@ -471,7 +471,7 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
+                        color: color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -495,7 +495,7 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
+                        color: color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -530,7 +530,7 @@ class _GoalsP9ScreenState extends State<GoalsP9Screen>
                             border: Border.all(color: color, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                color: color.withValues(alpha: 0.4),
+                                color: color.withOpacity(0.4),
                                 blurRadius: isActive ? 15 : 8,
                                 spreadRadius: isActive ? 2 : 0,
                               ),

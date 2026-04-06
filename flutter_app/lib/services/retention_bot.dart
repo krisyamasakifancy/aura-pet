@@ -312,7 +312,7 @@ class EmotionalNotificationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFAB76).withValues(alpha: 0.3),
+              color: const Color(0xFFFFAB76).withOpacity(0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -330,7 +330,7 @@ class EmotionalNotificationCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFE4B5).withValues(alpha: 0.5),
+                    color: const Color(0xFFFFE4B5).withOpacity(0.5),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
