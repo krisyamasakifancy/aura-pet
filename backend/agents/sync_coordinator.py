@@ -7,11 +7,14 @@ Quad-Agent Sync:
 2. Logic-Agent: 奖励计算 & 数据更新
 3. Persona-Agent: 情感反馈 & 对话生成
 4. Animator-Agent: 动画触发 & 物理引擎
+
+⚠️ 安全注意：API Keys 通过环境变量管理，绝不硬编码！
 """
 
 from __future__ import annotations
 import asyncio
 import json
+import os
 import random
 import uuid
 from dataclasses import dataclass, field, asdict
@@ -19,6 +22,34 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
+
+# ========== 安全：导入配置模块 ==========
+try:
+    from config import get_settings, require_gemini_key, get_optional_gemini_key
+except ImportError:
+    # 如果 config.py 不存在，使用内置方式
+    def get_settings():
+        class Settings:
+            gemini_api_key = os.getenv("GEMINI_API_KEY")
+        return Settings()
+    
+    def require_gemini_key():
+        key = os.getenv("GEMINI_API_KEY")
+        if not key:
+            raise ValueError("GEMINI_API_KEY 环境变量未设置！")
+        return key
+    
+    def get_optional_gemini_key():
+        return os.getenv("GEMINI_API_KEY")
+
+# ========== 尝试导入 Gemini SDK ==========
+GEMINI_AVAILABLE = False
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    genai = None
+    print("⚠️ google-generativeai 未安装，Gemini 功能将使用模拟模式")
 
 # ============================================
 # DATA CLASSES
@@ -222,9 +253,64 @@ class VisionAgent:
     
     async def _call_gemini(self, image_data: str) -> Dict[str, Any]:
         """
-        模拟 Gemini Vision API
+        调用 Gemini Vision API
+        
+        ⚠️ API Key 从环境变量读取，绝不在代码中硬编码！
         """
-        # 实际项目中调用 Google Gemini Vision API
+        gemini_key = get_optional_gemini_key()
+        
+        if not gemini_key:
+            # 没有 API Key 时使用模拟数据
+            print("⚠️ 未配置 GEMINI_API_KEY，使用模拟数据")
+            return await self._mock_gemini(image_data)
+        
+        if not GEMINI_AVAILABLE:
+            print("⚠️ google-generativeai 未安装，使用模拟数据")
+            return await self._mock_gemini(image_data)
+        
+        try:
+            # 配置 Gemini（使用环境变量的 Key）
+            genai.configure(api_key=gemini_key)
+            model = genai.GenerativeModel('gemini-pro-vision')
+            
+            # 准备图片数据
+            image_bytes = self._decode_base64_image(image_data)
+            
+            # 调用 API
+            response = model.generate_content([
+                "分析这张食物图片，返回JSON格式："
+                '{"food_name":"名称","calories":热量,"protein":蛋白质,"carbs":碳水,"fat":脂肪,"confidence":置信度}',
+                {"mime_type": "image/jpeg", "data": image_bytes}
+            ])
+            
+            # 解析响应
+            result_text = response.text.strip()
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0]
+            
+            result = json.loads(result_text)
+            
+            print(f"✓ Gemini 识别: {result.get('food_name')} ({result.get('calories')} kcal)")
+            
+            return {
+                "food_name": result.get("food_name", "奶酪蛋糕"),
+                "calories": int(result.get("calories", 400)),
+                "protein": float(result.get("protein", 7.8)),
+                "carbs": float(result.get("carbs", 43.0)),
+                "fat": float(result.get("fat", 21.0)),
+                "category": FoodCategory.DESSERT,
+                "colors": ["#FFFACD", "#FFD700", "#A0522D"],
+                "confidence": float(result.get("confidence", 0.88))
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Gemini API 调用失败: {e}，使用模拟数据")
+            return await self._mock_gemini(image_data)
+    
+    async def _mock_gemini(self, image_data: str) -> Dict[str, Any]:
+        """
+        模拟 Gemini Vision API（当无 API Key 时使用）
+        """
         await asyncio.sleep(0.1)  # 模拟延迟
         
         return {
@@ -237,6 +323,16 @@ class VisionAgent:
             "colors": ["#FFFACD", "#FFD700", "#A0522D"],
             "confidence": 0.88
         }
+    
+    def _decode_base64_image(self, image_data: str) -> bytes:
+        """
+        解码 Base64 图片数据
+        """
+        import base64
+        # 处理 data URI 格式
+        if "," in image_data:
+            image_data = image_data.split(",", 1)[1]
+        return base64.b64decode(image_data)
     
     def _cross_validate(self, r1: Dict, r2: Dict) -> Dict[str, Any]:
         """

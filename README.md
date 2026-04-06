@@ -5,7 +5,71 @@
 
 ---
 
-## 🎯 核心理念：用 AI 协作消除摄入焦虑
+## 🔐 商用级安全配置（必读）
+
+### 获取 Gemini API Key
+
+1. **访问 Google AI Studio**: https://makersuite.google.com/app/apikey
+2. **创建 API Key**: 点击 "Create API Key" → 复制生成的 Key
+3. **保管好 Key**: 不要再任何地方明文显示
+
+### 本地开发配置
+
+```bash
+cd backend
+
+# 1. 复制示例配置
+cp .env.example .env
+
+# 2. 编辑 .env，填入你的 Keys
+nano .env
+
+# 3. 验证配置
+python config.py
+```
+
+`.env` 文件内容示例：
+```bash
+GEMINI_API_KEY=AIzaSy...your-key-here
+DATABASE_URL=postgresql://user:pass@localhost:5432/aura_pet
+SECRET_KEY=generate-a-secure-random-key
+```
+
+### GitHub Secrets 配置（自动化部署）
+
+> ⚠️ **GitHub Pages 部署需要配置这些 Secrets！**
+
+1. 进入你的 GitHub 仓库
+2. 点击 **Settings** → **Secrets and variables** → **Actions**
+3. 点击 **New repository secret**，添加以下项：
+
+| Secret Name | 获取方式 | 说明 |
+|------------|----------|------|
+| `GEMINI_API_KEY` | [AI Studio](https://makersuite.google.com/app/apikey) | Gemini 视觉识别 |
+| `DATABASE_URL` | 你的数据库 | 生产数据库连接 |
+| `SECRET_KEY` | 本地生成 | `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
+| `DOCKER_USERNAME` | Docker Hub | 镜像仓库用户名 |
+| `DOCKER_TOKEN` | Docker Hub | Access Token（非密码）|
+
+### 安全红线
+
+```
+❌ 绝对禁止
+├── 在代码中硬编码 API Key
+├── 将 .env 文件提交到 Git
+├── 在日志中打印密钥值
+└── 在公开渠道分享密钥
+
+✅ 正确做法
+├── 使用环境变量或 GitHub Secrets
+├── .env 文件加入 .gitignore
+├── 密钥只在你信任的设备上存储
+└── 定期轮换密钥
+```
+
+---
+
+## 🎯 核心理念：用 AI 协作消除焦虑
 
 ### 传统食物记录的问题
 
