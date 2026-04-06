@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'providers/app_state.dart';
-import 'providers/pet_provider.dart';
-import 'providers/nutrition_provider.dart';
-import 'providers/shop_provider.dart';
-import 'providers/achievement_provider.dart';
 import 'screens/bitepal_onboarding/main_onboarding.dart';
-import 'services/monet_clock.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MonetClock.instance.start();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
