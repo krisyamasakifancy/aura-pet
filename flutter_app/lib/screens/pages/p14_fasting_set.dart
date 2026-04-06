@@ -164,7 +164,7 @@ class P14FastingSetScreen extends StatelessWidget {
                     width: 22,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF64B5F6).withValues(alpha: 0.5),
+                      color: const Color(0xFF64B5F6).withOpacity(0.5),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -177,7 +177,7 @@ class P14FastingSetScreen extends StatelessWidget {
                     width: 22,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF64B5F6).withValues(alpha: 0.5),
+                      color: const Color(0xFF64B5F6).withOpacity(0.5),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -238,7 +238,7 @@ class P14FastingSetScreen extends StatelessWidget {
                   width: 14,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFB5B5).withValues(alpha: isSleeping || isDiving ? 0.8 : 0.4),
+                    color: const Color(0xFFFFB5B5).withOpacity(isSleeping || isDiving ? 0.8 : 0.4),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -250,7 +250,7 @@ class P14FastingSetScreen extends StatelessWidget {
                   width: 14,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFB5B5).withValues(alpha: isSleeping || isDiving ? 0.8 : 0.4),
+                    color: const Color(0xFFFFB5B5).withOpacity(isSleeping || isDiving ? 0.8 : 0.4),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),

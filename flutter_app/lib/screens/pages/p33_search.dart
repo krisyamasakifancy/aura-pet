@@ -225,7 +225,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: FancyDesign.primaryBrown.withValues(alpha: 0.3),
+                    color: FancyDesign.primaryBrown.withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -322,7 +322,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: FancyDesign.primaryBrown.withValues(alpha: 0.4),
+                color: FancyDesign.primaryBrown.withOpacity(0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -351,7 +351,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -376,7 +376,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: FancyDesign.primaryBrown.withValues(alpha: 0.08),
+                color: FancyDesign.primaryBrown.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
@@ -465,7 +465,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: FancyDesign.accentGold.withValues(alpha: _glowAnimation.value * 0.6),
+                        color: FancyDesign.accentGold.withOpacity(_glowAnimation.value * 0.6),
                         blurRadius: 40,
                         spreadRadius: 10,
                       ),
@@ -495,7 +495,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: FancyDesign.accentGold.withValues(alpha: 0.8),
+                      color: FancyDesign.accentGold.withOpacity(0.8),
                       width: 3,
                     ),
                   ),
@@ -542,7 +542,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             Text(
               '正在识别食物并估算分量',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
@@ -635,10 +635,10 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: FancyDesign.warning.withValues(alpha: 0.1),
+                    color: FancyDesign.warning.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: FancyDesign.warning.withValues(alpha: 0.3),
+                      color: FancyDesign.warning.withOpacity(0.3),
                     ),
                   ),
                   child: Row(

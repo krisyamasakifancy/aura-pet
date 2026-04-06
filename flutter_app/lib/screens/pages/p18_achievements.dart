@@ -218,7 +218,7 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                          color: const Color(0xFFFFD700).withOpacity(0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -250,7 +250,7 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                    color: const Color(0xFFFFD700).withOpacity(0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -368,7 +368,7 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                    color: const Color(0xFFFFD700).withOpacity(0.3),
                     blurRadius: 8,
                   ),
                 ]
@@ -400,13 +400,13 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
           color: isUnlocked ? Colors.white : Colors.grey[100],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isUnlocked ? rarityColor.withValues(alpha: 0.3) : Colors.grey[300]!,
+            color: isUnlocked ? rarityColor.withOpacity(0.3) : Colors.grey[300]!,
             width: 2,
           ),
           boxShadow: isUnlocked
               ? [
                   BoxShadow(
-                    color: rarityColor.withValues(alpha: 0.2),
+                    color: rarityColor.withOpacity(0.2),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -428,8 +428,8 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          rarityColor.withValues(alpha: 0.3),
-                          rarityColor.withValues(alpha: 0.0),
+                          rarityColor.withOpacity(0.3),
+                          rarityColor.withOpacity(0.0),
                         ],
                       ),
                     ),
@@ -439,7 +439,7 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
                   height: 56,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isUnlocked ? rarityColor.withValues(alpha: 0.15) : Colors.grey[200],
+                    color: isUnlocked ? rarityColor.withOpacity(0.15) : Colors.grey[200],
                     border: Border.all(
                       color: isUnlocked ? rarityColor : Colors.grey[400]!,
                       width: 2,
@@ -567,8 +567,8 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      rarityColor.withValues(alpha: 0.3),
-                      rarityColor.withValues(alpha: 0.0),
+                      rarityColor.withOpacity(0.3),
+                      rarityColor.withOpacity(0.0),
                     ],
                   ),
                 ),
@@ -594,7 +594,7 @@ class _P18AchievementsScreenState extends State<P18AchievementsScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: rarityColor.withValues(alpha: 0.1),
+                  color: rarityColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

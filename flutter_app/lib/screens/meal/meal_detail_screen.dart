@@ -106,13 +106,13 @@ class MealDetailScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          _getAuraColor(record!.auraScore).withValues(alpha: 0.2),
-                          _getAuraColor(record!.auraScore).withValues(alpha: 0.1),
+                          _getAuraColor(record!.auraScore).withOpacity(0.2),
+                          _getAuraColor(record!.auraScore).withOpacity(0.1),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: _getAuraColor(record!.auraScore).withValues(alpha: 0.5),
+                        color: _getAuraColor(record!.auraScore).withOpacity(0.5),
                         width: 2,
                       ),
                     ),
@@ -366,10 +366,10 @@ class _MacroRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: ratio > 1.2
-                    ? AuraPetTheme.danger.withValues(alpha: 0.2)
+                    ? AuraPetTheme.danger.withOpacity(0.2)
                     : (ratio < 0.8
-                        ? const Color(0xFFFFB74D).withValues(alpha: 0.2)
-                        : AuraPetTheme.accent.withValues(alpha: 0.2)),
+                        ? const Color(0xFFFFB74D).withOpacity(0.2)
+                        : AuraPetTheme.accent.withOpacity(0.2)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -392,7 +392,7 @@ class _MacroRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: (actualPercent / 100).clamp(0.0, 1.0),
-            backgroundColor: color.withValues(alpha: 0.2),
+            backgroundColor: color.withOpacity(0.2),
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 8,
           ),

@@ -187,7 +187,7 @@ class _MealHistoryItem extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AuraPetTheme.accent.withValues(alpha: 0.2),
+                        color: AuraPetTheme.accent.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

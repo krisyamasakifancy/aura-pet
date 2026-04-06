@@ -97,7 +97,7 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF8BA0).withValues(alpha: 0.4),
+                          color: const Color(0xFFFF8BA0).withOpacity(0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -168,7 +168,7 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.05),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -223,7 +223,7 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8F0).withValues(alpha: 0.5),
+                        color: const Color(0xFFFFF8F0).withOpacity(0.5),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(24),
                           bottomRight: Radius.circular(24),
@@ -233,9 +233,9 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildStatItem('Avg', '${(_weightData.map((e) => e['weight'] as double).reduce((a, b) => a + b) / _weightData.length).toStringAsFixed(1)}', 'kg'),
-                          Container(width: 1, height: 30, color: Colors.grey.withValues(alpha: 0.2)),
+                          Container(width: 1, height: 30, color: Colors.grey.withOpacity(0.2)),
                           _buildStatItem('Progress', '${progressPercent.toStringAsFixed(0)}', '%'),
-                          Container(width: 1, height: 30, color: Colors.grey.withValues(alpha: 0.2)),
+                          Container(width: 1, height: 30, color: Colors.grey.withOpacity(0.2)),
                           _buildStatItem('Days', '${_weightData.length}', 'days'),
                         ],
                       ),
@@ -256,7 +256,7 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 15,
                   ),
                 ],
@@ -312,7 +312,7 @@ class _P15ProgressScreenState extends State<P15ProgressScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -477,7 +477,7 @@ class MonetWeightChartPainter extends CustomPainter {
 
   void _drawGrid(Canvas canvas, Size size, double left, double top, double width, double height, double minW, double maxW) {
     final gridPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.1)
+      ..color = Colors.grey.withOpacity(0.1)
       ..strokeWidth = 1;
 
     // 水平网格线
@@ -523,7 +523,7 @@ class MonetWeightChartPainter extends CustomPainter {
     final targetY = top + height * (1 - (target - minW) / (maxW - minW));
 
     final dashPaint = Paint()
-      ..color = const Color(0xFF6C63FF).withValues(alpha: 0.5)
+      ..color = const Color(0xFF6C63FF).withOpacity(0.5)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -579,9 +579,9 @@ class MonetWeightChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFF8BA0).withValues(alpha: 0.4),
-          const Color(0xFFFFB4C4).withValues(alpha: 0.1),
-          const Color(0xFFFFF8F0).withValues(alpha: 0.0),
+          const Color(0xFFFF8BA0).withOpacity(0.4),
+          const Color(0xFFFFB4C4).withOpacity(0.1),
+          const Color(0xFFFFF8F0).withOpacity(0.0),
         ],
       ).createShader(Rect.fromLTWH(left, top, width, height));
 
@@ -607,7 +607,7 @@ class MonetWeightChartPainter extends CustomPainter {
 
     // 发光效果
     final glowPaint = Paint()
-      ..color = const Color(0xFFFF8BA0).withValues(alpha: 0.3)
+      ..color = const Color(0xFFFF8BA0).withOpacity(0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
@@ -646,7 +646,7 @@ class MonetWeightChartPainter extends CustomPainter {
       
       // 外圈光晕
       final glowPaint = Paint()
-        ..color = const Color(0xFFFF8BA0).withValues(alpha: 0.3)
+        ..color = const Color(0xFFFF8BA0).withOpacity(0.3)
         ..style = PaintingStyle.fill;
       
       canvas.drawCircle(Offset(currentX, y), isSelected ? 12 : 8, glowPaint);

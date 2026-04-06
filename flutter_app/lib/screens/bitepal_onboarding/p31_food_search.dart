@@ -259,7 +259,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: FurryColors.bearBrown.withValues(alpha: 0.3),
+                    color: FurryColors.bearBrown.withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -356,7 +356,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: FurryColors.bearBrown.withValues(alpha: 0.4),
+                color: FurryColors.bearBrown.withOpacity(0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -383,7 +383,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity(0.15),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -407,7 +407,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                color: FurryColors.carrotOrange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
@@ -504,7 +504,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             Text(
               '识别食物并计算营养成分',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
@@ -561,7 +561,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -575,7 +575,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               Text(
                 '🐰 兔厨',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white.withOpacity(0.8),
                   fontSize: 12,
                 ),
               ),
@@ -589,7 +589,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               Text(
                 '🐻 熊仔',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white.withOpacity(0.8),
                   fontSize: 12,
                 ),
               ),
@@ -607,7 +607,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               Text(
                 '🐘 象宝',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white.withOpacity(0.8),
                   fontSize: 12,
                 ),
               ),
@@ -640,7 +640,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+            color: FurryColors.carrotOrange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
@@ -724,7 +724,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -765,10 +765,10 @@ class _P31FoodSearchState extends State<P31FoodSearch>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withValues(alpha: 0.1),
+            color: const Color(0xFF10B981).withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF10B981).withValues(alpha: 0.3),
+              color: const Color(0xFF10B981).withOpacity(0.3),
             ),
           ),
           child: Row(
@@ -777,7 +777,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  color: const Color(0xFF10B981).withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -826,7 +826,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
         color: const Color(0xFF1E1E1E), // 深灰色背景
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF10B981).withValues(alpha: 0.5),
+          color: const Color(0xFF10B981).withOpacity(0.5),
           width: 1,
         ),
       ),
@@ -883,7 +883,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                   Text(
                     'Endpoint: dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 10,
                       fontFamily: 'monospace',
                     ),
@@ -891,7 +891,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                   Text(
                     'Model: qwen-vl-max',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 10,
                       fontFamily: 'monospace',
                     ),
@@ -1026,11 +1026,11 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: Colors.white.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 30,
                     ),
                   ],
@@ -1063,7 +1063,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                        color: FurryColors.carrotOrange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -1115,15 +1115,15 @@ class _P31FoodSearchState extends State<P31FoodSearch>
   Widget _buildFrostedGlassCard({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: Colors.white.withOpacity(0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -1183,7 +1183,7 @@ class _FoodListItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: FurryColors.bearBrown.withValues(alpha: 0.1),
+              color: FurryColors.bearBrown.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(

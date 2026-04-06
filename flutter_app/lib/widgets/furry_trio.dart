@@ -71,12 +71,12 @@ class FurryTheme {
   // 阴影 - 毛绒软绵感
   static List<BoxShadow> get fluffyShadow => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.08),
+      color: Colors.black.withOpacity(0.08),
       blurRadius: 20,
       offset: const Offset(0, 8),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.04),
+      color: Colors.black.withOpacity(0.04),
       blurRadius: 40,
       offset: const Offset(0, 20),
     ),
@@ -84,7 +84,7 @@ class FurryTheme {
   
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
+      color: Colors.black.withOpacity(0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
@@ -276,7 +276,7 @@ class _DataBearPainter extends CustomPainter {
     }
     
     // 腮红
-    final blushPaint = Paint()..color = FurryColors.blushPink.withValues(alpha: 0.5);
+    final blushPaint = Paint()..color = FurryColors.blushPink.withOpacity(0.5);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(center.dx - s * 0.55, center.dy + s * 0.05 + bounceOffset),
@@ -581,7 +581,7 @@ class _ChefBunnyPainter extends CustomPainter {
     }
     
     // 腮红
-    final blushPaint = Paint()..color = FurryColors.blushPink.withValues(alpha: 0.4);
+    final blushPaint = Paint()..color = FurryColors.blushPink.withOpacity(0.4);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(center.dx - s * 0.5, center.dy + s * 0.1 + bounceOffset),
@@ -881,11 +881,9 @@ class _CheerEllPainter extends CustomPainter {
     } else {
       _drawHappyFace(canvas, center, s);
     }
-      _drawHappyFace(canvas, center, s);
-    }
     
     // 腮红
-    final blushPaint = Paint()..color = FurryColors.ellPink.withValues(alpha: 0.5);
+    final blushPaint = Paint()..color = FurryColors.ellPink.withOpacity(0.5);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(center.dx - s * 0.35, center.dy + s * 0.15 + bounceOffset),
@@ -918,7 +916,7 @@ class _CheerEllPainter extends CustomPainter {
     canvas.drawPath(path, paint);
     
     // 内耳粉色
-    final innerPaint = Paint()..color = FurryColors.ellPink.withValues(alpha: 0.4);
+    final innerPaint = Paint()..color = FurryColors.ellPink.withOpacity(0.4);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(center.dx + size * 0.2, center.dy + size * 0.1),

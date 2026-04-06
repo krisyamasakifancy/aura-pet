@@ -120,7 +120,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withValues(alpha: 0.2),
+                          color: Colors.blue.withOpacity(0.2),
                           blurRadius: 10,
                         ),
                       ],
@@ -181,7 +181,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
                                 '/ ${_targetIntake.toStringAsFixed(1)}L',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.white.withOpacity(0.8),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -190,7 +190,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(alpha: 0.9),
+                                  color: Colors.white.withOpacity(0.9),
                                 ),
                               ),
                             ],
@@ -228,7 +228,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.15),
+                    color: Colors.blue.withOpacity(0.15),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -308,7 +308,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     blurRadius: 15,
                   ),
                 ],
@@ -397,7 +397,7 @@ class _P10WaterScreenState extends State<P10WaterScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withValues(alpha: 0.15),
+              color: Colors.blue.withOpacity(0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -460,7 +460,7 @@ class WaterGlassPainter extends CustomPainter {
     
     // 玻璃杯背景
     final glassBgPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
+      ..color = Colors.white.withOpacity(0.3)
       ..style = PaintingStyle.fill;
     canvas.drawPath(glassPath, glassBgPaint);
     
@@ -478,7 +478,7 @@ class WaterGlassPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFF64B5F6).withValues(alpha: 0.8),
+          const Color(0xFF64B5F6).withOpacity(0.8),
           const Color(0xFF1976D2),
         ],
       ).createShader(Rect.fromLTWH(0, waterTop, size.width, waterHeight));
@@ -502,7 +502,7 @@ class WaterGlassPainter extends CustomPainter {
     // 气泡
     if (fillPercent > 0.1) {
       final bubblePaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.6)
+        ..color = Colors.white.withOpacity(0.6)
         ..style = PaintingStyle.fill;
       
       for (int i = 0; i < 8; i++) {
@@ -519,7 +519,7 @@ class WaterGlassPainter extends CustomPainter {
     
     // 玻璃杯边框
     final glassBorderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
     canvas.drawPath(glassPath, glassBorderPaint);
@@ -530,8 +530,8 @@ class WaterGlassPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: 0.5),
-          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withOpacity(0.5),
+          Colors.white.withOpacity(0.0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width * 0.3, size.height * 0.5));
     

@@ -198,7 +198,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
         color: const Color(0xFFFFF5E6),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFFF8C00).withValues(alpha: 0.3),
+          color: const Color(0xFFFF8C00).withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -210,7 +210,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF8C00).withValues(alpha: 0.2),
+                  color: const Color(0xFFFF8C00).withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -347,7 +347,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 30,
             offset: const Offset(0, 8),
           ),
@@ -408,7 +408,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
                     Text(
                       '点击下方按钮拍照',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Colors.white.withOpacity(0.7),
                         fontSize: 16,
                       ),
                     ),
@@ -640,7 +640,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -716,7 +716,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -743,7 +743,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB6C1).withValues(alpha: 0.3),
+                        color: const Color(0xFFFFB6C1).withOpacity(0.3),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -825,10 +825,10 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                color: const Color(0xFF10B981).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  color: const Color(0xFF10B981).withOpacity(0.3),
                 ),
               ),
               child: Row(
@@ -1198,7 +1198,7 @@ class _NutritionItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(5),
               child: LinearProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
-                backgroundColor: color.withValues(alpha: 0.2),
+                backgroundColor: color.withOpacity(0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
                 minHeight: 10,
               ),
@@ -1227,7 +1227,7 @@ class _NutritionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: color.withOpacity(0.15),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

@@ -121,7 +121,7 @@ class _P28GoalsScreenState extends State<P28GoalsScreen>
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                                  color: const Color(0xFF6C63FF).withOpacity(0.4),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -248,7 +248,7 @@ class _P28GoalsScreenState extends State<P28GoalsScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: gradient[0].withValues(alpha: 0.15),
+            color: gradient[0].withOpacity(0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -316,9 +316,9 @@ class _P28GoalsScreenState extends State<P28GoalsScreen>
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: gradient[0],
-              inactiveTrackColor: gradient[0].withValues(alpha: 0.2),
+              inactiveTrackColor: gradient[0].withOpacity(0.2),
               thumbColor: gradient[0],
-              overlayColor: gradient[0].withValues(alpha: 0.2),
+              overlayColor: gradient[0].withOpacity(0.2),
               trackHeight: 8,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
@@ -369,7 +369,7 @@ class _P28GoalsScreenState extends State<P28GoalsScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+            color: const Color(0xFF4CAF50).withOpacity(0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -466,7 +466,7 @@ class _P28GoalsScreenState extends State<P28GoalsScreen>
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                              color: const Color(0xFF4CAF50).withOpacity(0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

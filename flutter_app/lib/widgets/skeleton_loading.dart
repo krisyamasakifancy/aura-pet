@@ -63,7 +63,7 @@ class _MonetSkeletonState extends State<MonetSkeleton>
               end: Alignment(_animation.value + 1, 0),
               colors: [
                 colors.shimmerBase,
-                colors.shimmerHighlight.withValues(alpha: 0.6),
+                colors.shimmerHighlight.withOpacity(0.6),
                 colors.shimmerBase,
               ],
               stops: const [0.0, 0.5, 1.0],
@@ -95,7 +95,7 @@ class MonetSkeletonCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -347,8 +347,8 @@ class _MonetLoadingIndicatorState extends State<MonetLoadingIndicator>
               startAngle: _controller.value * 2 * 3.14159,
               endAngle: (_controller.value + 1) * 2 * 3.14159,
               colors: [
-                colors.primary.withValues(alpha: 0.0),
-                colors.primary.withValues(alpha: 0.3),
+                colors.primary.withOpacity(0.0),
+                colors.primary.withOpacity(0.3),
                 colors.primary,
               ],
               stops: const [0.0, 0.6, 1.0],

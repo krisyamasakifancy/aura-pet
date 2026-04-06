@@ -173,7 +173,7 @@ class _P05HomeScreenState extends State<P05HomeScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+                        color: const Color(0xFFEF4444).withOpacity(0.5),
                         blurRadius: 6,
                       ),
                     ],
@@ -195,9 +195,9 @@ class _P05HomeScreenState extends State<P05HomeScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            FurryColors.bearBrown.withValues(alpha: 0.1),
-            FurryColors.bunnyPink.withValues(alpha: 0.1),
-            FurryColors.ellPink.withValues(alpha: 0.1),
+            FurryColors.bearBrown.withOpacity(0.1),
+            FurryColors.bunnyPink.withOpacity(0.1),
+            FurryColors.ellPink.withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(FurryTheme.radiusLg),
@@ -277,7 +277,7 @@ class _P05HomeScreenState extends State<P05HomeScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: _getCharacterColor().withValues(alpha: 0.2),
+              color: _getCharacterColor().withOpacity(0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
@@ -358,7 +358,7 @@ class _P05HomeScreenState extends State<P05HomeScreen>
               Container(
                 width: 1,
                 height: 30,
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withOpacity(0.08),
                 margin: const EdgeInsets.symmetric(horizontal: 16),
               ),
               _CalorieChip(
@@ -416,10 +416,10 @@ class _P05HomeScreenState extends State<P05HomeScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FurryColors.bearBrown.withValues(alpha: 0.08),
+        color: FurryColors.bearBrown.withOpacity(0.08),
         borderRadius: BorderRadius.circular(FurryTheme.radiusMd),
         border: Border.all(
-          color: FurryColors.bearBrown.withValues(alpha: 0.15),
+          color: FurryColors.bearBrown.withOpacity(0.15),
         ),
       ),
       child: Row(
@@ -521,7 +521,7 @@ class _CharacterLabel extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? color.withValues(alpha: 0.2) : Colors.transparent,
+          color: isActive ? color.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isActive ? color : Colors.transparent,

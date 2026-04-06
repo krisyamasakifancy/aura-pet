@@ -183,7 +183,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: moodColor.withValues(alpha: 
+                              color: moodColor.withOpacity(
                                   _glowOpacity.value * auraIntensity * 0.5),
                               blurRadius: 40 * auraIntensity,
                               spreadRadius: 10 * auraIntensity,
@@ -191,7 +191,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                             // 深夜模式额外光晕
                             if (monetColors.phase == MonetTimePhase.night)
                               BoxShadow(
-                                color: monetColors.petGlow.withValues(alpha: 
+                                color: monetColors.petGlow.withOpacity(
                                     _glowOpacity.value * 0.3),
                                 blurRadius: 60,
                                 spreadRadius: 20,
@@ -209,7 +209,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              moodColor.withValues(alpha: 0.4 * auraIntensity),
+                              moodColor.withOpacity(0.4 * auraIntensity),
                               Colors.transparent,
                             ],
                           ),
@@ -227,7 +227,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: moodColor.withValues(alpha: 
+                          color: moodColor.withOpacity(
                               auraIntensity * 0.3),
                           blurRadius: 20,
                           spreadRadius: 2,
@@ -246,7 +246,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                             gradient: RadialGradient(
                               center: const Alignment(-0.3, -0.3),
                               colors: [
-                                moodColor.withValues(alpha: 0.3),
+                                moodColor.withOpacity(0.3),
                                 Colors.white,
                               ],
                             ),
@@ -299,7 +299,7 @@ class _AmbientPetCanvasState extends State<AmbientPetCanvas>
                     color: colors.petGlow,
                     boxShadow: [
                       BoxShadow(
-                        color: colors.petGlow.withValues(alpha: 0.5),
+                        color: colors.petGlow.withOpacity(0.5),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),

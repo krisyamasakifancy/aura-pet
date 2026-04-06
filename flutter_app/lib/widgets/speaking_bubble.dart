@@ -206,13 +206,13 @@ class _SpeakingBubbleState extends State<SpeakingBubble>
                           gradient: LinearGradient(
                             colors: [
                               AuraPetTheme.heartLight,
-                              color.withValues(alpha: 0.6),
+                              color.withOpacity(0.6),
                             ],
                           ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: color.withValues(alpha: 0.3),
+                              color: color.withOpacity(0.3),
                               blurRadius: 8,
                             ),
                           ],
@@ -237,7 +237,7 @@ class _SpeakingBubbleState extends State<SpeakingBubble>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: categoryColor.withValues(alpha: 0.2),
+            color: categoryColor.withOpacity(0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -259,7 +259,7 @@ class _SpeakingBubbleState extends State<SpeakingBubble>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AuraPetTheme.auraGlow.withValues(alpha: 0.3),
+                      color: AuraPetTheme.auraGlow.withOpacity(0.3),
                       blurRadius: 10,
                     ),
                   ],
@@ -320,7 +320,7 @@ class _SpeakingBubbleState extends State<SpeakingBubble>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.15),
+                    color: categoryColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -492,7 +492,7 @@ class AuraBackground extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                AuraPetTheme.primaryLight.withValues(alpha: 0.3),
+                AuraPetTheme.primaryLight.withOpacity(0.3),
                 Colors.transparent,
               ],
             ),
@@ -510,7 +510,7 @@ class AuraBackground extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                AuraPetTheme.accentLight.withValues(alpha: 0.2),
+                AuraPetTheme.accentLight.withOpacity(0.2),
                 Colors.transparent,
               ],
             ),

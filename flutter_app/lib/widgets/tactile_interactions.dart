@@ -151,7 +151,7 @@ class _TactileButtonState extends State<TactileButton>
                   borderRadius: BorderRadius.circular(widget.borderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 
+                      color: Colors.black.withOpacity(
                           _isPressed ? 0.05 : 0.1),
                       blurRadius: _isPressed ? 4 : 8,
                       offset: Offset(0, _isPressed ? 2 : 4),
@@ -294,7 +294,7 @@ class _MonetPetButtonState extends State<MonetPetButton>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: widget.glowColor.withValues(alpha: 
+                    color: widget.glowColor.withOpacity(
                         _glowAnimation.value * widget.glowIntensity),
                     blurRadius: 30,
                     spreadRadius: 5,
@@ -306,7 +306,7 @@ class _MonetPetButtonState extends State<MonetPetButton>
                   shape: BoxShape.circle,
                   color: Colors.white,
                   border: Border.all(
-                    color: widget.glowColor.withValues(alpha: 0.5),
+                    color: widget.glowColor.withOpacity(0.5),
                     width: 3,
                   ),
                 ),
@@ -384,7 +384,7 @@ class _RippleTapEffectState extends State<RippleTapEffect>
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: widget.rippleColor.withValues(alpha: opacity * 0.3),
+                          color: widget.rippleColor.withOpacity(opacity * 0.3),
                         ),
                       ),
                     );

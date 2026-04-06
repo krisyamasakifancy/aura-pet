@@ -156,8 +156,8 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            AuraPetTheme.auraGlow.withValues(alpha: 0.4 * intensity),
-            AuraPetTheme.auraGlowSoft.withValues(alpha: 0.2 * intensity),
+            AuraPetTheme.auraGlow.withOpacity(0.4 * intensity),
+            AuraPetTheme.auraGlowSoft.withOpacity(0.2 * intensity),
             Colors.transparent,
           ],
         ),
@@ -193,13 +193,13 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AuraPetTheme.heartLight.withValues(alpha: 0.8),
-                        AuraPetTheme.heartPink.withValues(alpha: 0.6),
+                        AuraPetTheme.heartLight.withOpacity(0.8),
+                        AuraPetTheme.heartPink.withOpacity(0.6),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AuraPetTheme.heartPink.withValues(alpha: 0.3),
+                        color: AuraPetTheme.heartPink.withOpacity(0.3),
                         blurRadius: 8,
                       ),
                     ],
@@ -234,7 +234,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
         ),
         boxShadow: [
           BoxShadow(
-            color: AuraPetTheme.raccoonDark.withValues(alpha: 0.3),
+            color: AuraPetTheme.raccoonDark.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -271,7 +271,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withOpacity(0.1),
             Colors.transparent,
           ],
         ),
@@ -289,7 +289,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
         width: faceSize,
         height: faceSize * 0.75,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
+          color: Colors.white.withOpacity(0.95),
           borderRadius: BorderRadius.circular(faceSize * 0.4),
         ),
       ),
@@ -342,7 +342,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AuraPetTheme.noseBlack.withValues(alpha: 0.3),
+              color: AuraPetTheme.noseBlack.withOpacity(0.3),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -371,7 +371,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
                 width: size * 0.15,
                 height: size * 0.15,
                 decoration: BoxDecoration(
-                  color: AuraPetTheme.eyeShine.withValues(alpha: 0.7),
+                  color: AuraPetTheme.eyeShine.withOpacity(0.7),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -389,7 +389,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         blurRadius: 4,
                         spreadRadius: 1,
                       ),
@@ -434,7 +434,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
           width: blushSize,
           height: blushSize * 0.5,
           decoration: BoxDecoration(
-            color: AuraPetTheme.accent.withValues(alpha: 0.4),
+            color: AuraPetTheme.accent.withOpacity(0.4),
             borderRadius: BorderRadius.circular(blushSize),
           ),
         ),
@@ -444,7 +444,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
           width: blushSize,
           height: blushSize * 0.5,
           decoration: BoxDecoration(
-            color: AuraPetTheme.accent.withValues(alpha: 0.4),
+            color: AuraPetTheme.accent.withOpacity(0.4),
             borderRadius: BorderRadius.circular(blushSize),
           ),
         ),
@@ -514,7 +514,7 @@ class _QRaccoonCanvasState extends State<QRaccoonCanvas>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: AuraPetTheme.auraGlow.withValues(alpha: 0.3 * intensity),
+          color: AuraPetTheme.auraGlow.withOpacity(0.3 * intensity),
           width: 3,
         ),
       ),
@@ -652,7 +652,7 @@ class _FloatingHeartsPainter extends CustomPainter {
       final scale = 0.5 + adjustedProgress * 0.5;
 
       final paint = Paint()
-        ..color = AuraPetTheme.heartPink.withValues(alpha: opacity * 0.7)
+        ..color = AuraPetTheme.heartPink.withOpacity(opacity * 0.7)
         ..style = PaintingStyle.fill;
 
       canvas.save();

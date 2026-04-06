@@ -29,7 +29,7 @@ class FancyDesign {
   // ========== 阴影系统 (Stripe/Vercel 风格) ==========
   static List<BoxShadow> shadowSubtle = [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.04),
+      color: Colors.black.withOpacity(0.04),
       blurRadius: 2,
       offset: const Offset(0, 1),
     ),
@@ -37,12 +37,12 @@ class FancyDesign {
   
   static List<BoxShadow> shadowCard = [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.08),
+      color: Colors.black.withOpacity(0.08),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.04),
+      color: Colors.black.withOpacity(0.04),
       blurRadius: 16,
       offset: const Offset(0, 8),
     ),
@@ -50,12 +50,12 @@ class FancyDesign {
   
   static List<BoxShadow> shadowElevated = [
     BoxShadow(
-      color: primaryBrown.withValues(alpha: 0.15),
+      color: primaryBrown.withOpacity(0.15),
       blurRadius: 20,
       offset: const Offset(0, 8),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.1),
+      color: Colors.black.withOpacity(0.1),
       blurRadius: 30,
       offset: const Offset(0, 15),
     ),
@@ -78,8 +78,8 @@ class FancyDesign {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      primaryBrown.withValues(alpha: 0.3),
-      primaryBrown.withValues(alpha: 0.0),
+      primaryBrown.withOpacity(0.3),
+      primaryBrown.withOpacity(0.0),
     ],
   );
 }
@@ -116,7 +116,7 @@ class DataReportCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: FancyDesign.shadowCard,
           border: Border.all(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             width: 1,
           ),
         ),
@@ -171,7 +171,7 @@ class DataReportCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: (trendPositive ? FancyDesign.success : FancyDesign.error)
-                          .withValues(alpha: 0.1),
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
@@ -267,7 +267,7 @@ class _GlowProgressRingState extends State<GlowProgressRing>
   @override
   Widget build(BuildContext context) {
     final progressColor = widget.progressColor ?? FancyDesign.primaryBrown;
-    final bgColor = widget.backgroundColor ?? Colors.black.withValues(alpha: 0.05);
+    final bgColor = widget.backgroundColor ?? Colors.black.withOpacity(0.05);
     
     return AnimatedBuilder(
       animation: _breathAnimation,
@@ -286,7 +286,7 @@ class _GlowProgressRingState extends State<GlowProgressRing>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: progressColor.withValues(alpha: _breathAnimation.value * 0.4),
+                      color: progressColor.withOpacity(_breathAnimation.value * 0.4),
                       blurRadius: 30 + (widget.strokeWidth * 2),
                       spreadRadius: 5,
                     ),
@@ -465,7 +465,7 @@ class StatusCallout extends StatelessWidget {
                     description!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: config.textColor.withValues(alpha: 0.8),
+                      color: config.textColor.withOpacity(0.8),
                     ),
                   ),
                 ],
@@ -488,36 +488,36 @@ class StatusCallout extends StatelessWidget {
     switch (type) {
       case StatusType.success:
         return _CalloutConfig(
-          bgColor: FancyDesign.success.withValues(alpha: 0.08),
-          borderColor: FancyDesign.success.withValues(alpha: 0.3),
-          iconBgColor: FancyDesign.success.withValues(alpha: 0.15),
+          bgColor: FancyDesign.success.withOpacity(0.08),
+          borderColor: FancyDesign.success.withOpacity(0.3),
+          iconBgColor: FancyDesign.success.withOpacity(0.15),
           iconColor: FancyDesign.success,
           textColor: const Color(0xFF065F46),
           defaultIcon: Icons.check_circle_outline,
         );
       case StatusType.warning:
         return _CalloutConfig(
-          bgColor: FancyDesign.warning.withValues(alpha: 0.08),
-          borderColor: FancyDesign.warning.withValues(alpha: 0.3),
-          iconBgColor: FancyDesign.warning.withValues(alpha: 0.15),
+          bgColor: FancyDesign.warning.withOpacity(0.08),
+          borderColor: FancyDesign.warning.withOpacity(0.3),
+          iconBgColor: FancyDesign.warning.withOpacity(0.15),
           iconColor: FancyDesign.warning,
           textColor: const Color(0xFF92400E),
           defaultIcon: Icons.warning_amber_outlined,
         );
       case StatusType.error:
         return _CalloutConfig(
-          bgColor: FancyDesign.error.withValues(alpha: 0.08),
-          borderColor: FancyDesign.error.withValues(alpha: 0.3),
-          iconBgColor: FancyDesign.error.withValues(alpha: 0.15),
+          bgColor: FancyDesign.error.withOpacity(0.08),
+          borderColor: FancyDesign.error.withOpacity(0.3),
+          iconBgColor: FancyDesign.error.withOpacity(0.15),
           iconColor: FancyDesign.error,
           textColor: const Color(0xFF991B1B),
           defaultIcon: Icons.error_outline,
         );
       case StatusType.info:
         return _CalloutConfig(
-          bgColor: FancyDesign.info.withValues(alpha: 0.08),
-          borderColor: FancyDesign.info.withValues(alpha: 0.3),
-          iconBgColor: FancyDesign.info.withValues(alpha: 0.15),
+          bgColor: FancyDesign.info.withOpacity(0.08),
+          borderColor: FancyDesign.info.withOpacity(0.3),
+          iconBgColor: FancyDesign.info.withOpacity(0.15),
           iconColor: FancyDesign.info,
           textColor: const Color(0xFF1E40AF),
           defaultIcon: Icons.info_outline,
@@ -568,15 +568,15 @@ class FrostedGlassCard extends StatelessWidget {
       child: Container(
         padding: padding ?? const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.7),
+          color: Colors.white.withOpacity(0.7),
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withOpacity(0.5),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -608,7 +608,7 @@ class TrendIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -663,13 +663,13 @@ class AIResultCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            FancyDesign.primaryBrown.withValues(alpha: 0.05),
-            FancyDesign.accentGold.withValues(alpha: 0.08),
+            FancyDesign.primaryBrown.withOpacity(0.05),
+            FancyDesign.accentGold.withOpacity(0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: FancyDesign.primaryBrown.withValues(alpha: 0.2),
+          color: FancyDesign.primaryBrown.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: FancyDesign.shadowElevated,
@@ -708,7 +708,7 @@ class AIResultCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: FancyDesign.accentGold.withValues(alpha: 0.3),
+                    color: FancyDesign.accentGold.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -794,7 +794,7 @@ class AIResultCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: Colors.white.withOpacity(0.5),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),

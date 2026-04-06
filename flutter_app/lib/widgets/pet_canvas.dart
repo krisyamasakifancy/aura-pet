@@ -57,12 +57,12 @@ class PetCanvas extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: bearColor.withValues(alpha: glowOpacity),
+                  color: bearColor.withOpacity(glowOpacity),
                   blurRadius: 60,
                   spreadRadius: 20,
                 ),
                 BoxShadow(
-                  color: bearColor.withValues(alpha: 0.25),
+                  color: bearColor.withOpacity(0.25),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),
@@ -201,7 +201,7 @@ class BearPainter extends CustomPainter {
 
     // Shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.1)
+      ..color = Colors.black.withOpacity(0.1)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx, cy + 85), width: 110, height: 28),
@@ -315,7 +315,7 @@ class BearPainter extends CustomPainter {
     }
 
     // Blush
-    final blushPaint = Paint()..color = const Color(0xFFFFB5B5).withValues(alpha: 0.5);
+    final blushPaint = Paint()..color = const Color(0xFFFFB5B5).withOpacity(0.5);
     canvas.drawCircle(Offset(cx - 42, cy - 5), 11, blushPaint);
     canvas.drawCircle(Offset(cx + 42, cy - 5), 11, blushPaint);
   }

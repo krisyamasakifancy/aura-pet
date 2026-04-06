@@ -165,8 +165,8 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: _isFasting 
-                              ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
-                              : const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                              ? const Color(0xFF6C63FF).withOpacity(0.3)
+                              : const Color(0xFF4CAF50).withOpacity(0.3),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: _isFasting ? const Color(0xFF6C63FF) : const Color(0xFF4CAF50),
@@ -223,7 +223,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                                     _isFasting ? 'Time Remaining' : 'Completed!',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color: Colors.white.withOpacity(0.7),
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -242,7 +242,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withOpacity(0.8),
                                     ),
                                   ),
                                 ],
@@ -260,10 +260,10 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                     ),
                   ),
                   child: Row(
@@ -279,7 +279,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                       Container(
                         width: 1,
                         height: 60,
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                       ),
                       Expanded(
                         child: _buildPhaseCard(
@@ -300,7 +300,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -341,8 +341,8 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                                 height: 32,
                                 decoration: BoxDecoration(
                                   color: item['completed']
-                                      ? const Color(0xFF6C63FF).withValues(alpha: 0.2)
-                                      : const Color(0xFFFF5252).withValues(alpha: 0.2),
+                                      ? const Color(0xFF6C63FF).withOpacity(0.2)
+                                      : const Color(0xFFFF5252).withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
@@ -357,7 +357,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
                                   item['date'],
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                   ),
                                 ),
                               ),
@@ -393,7 +393,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
           title,
           style: TextStyle(
             fontSize: 13,
-            color: isActive ? color : Colors.white.withValues(alpha: 0.5),
+            color: isActive ? color : Colors.white.withOpacity(0.5),
           ),
         ),
         const SizedBox(height: 4),
@@ -402,7 +402,7 @@ class _P13FastingScreenState extends State<P13FastingScreen>
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: isActive ? color : Colors.white.withValues(alpha: 0.5),
+            color: isActive ? color : Colors.white.withOpacity(0.5),
           ),
         ),
       ],
@@ -428,9 +428,9 @@ class FastingRingPainter extends CustomPainter {
         startAngle: -math.pi / 2,
         endAngle: 3 * math.pi / 2,
         colors: [
-          Colors.white.withValues(alpha: 0.1),
-          Colors.white.withValues(alpha: 0.05),
-          Colors.white.withValues(alpha: 0.1),
+          Colors.white.withOpacity(0.1),
+          Colors.white.withOpacity(0.05),
+          Colors.white.withOpacity(0.1),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
     
@@ -460,7 +460,7 @@ class FastingRingPainter extends CustomPainter {
     
     // 发光效果
     final glowPaint = Paint()
-      ..color = (isFasting ? const Color(0xFF6C63FF) : const Color(0xFF4CAF50)).withValues(alpha: 0.3)
+      ..color = (isFasting ? const Color(0xFF6C63FF) : const Color(0xFF4CAF50)).withOpacity(0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 20
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
@@ -514,7 +514,7 @@ class StarFieldPainter extends CustomPainter {
       final twinkle = (math.sin(phase * 2 * math.pi + i) + 1) / 2;
       
       final paint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.3 + twinkle * 0.5);
+        ..color = Colors.white.withOpacity(0.3 + twinkle * 0.5);
       
       canvas.drawCircle(Offset(x, y), starSize, paint);
     }

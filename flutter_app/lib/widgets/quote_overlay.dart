@@ -153,7 +153,7 @@ class _MonetTextAnimationState extends State<MonetTextAnimation>
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFB5B5).withValues(alpha: _glowAnimation.value),
+                  color: const Color(0xFFFFB5B5).withOpacity(_glowAnimation.value),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),

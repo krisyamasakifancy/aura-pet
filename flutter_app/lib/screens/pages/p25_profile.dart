@@ -82,7 +82,7 @@ class P25ProfileScreen extends StatelessWidget {
                 'Professional Dashboard',
                 style: TextStyle(
                   fontSize: 13,
-                  color: FurryTheme.textSecondary.withValues(alpha: 0.8),
+                  color: FurryTheme.textSecondary.withOpacity(0.8),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -138,7 +138,7 @@ class P25ProfileScreen extends StatelessWidget {
               '实时更新',
               style: TextStyle(
                 fontSize: 12,
-                color: FancyDesign.success.withValues(alpha: 0.8),
+                color: FancyDesign.success.withOpacity(0.8),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -151,7 +151,7 @@ class P25ProfileScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: FancyDesign.success.withValues(alpha: 0.5),
+                    color: FancyDesign.success.withOpacity(0.5),
                     blurRadius: 4,
                   ),
                 ],
@@ -279,7 +279,7 @@ class P25ProfileScreen extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: progressColor.withValues(alpha: 0.15),
+                color: progressColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: progressColor, size: 18),
@@ -317,7 +317,7 @@ class P25ProfileScreen extends StatelessWidget {
                     child: Container(
                       height: 10,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: Colors.black.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: FractionallySizedBox(
@@ -326,12 +326,12 @@ class P25ProfileScreen extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [progressColor, progressColor.withValues(alpha: 0.7)],
+                              colors: [progressColor, progressColor.withOpacity(0.7)],
                             ),
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
-                                color: progressColor.withValues(alpha: 0.4),
+                                color: progressColor.withOpacity(0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),

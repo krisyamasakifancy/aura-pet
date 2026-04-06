@@ -295,7 +295,7 @@ class _PetAnimationControllerState extends State<PetAnimationController>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                _getEmotionColor(_currentEmotion).withValues(alpha: 0.3),
+                _getEmotionColor(_currentEmotion).withOpacity(0.3),
                 Colors.transparent,
               ],
             ),
@@ -342,7 +342,7 @@ class _PetAnimationControllerState extends State<PetAnimationController>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -366,10 +366,10 @@ class _PetAnimationControllerState extends State<PetAnimationController>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: Colors.white.withOpacity(0.2),
           ),
         ),
         child: Row(
