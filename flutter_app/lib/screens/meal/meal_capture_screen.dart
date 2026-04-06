@@ -268,15 +268,30 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
 
   // ========== Qwen-VL 识别 ==========
   Future<void> _recognizeWithQwen(File imageFile) async {
+    print('========================================');
+    print('=== 🍳 开始 Qwen-VL 食物识别 ===');
+    print('========================================');
+    
     if (apiKey.isEmpty) {
-      // 没有 API Key，使用模拟数据
+      print('⚠️ API Key 为空，使用模拟数据');
       await _simulateRecognition();
       return;
     }
     
+    print('✅ API Key 已配置: ${apiKey.substring(0, 10)}...');
+    print('📷 图片大小: ${imageFile.lengthSync()} bytes');
+    
     try {
       final service = QwenVisionService(apiKey: apiKey);
+      print('🔄 正在调用 Qwen API...');
+      
       final result = await service.recognizeFood(imageFile);
+      
+      print('========================================');
+      print('📥 Qwen API 返回结果:');
+      print('========================================');
+      print('原始数据: $result');
+      print('========================================');
       
       if (!mounted) return;
       
@@ -288,11 +303,16 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
       
       // 如果是食物，创建 NutritionRecord
       if (!_isNotFood) {
+        print('✅ 识别为食物: ${result['name']}');
         _createNutritionRecord(result);
+      } else {
+        print('❌ 识别为非食物');
       }
       
     } catch (e) {
-      debugPrint('Qwen 识别失败: $e');
+      print('========================================');
+      print('❌ Qwen 识别出错: $e');
+      print('========================================');
       
       // 识别失败，使用模拟数据
       if (mounted) {
