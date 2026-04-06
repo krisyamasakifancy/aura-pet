@@ -11,10 +11,14 @@
 name: Deploy Aura-Pet
 
 on:
+  # 自动触发
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  
+  # 手动触发（可从 GitHub UI 操作）
+  workflow_dispatch:
 
 # 环境变量（安全：不输出到日志）
 env:
