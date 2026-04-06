@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import '../../services/qwen_vision_service.dart';
 import '../../widgets/furry_trio.dart';
 
 /// P31: AI 智能识图页面 - 毛绒三友联动版
@@ -69,7 +71,16 @@ class _P31FoodSearchState extends State<P31FoodSearch>
     super.dispose();
   }
 
-  void _startScan() {
+  File? _selectedImage;
+
+  void _startScan() async {
+    // 选择图片
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    if (image == null) return;
+    
+    _selectedImage = File(image.path);
+    
     setState(() {
       _showScanAnimation = true;
       _showResult = false;
@@ -77,36 +88,78 @@ class _P31FoodSearchState extends State<P31FoodSearch>
       _rawJson = '';
     });
     
-    // 模拟 AI 识别
-    Future.delayed(const Duration(seconds: 2), () {
+    // 调用真实的 Qwen Vision API
+    try {
+      // 从 localStorage 或环境变量获取 API Key
+      const apiKey = String.fromEnvironment('DASHSCOPE_API_KEY', defaultValue: '');
+      
+      if (apiKey.isEmpty) {
+        // 从 localStorage 获取
+        final savedKey = await _getApiKeyFromStorage();
+        if (savedKey == null || savedKey.isEmpty) {
+          _showError('API Key 未配置！请先设置 DashScope API Key');
+          return;
+        }
+        await _callQwenApi(savedKey);
+      } else {
+        await _callQwenApi(apiKey);
+      }
+    } catch (e) {
+      _showError('API 调用失败: $e');
+    }
+  }
+  
+  Future<String?> _getApiKeyFromStorage() async {
+    try {
+      const channel = MethodChannel('aura_pet/storage');
+      final result = await channel.invokeMethod<String>('getApiKey');
+      return result;
+    } catch (e) {
+      // 如果没有原生 channel，返回空
+      return '';
+    }
+  }
+  
+  Future<void> _callQwenApi(String apiKey) async {
+    if (_selectedImage == null) return;
+    
+    final service = QwenVisionService(apiKey: apiKey);
+    
+    try {
+      final result = await service.recognizeFood(_selectedImage!);
+      
+      // 更新调试面板
+      _rawJson = QwenVisionService.lastRawResponse ?? jsonEncode(result);
+      
       if (mounted) {
-        _simulateQwenResponse();
+        _updateTrioWithResponse(jsonEncode(result));
         setState(() {
           _showScanAnimation = false;
           _showResult = true;
         });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        _showError('识别失败: $e');
+        setState(() {
+          _showScanAnimation = false;
+        });
+      }
+    }
   }
-
-  void _simulateQwenResponse() {
-    // 模拟返回的 JSON
-    _rawJson = '''
-{
-  "is_food": true,
-  "name": "红烧肉",
-  "cuisine": "川菜",
-  "ingredients": ["五花肉", "冰糖", "酱油", "八角", "桂皮"],
-  "portion_estimate": "中份（约150克）",
-  "calories": 450,
-  "protein": 18.5,
-  "carbs": 12.0,
-  "fat": 38.0,
-  "advice": "这道菜脂肪含量较高，建议搭配一份蔬菜或一碗米饭平衡营养"
-}''';
-    
-    // 解析并联动三友
-    _updateTrioWithResponse(_rawJson);
+  
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _showScanAnimation = false;
+      });
+    }
   }
 
   void _updateTrioWithResponse(String jsonStr) {

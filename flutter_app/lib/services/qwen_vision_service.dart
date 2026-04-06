@@ -2,18 +2,47 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
+/// CEO 指定营养师 Prompt（一字不差）
+const String _NUTRITIONIST_PROMPT = '''你是一位拥有10年经验的中国注册营养师，精通川鲁粤淮扬等所有菜系。
+
+分析这张图片，严格按以下 JSON 格式返回，不要输出任何其他内容：
+
+{
+"is_food": true/false,
+"name": "菜品的准确名称",
+"cuisine": "菜系",
+"ingredients": ["主要食材1", "食材2"],
+"portion_estimate": "分量估算",
+"calories": 数字,
+"protein": 数字,
+"carbs": 数字,
+"fat": 数字,
+"advice": "一句具体的营养建议"
+}''';
+
 class QwenVisionService {
-  // ⚠️ 测试用：直接写入 API Key
-  // TODO: 正式环境请通过环境变量或 GitHub Secrets 注入
-  static const String _testApiKey = 'YOUR_DASHSCOPE_API_KEY_HERE';
+  /// 从编译时环境变量获取 API Key
+  static String get _envApiKey {
+    final key = const String.fromEnvironment('DASHSCOPE_API_KEY', defaultValue: '');
+    if (key.isEmpty) {
+      print('🚨 CRITICAL ERROR: API KEY NOT MAPPED');
+      print('🚨 DASHSCOPE_API_KEY 未通过 --dart-define 注入');
+      print('🚨 请检查 GitHub Secrets 和 workflow 配置');
+    }
+    return key;
+  }
   
   final String apiKey;
   
+  /// 存储最后一次 API 响应（供调试面板使用）
+  static String? lastRawResponse;
+  static Map<String, dynamic>? lastParsedResponse;
+  
   QwenVisionService({required this.apiKey});
   
-  /// 便捷构造函数：直接使用测试 Key
-  factory QwenVisionService.withTestKey() {
-    return QwenVisionService(apiKey: _testApiKey);
+  /// 使用环境变量 API Key
+  factory QwenVisionService.withEnvKey() {
+    return QwenVisionService(apiKey: _envApiKey);
   }
   
   Future<Map<String, dynamic>> recognizeFood(File imageFile) async {
@@ -23,14 +52,20 @@ class QwenVisionService {
     print('🔵 QwenVisionService.recognizeFood()');
     print('========================================');
     print('📡 API URL: $url');
-    print('🔑 API Key: ${apiKey.substring(0, 10)}...');
+    print('🔑 API Key: ${apiKey.isNotEmpty ? apiKey.substring(0, 10) + '...' : "EMPTY"}');
     print('📷 图片文件: ${imageFile.path}');
     print('📷 图片大小: ${imageFile.lengthSync()} bytes');
+    
+    if (apiKey.isEmpty) {
+      print('🚨 CRITICAL ERROR: API KEY NOT MAPPED');
+      throw Exception('CRITICAL ERROR: API KEY NOT MAPPED');
+    }
     
     List<int> imageBytes = await imageFile.readAsBytes();
     String base64Image = base64Encode(imageBytes);
     print('📦 Base64 长度: ${base64Image.length} 字符');
     
+    /// CEO 指定营养师 Prompt
     final requestBody = {
       "model": "qwen-vl-max",
       "input": {
@@ -39,7 +74,7 @@ class QwenVisionService {
             "role": "user",
             "content": [
               {"image": "data:image/jpeg;base64,$base64Image"},
-              {"text": "你是一位中国营养学专家。分析这张食物图片，只返回JSON，不要其他内容：{\"is_food\": true/false, \"name\": \"菜名\", \"cuisine\": \"菜系\", \"calories\": 数字, \"protein\": 数字, \"carbs\": 数字, \"fat\": 数字, \"advice\": \"建议文案\"}如果不是食物，is_food为false，其他字段为空。"}
+              {"text": _NUTRITIONIST_PROMPT}
             ]
           }
         ]
@@ -47,7 +82,10 @@ class QwenVisionService {
       "parameters": {"temperature": 0.1, "result_format": "message"}
     };
     
+    // 打印原始请求体（调试用）
+    final requestJson = jsonEncode(requestBody);
     print('📤 发送请求到 Qwen API...');
+    print('📋 Request Body: $requestJson');
     
     final response = await http.post(
       Uri.parse(url),
@@ -55,19 +93,23 @@ class QwenVisionService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $apiKey',
       },
-      body: jsonEncode(requestBody),
+      body: requestJson,
     );
+    
+    // 保存原始响应（供调试面板使用）
+    lastRawResponse = response.body;
     
     print('========================================');
     print('📥 Qwen API 响应:');
     print('========================================');
     print('Status Code: ${response.statusCode}');
-    print('📄 Response Body: ${response.body}');
+    print('📄 Raw Response: ${response.body}');
     print('========================================');
     
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       print('✅ JSON 解析成功');
+      print('📊 Full Response Data: $data');
       
       String? content;
       try {
@@ -81,6 +123,7 @@ class QwenVisionService {
       if (content != null) {
         print('🔄 解析 content JSON...');
         final result = jsonDecode(content);
+        lastParsedResponse = result;
         print('✅ 最终解析结果: $result');
         print('========================================');
         return result;
@@ -91,5 +134,15 @@ class QwenVisionService {
       print('❌ API 调用失败: ${response.statusCode}');
       throw Exception('API调用失败: ${response.statusCode}');
     }
+  }
+  
+  /// 获取原始响应（供调试面板调用）
+  static String getDebugRawResponse() {
+    return lastRawResponse ?? '{"error": "No response yet"}';
+  }
+  
+  /// 获取解析后响应（供调试面板调用）
+  static Map<String, dynamic> getDebugParsedResponse() {
+    return lastParsedResponse ?? {"error": "No parsed response"};
   }
 }
