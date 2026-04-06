@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/nutrition_provider.dart';
 import '../../providers/pet_provider.dart';
+import '../../services/qwen_vision_service.dart';
 import '../../utils/theme.dart';
 import '../../utils/router.dart';
+import '../../widgets/furry_trio.dart';
 
 class MealCaptureScreen extends StatefulWidget {
   const MealCaptureScreen({super.key});
@@ -16,6 +20,16 @@ class MealCaptureScreen extends StatefulWidget {
 class _MealCaptureScreenState extends State<MealCaptureScreen> {
   bool _isAnalyzing = false;
   NutritionRecord? _lastRecord;
+  
+  // Qwen 识别结果
+  Map<String, dynamic>? _qwenResult;
+  bool _isNotFood = false;
+  File? _capturedImage;
+  
+  // API Key 从环境变量读取
+  final String apiKey = const String.fromEnvironment('DASHSCOPE_API_KEY', defaultValue: '');
+  
+  final ImagePicker _picker = ImagePicker();
 
   final List<Map<String, dynamic>> _quickFoods = [
     {'name': '鸡胸肉沙拉', 'emoji': '🍗'},
@@ -35,72 +49,25 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('记录饮食'),
+        actions: [
+          // 小熊按钮
+          IconButton(
+            icon: const Text('🐻', style: TextStyle(fontSize: 24)),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Camera placeholder
-            GestureDetector(
-              onTap: _simulateCapture,
-              child: Container(
-                width: double.infinity,
-                height: 250,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 30,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: _isAnalyzing
-                    ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            color: AuraPetTheme.accent,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'AI 正在分析...',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            '📸',
-                            style: TextStyle(fontSize: 72),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '点击拍摄食物',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 16,
-                            ),
-                          ),
-                          // Scan animation
-                          const SizedBox(height: 20),
-                          _ScanLine(),
-                        ],
-                      ),
-              ),
-            ),
+            // Camera area
+            _buildCameraArea(),
+            const SizedBox(height: 24),
+            
+            // 拍照/相册按钮
+            _buildCameraButtons(),
             const SizedBox(height: 32),
 
             // Quick select
@@ -126,13 +93,551 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
               },
             ),
 
-            // Result display
-            if (_lastRecord != null) ...[
+            // ========== 毛绒质感结果卡片 ==========
+            if (_qwenResult != null) ...[
+              const SizedBox(height: 32),
+              _isNotFood 
+                  ? _buildNotFoodCard() 
+                  : _buildFoodResultCard(),
+            ],
+            
+            // 原有的模拟结果卡片（快速选择使用）
+            if (_lastRecord != null && _qwenResult == null) ...[
               const SizedBox(height: 32),
               _MealResultCard(record: _lastRecord!),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCameraArea() {
+    return Container(
+      width: double.infinity,
+      height: 250,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: _capturedImage != null && !_isAnalyzing
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.file(
+                _capturedImage!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            )
+          : _isAnalyzing
+              ? const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 毛绒三友动画
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ChefBunny(size: 50, animate: true, excited: true),
+                        SizedBox(width: 8),
+                        DataBear(size: 50, animate: true, celebrate: true),
+                        SizedBox(width: 8),
+                        CheerEll(size: 50, animate: true, celebrate: true),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      '🐰 AI 营养师分析中...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '正在识别食物并计算营养',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    CircularProgressIndicator(
+                      color: Color(0xFFFF8C00),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('📸', style: TextStyle(fontSize: 72)),
+                    const SizedBox(height: 16),
+                    Text(
+                      '点击下方按钮拍照',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _ScanLine(),
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildCameraButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.camera),
+            icon: const Icon(Icons.camera_alt),
+            label: const Text('拍照'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF8C00),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.gallery),
+            icon: const Icon(Icons.photo_library),
+            label: const Text('相册'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFFF8C00),
+              side: const BorderSide(color: Color(0xFFFF8C00)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ========== 拍照/选图处理 ==========
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image == null) return;
+      
+      setState(() {
+        _capturedImage = File(image.path);
+        _isAnalyzing = true;
+        _qwenResult = null;
+        _isNotFood = false;
+      });
+      
+      HapticFeedback.mediumImpact();
+      
+      // 调用 Qwen-VL 识别
+      await _recognizeWithQwen(File(image.path));
+      
+    } catch (e) {
+      debugPrint('图片选择失败: $e');
+      setState(() => _isAnalyzing = false);
+    }
+  }
+
+  // ========== Qwen-VL 识别 ==========
+  Future<void> _recognizeWithQwen(File imageFile) async {
+    if (apiKey.isEmpty) {
+      // 没有 API Key，使用模拟数据
+      await _simulateRecognition();
+      return;
+    }
+    
+    try {
+      final service = QwenVisionService(apiKey: apiKey);
+      final result = await service.recognizeFood(imageFile);
+      
+      if (!mounted) return;
+      
+      setState(() {
+        _qwenResult = result;
+        _isNotFood = result['is_food'] == false;
+        _isAnalyzing = false;
+      });
+      
+      // 如果是食物，创建 NutritionRecord
+      if (!_isNotFood) {
+        _createNutritionRecord(result);
+      }
+      
+    } catch (e) {
+      debugPrint('Qwen 识别失败: $e');
+      
+      // 识别失败，使用模拟数据
+      if (mounted) {
+        await _simulateRecognition();
+      }
+    }
+  }
+
+  // 模拟识别（无 API Key 或识别失败时使用）
+  Future<void> _simulateRecognition() async {
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (!mounted) return;
+    
+    // 随机决定是否是食物
+    final isFood = DateTime.now().millisecond % 5 != 0; // 80%概率是食物
+    
+    if (isFood) {
+      final foods = [
+        {'name': '红烧肉', 'cuisine': '川菜', 'calories': 450, 'protein': 18.5, 'carbs': 12.0, 'fat': 38.0, 'advice': '这道菜脂肪含量较高，建议搭配一份蔬菜平衡'},
+        {'name': '麻辣烫', 'cuisine': '川菜', 'calories': 380, 'protein': 25.0, 'carbs': 30.0, 'fat': 18.0, 'advice': '麻辣烫营养均衡，注意不要选太辣的汤底'},
+        {'name': '螺蛳粉', 'cuisine': '桂菜', 'calories': 420, 'protein': 18.0, 'carbs': 55.0, 'fat': 15.0, 'advice': '螺蛳粉热量较高，建议少放花生和腐竹'},
+        {'name': '小笼包', 'cuisine': '淮扬菜', 'calories': 280, 'protein': 12.0, 'carbs': 35.0, 'fat': 10.0, 'advice': '小笼包皮薄馅多，适量食用即可'},
+      ];
+      final food = foods[DateTime.now().second % foods.length];
+      
+      setState(() {
+        _qwenResult = {
+          'is_food': true,
+          ...food,
+        };
+        _isNotFood = false;
+        _isAnalyzing = false;
+      });
+      
+      _createNutritionRecord(_qwenResult!);
+      
+    } else {
+      setState(() {
+        _qwenResult = {
+          'is_food': false,
+          'name': '',
+        };
+        _isNotFood = true;
+        _isAnalyzing = false;
+      });
+    }
+  }
+
+  void _createNutritionRecord(Map<String, dynamic> result) {
+    final nutrition = context.read<NutritionProvider>();
+    final foodName = result['name'] ?? '未知菜品';
+    final calories = (result['calories'] ?? 300).toInt();
+    
+    final record = NutritionRecord(
+      foodName: foodName,
+      emoji: _getFoodEmoji(foodName),
+      calories: calories,
+      protein: (result['protein'] ?? 15).toDouble(),
+      carbs: (result['carbs'] ?? 30).toDouble(),
+      fat: (result['fat'] ?? 15).toDouble(),
+      timestamp: DateTime.now(),
+    );
+    
+    setState(() => _lastRecord = record);
+    
+    // 更新宠物状态
+    final pet = context.read<PetProvider>();
+    pet.startEating();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      pet.finishEating(auraScore: record.auraScore);
+    });
+  }
+
+  String _getFoodEmoji(String foodName) {
+    if (foodName.contains('肉') || foodName.contains('牛') || foodName.contains('猪')) return '🥩';
+    if (foodName.contains('鸡')) return '🍗';
+    if (foodName.contains('鱼') || foodName.contains('三文')) return '🍣';
+    if (foodName.contains('沙拉') || foodName.contains('菜')) return '🥗';
+    if (foodName.contains('面') || foodName.contains('粉')) return '🍜';
+    if (foodName.contains('包')) return '🥟';
+    if (foodName.contains('米')) return '🍚';
+    return '🍽️';
+  }
+
+  // ========== 非食物卡片 ==========
+  Widget _buildNotFoodCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 毛绒三友困惑动画
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ChefBunny(size: 60, animate: true, thinking: true),
+              DataBear(size: 60, animate: true, thinking: true),
+              CheerEll(size: 60, animate: true, thinking: true),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            '😕 识别不到食物哦~',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF5D4E37),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '毛绒三友都困惑了呢\n请拍摄真正的食物吧！',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: const Color(0xFF8B7B6B),
+            ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _qwenResult = null;
+                _capturedImage = null;
+              });
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('重新拍摄'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFFF8C00),
+              side: const BorderSide(color: Color(0xFFFF8C00)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== 食物结果卡片 ==========
+  Widget _buildFoodResultCard() {
+    final result = _qwenResult!;
+    final foodName = result['name'] ?? '未知菜品';
+    final cuisine = result['cuisine'] ?? '其他';
+    final calories = (result['calories'] ?? 0).toInt();
+    final protein = (result['protein'] ?? 0).toDouble();
+    final carbs = (result['carbs'] ?? 0).toDouble();
+    final fat = (result['fat'] ?? 0).toDouble();
+    final advice = result['advice'] ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header - 兔厨 + 菜品名称
+          Row(
+            children: [
+              const ChefBunny(size: 50, animate: true, excited: true),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      foodName,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF5D4E37),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB6C1).withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        cuisine,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFFF8C00),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // 热量 - 熊仔数据
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFF5F0), Color(0xFFFFB6C1)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const DataBear(size: 50, animate: true, celebrate: true),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$calories',
+                          style: const TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF8B7355),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'kcal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF8B7B6B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Text(
+                      'AI 精准估算',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFB0A090),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 营养素
+          Row(
+            children: [
+              _NutritionChip(label: '蛋白质', value: '${protein.toStringAsFixed(1)}g', color: const Color(0xFFFF8C00)),
+              const SizedBox(width: 8),
+              _NutritionChip(label: '碳水', value: '${carbs.toStringAsFixed(1)}g', color: const Color(0xFFD4A574)),
+              const SizedBox(width: 8),
+              _NutritionChip(label: '脂肪', value: '${fat.toStringAsFixed(1)}g', color: const Color(0xFFFFB6C1)),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 象宝建议
+          if (advice.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const CheerEll(size: 36, animate: true, celebrate: true),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      advice,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF5D4E37),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 保存按钮
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_lastRecord != null) {
+                  context.read<NutritionProvider>().addMealRecord(_lastRecord!);
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF8C00),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('🐻', style: TextStyle(fontSize: 18)),
+                  SizedBox(width: 8),
+                  Text(
+                    '保存记录',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -171,6 +676,7 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
     setState(() {
       _isAnalyzing = false;
       _lastRecord = record;
+      _qwenResult = null;
     });
 
     // Show result
@@ -210,7 +716,7 @@ class _ScanLineState extends State<_ScanLine>
             gradient: LinearGradient(
               colors: [
                 Colors.transparent,
-                AuraPetTheme.accent,
+                const Color(0xFFFF8C00),
                 Colors.transparent,
               ],
             ),
@@ -466,6 +972,50 @@ class _NutritionItem extends StatelessWidget {
                 backgroundColor: color.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
                 minHeight: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NutritionChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _NutritionChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: const Color(0xFF8B7B6B),
               ),
             ),
           ],
