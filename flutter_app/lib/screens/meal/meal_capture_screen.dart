@@ -26,8 +26,9 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
   bool _isNotFood = false;
   File? _capturedImage;
   
-  // API Key 从环境变量读取
-  final String apiKey = const String.fromEnvironment('DASHSCOPE_API_KEY', defaultValue: '');
+  // API Key - 直接写入用于测试
+  // ⚠️ 请把下面的 'YOUR_API_KEY' 替换成你的真实 DASHSCOPE API Key
+  final String apiKey = 'YOUR_API_KEY';
   
   final ImagePicker _picker = ImagePicker();
 
@@ -272,8 +273,11 @@ class _MealCaptureScreenState extends State<MealCaptureScreen> {
     print('=== 🍳 开始 Qwen-VL 食物识别 ===');
     print('========================================');
     
-    if (apiKey.isEmpty) {
-      print('⚠️ API Key 为空，使用模拟数据');
+    // 检查是否配置了真实的 API Key
+    if (apiKey.isEmpty || apiKey == 'YOUR_API_KEY') {
+      print('⚠️ API Key 未配置!');
+      print('⚠️ 请在 meal_capture_screen.dart 中设置真实的 API Key');
+      print('⚠️ 当前使用模拟数据');
       await _simulateRecognition();
       return;
     }

@@ -3,9 +3,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class QwenVisionService {
+  // ⚠️ 测试用：直接写入 API Key
+  // TODO: 正式环境请通过环境变量或 GitHub Secrets 注入
+  static const String _testApiKey = 'YOUR_DASHSCOPE_API_KEY_HERE';
+  
   final String apiKey;
   
   QwenVisionService({required this.apiKey});
+  
+  /// 便捷构造函数：直接使用测试 Key
+  factory QwenVisionService.withTestKey() {
+    return QwenVisionService(apiKey: _testApiKey);
+  }
   
   Future<Map<String, dynamic>> recognizeFood(File imageFile) async {
     final url = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
@@ -16,6 +25,7 @@ class QwenVisionService {
     print('📡 API URL: $url');
     print('🔑 API Key: ${apiKey.substring(0, 10)}...');
     print('📷 图片文件: ${imageFile.path}');
+    print('📷 图片大小: ${imageFile.lengthSync()} bytes');
     
     List<int> imageBytes = await imageFile.readAsBytes();
     String base64Image = base64Encode(imageBytes);
@@ -38,7 +48,6 @@ class QwenVisionService {
     };
     
     print('📤 发送请求到 Qwen API...');
-    print('📋 Request Body Keys: ${requestBody.keys.toList()}');
     
     final response = await http.post(
       Uri.parse(url),
@@ -53,15 +62,13 @@ class QwenVisionService {
     print('📥 Qwen API 响应:');
     print('========================================');
     print('Status Code: ${response.statusCode}');
-    print('📄 Response Body:');
-    print(response.body);
+    print('📄 Response Body: ${response.body}');
     print('========================================');
     
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       print('✅ JSON 解析成功');
       
-      // 提取 content
       String? content;
       try {
         content = data['output']['choices'][0]['message']['content'];
