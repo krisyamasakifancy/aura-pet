@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,7 @@ import '../../widgets/canvas_bear.dart';
 
 /// P31 Food Search - AI Camera Entry Point
 /// 🦞 CEO 要求：右下角相机按钮 + 泰迪熊对话 + Gemini AI 识别
+/// 🧠 升级：智能食物判定 + 非食物拒绝 + 体积估算
 class P31FoodSearch extends StatefulWidget {
   final VoidCallback onNext;
   
@@ -21,6 +23,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
   bool _showBearDialog = false;
   bool _isScanning = false;
   bool _showAIFeedback = false;
+  bool _isNotFood = false;  // 🆕 非食物标记
   String? _selectedImagePath;
   String? _aiFoodName;
   int? _aiCalories;
@@ -29,14 +32,27 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
   double? _aiFat;
   String? _anxietyLabel;
   String? _anxietyEmoji;
+  String? _bearComicLine;  // 🆕 泰迪熊吐槽台词
+  String? _bearRejectEmoji;  // 🆕 拒绝表情
   
   final ImagePicker _picker = ImagePicker();
   late AnimationController _scanAnimController;
   late Animation<double> _scanAnimation;
+  late AnimationController _shakeAnimController;
 
   // 项目主色调（棕色）
   static const Color _primaryBrown = Color(0xFF8B7355);
   static const Color _accentGold = Color(0xFFD4A574);
+
+  // 🆕 泰迪熊吐槽语料库（非食物时使用）
+  static const List<Map<String, String>> _notFoodBearQuotes = [
+    {'emoji': '😓', 'line': '主人，这个真的咬不动诶... 🐻'},
+    {'emoji': '🤔', 'line': '这看起来不像好吃的，我们要不去拍点真正的晚餐？✨'},
+    {'emoji': '😅', 'line': '小浣熊研究了半天，发现这好像不能吃诶...'},
+    {'emoji': '🫤', 'line': '呃...这个不在我的食物字典里呢，换个试试？'},
+    {'emoji': '🤷', 'line': '摊手.jpg 这个真的帮不了你拍一张美食吧！'},
+    {'emoji': '🙈', 'line': '我什么都没看到，让我看看真正的食物吧！'},
+  ];
 
   @override
   void initState() {
@@ -48,11 +64,18 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     _scanAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _scanAnimController, curve: Curves.easeInOut),
     );
+    
+    // 🆕 抖动动画（非食物时使用）
+    _shakeAnimController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
     _scanAnimController.dispose();
+    _shakeAnimController.dispose();
     super.dispose();
   }
 
@@ -83,6 +106,9 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         _selectedImagePath = image.path;
         _isScanning = true;
         _showAIFeedback = false;
+        _isNotFood = false;
+        _bearComicLine = null;
+        _bearRejectEmoji = null;
       });
 
       // 开始扫描动画
@@ -97,15 +123,14 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     }
   }
 
-  // ========== Gemini API 调用 ==========
+  // ========== 🧠 升级版 Gemini API 调用 ==========
   Future<void> _callGeminiAPI(XFile image) async {
     try {
       // 读取图片并转为 base64
       final bytes = await image.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      // 从环境变量获取 API Key（通过 Flutter Define）
-      // 在实际部署时通过 --dart-define=GEMINI_API_KEY=xxx 注入
+      // 从环境变量获取 API Key
       const apiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
       
       if (apiKey.isEmpty) {
@@ -114,6 +139,55 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         return;
       }
 
+      // 🆕 升级版 Prompt：食物判定 + 体积估算
+      const enhancedPrompt = '''
+【智能食物分析系统 v2.0】
+
+你是一个严格的食物鉴定专家。请严格按以下步骤分析：
+
+## 第一步：食物判定（必须先执行）
+仔细分析图片内容，判断是否为"可食用食物"：
+- ✅ 可接受：水果、蔬菜、肉类、菜肴、饮品、零食、甜点、面包、米饭、面食等任何可以食用的东西
+- ❌ 不可接受：电子产品（电脑、手机、键盘）、家具（桌子、椅子）、人、动物（除非是食物本身如烤鸭）、植物（非食用）、建筑、风景、服装、书籍、化妆品等
+
+## 第二步：响应格式
+
+### 如果是食物：
+```json
+{
+  "is_food": true,
+  "food_name": "食物名称",
+  "portion_size": "一人份/二人份/多人份/小份/大份",
+  "calories": 估算热量(整数),
+  "calories_range": "100-200kcal",
+  "protein": 蛋白质(g, 浮点数),
+  "carbs": 碳水化合物(g, 浮点数),
+  "fat": 脂肪(g, 浮点数),
+  "anxiety_label": "去焦虑标签",
+  "anxiety_emoji": "表情符号",
+  "confidence": 0.0-1.0,
+  "reasoning": "简要判断依据"
+}
+```
+
+### 如果不是食物：
+```json
+{
+  "is_food": false,
+  "detected_object": "识别到的物体名称",
+  "reject_reason": "为什么这不是食物",
+  "suggestion": "建议用户拍什么"
+}
+```
+
+## 重要规则：
+1. 必须先判断 is_food，这是最重要的字段
+2. 如果不是食物，is_food 必须为 false，禁止返回任何食物数据
+3. 如果是食物，必须估算份量（一 人份/二人份/多人份）
+4. 热量必须基于份量调整（多人份热量约是单人份的2-3倍）
+5. 只返回JSON，不要其他内容
+''';
+
       // 调用 Gemini Vision API
       final response = await http.post(
         Uri.parse('https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=$apiKey'),
@@ -121,19 +195,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         body: jsonEncode({
           'contents': [{
             'parts': [
-              {
-                'text': '''分析这张食物图片，返回JSON格式：
-                {
-                  "food_name": "食物名称",
-                  "calories": 估算热量(整数),
-                  "protein": 蛋白质(g, 浮点数),
-                  "carbs": 碳水化合物(g, 浮点数),
-                  "fat": 脂肪(g, 浮点数),
-                  "anxiety_label": "去焦虑标签",
-                  "anxiety_emoji": "表情符号"
-                }
-                只返回JSON，不要其他内容。'''
-              },
+              {'text': enhancedPrompt},
               {
                 'inlineData': {
                   'mimeType': 'image/jpeg',
@@ -153,15 +215,17 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         final jsonMatch = RegExp(r'\{.*\}', dotAll: true).firstMatch(text);
         if (jsonMatch != null) {
           final result = jsonDecode(jsonMatch.group(0)!);
-          _updateAIResult(
-            foodName: result['food_name'] ?? '未知食物',
-            calories: (result['calories'] ?? 0).toInt(),
-            protein: (result['protein'] ?? 0).toDouble(),
-            carbs: (result['carbs'] ?? 0).toDouble(),
-            fat: (result['fat'] ?? 0).toDouble(),
-            anxietyLabel: result['anxiety_label'] ?? '能量补给',
-            anxietyEmoji: result['anxiety_emoji'] ?? '⚡',
-          );
+          
+          // 🆕 检查是否为食物
+          final isFood = result['is_food'] == true;
+          
+          if (!isFood) {
+            // ❌ 非食物：显示吐槽界面
+            _handleNotFood(result);
+          } else {
+            // ✅ 是食物：正常显示识别结果
+            _handleFoodResult(result);
+          }
         } else {
           await _simulateAIFeedback();
         }
@@ -175,20 +239,85 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     }
   }
 
+  // 🆕 处理非食物结果
+  void _handleNotFood(Map<String, dynamic> result) {
+    final random = Random();
+    final quote = _notFoodBearQuotes[random.nextInt(_notFoodBearQuotes.length)];
+    
+    setState(() {
+      _isScanning = false;
+      _showAIFeedback = true;
+      _isNotFood = true;
+      _bearComicLine = result['suggestion'] ?? quote['line'];
+      _bearRejectEmoji = quote['emoji'];
+      _aiFoodName = result['detected_object'] ?? '未知物体';
+    });
+    
+    // 播放抖动动画
+    _shakeAnimController.forward().then((_) {
+      _shakeAnimController.reverse();
+    });
+  }
+
+  // 🆕 处理食物结果
+  void _handleFoodResult(Map<String, dynamic> result) {
+    // 计算热量范围
+    final calories = result['calories'] ?? 0;
+    final portionSize = result['portion_size'] ?? '一人份';
+    
+    String caloriesRange;
+    if (portionSize.contains('多') || portionSize.contains('3') || portionSize.contains('大')) {
+      caloriesRange = '${(calories * 0.8).round()}-${(calories * 1.5).round()}kcal';
+    } else if (portionSize.contains('二') || portionSize.contains('中')) {
+      caloriesRange = '${(calories * 0.6).round()}-${(calories * 1.2).round()}kcal';
+    } else {
+      caloriesRange = '${(calories * 0.7).round()}-${(calories * 1.3).round()}kcal';
+    }
+    
+    _updateAIResult(
+      foodName: result['food_name'] ?? '未知食物',
+      calories: calories,
+      protein: (result['protein'] ?? 0).toDouble(),
+      carbs: (result['carbs'] ?? 0).toDouble(),
+      fat: (result['fat'] ?? 0).toDouble(),
+      anxietyLabel: result['anxiety_label'] ?? '能量补给',
+      anxietyEmoji: result['anxiety_emoji'] ?? '⚡',
+      portionSize: portionSize,
+      caloriesRange: caloriesRange,
+    );
+  }
+
   // ========== 模拟 AI 反馈（无 API Key 或失败时）==========
   Future<void> _simulateAIFeedback() async {
     // 模拟 AI 识别延迟
     await Future.delayed(const Duration(seconds: 2));
     
-    // 随机生成模拟数据
+    // 随机决定是否模拟非食物（10%概率）
+    final random = Random();
+    if (random.nextInt(10) == 0) {
+      // 模拟非食物
+      final quote = _notFoodBearQuotes[random.nextInt(_notFoodBearQuotes.length)];
+      setState(() {
+        _isScanning = false;
+        _showAIFeedback = true;
+        _isNotFood = true;
+        _bearComicLine = quote['line'];
+        _bearRejectEmoji = quote['emoji'];
+        _aiFoodName = '非食物物体';
+      });
+      _shakeAnimController.forward().then((_) => _shakeAnimController.reverse());
+      return;
+    }
+    
+    // 正常食物数据
     final foods = [
-      {'name': '芝士蛋糕', 'cal': 420, 'protein': 8.5, 'carbs': 45.0, 'fat': 22.0},
-      {'name': '水果沙拉', 'cal': 150, 'protein': 2.0, 'carbs': 35.0, 'fat': 1.0},
-      {'name': '三明治', 'cal': 320, 'protein': 15.0, 'carbs': 40.0, 'fat': 12.0},
-      {'name': '奶茶', 'cal': 280, 'protein': 3.0, 'carbs': 55.0, 'fat': 6.0},
+      {'name': '芝士蛋糕', 'cal': 420, 'protein': 8.5, 'carbs': 45.0, 'fat': 22.0, 'portion': '一人份', 'range': '350-500kcal'},
+      {'name': '水果沙拉', 'cal': 150, 'protein': 2.0, 'carbs': 35.0, 'fat': 1.0, 'portion': '一人份', 'range': '120-200kcal'},
+      {'name': '三明治套餐', 'cal': 450, 'protein': 20.0, 'carbs': 50.0, 'fat': 18.0, 'portion': '二人份', 'range': '400-600kcal'},
+      {'name': '珍珠奶茶', 'cal': 280, 'protein': 3.0, 'carbs': 55.0, 'fat': 6.0, 'portion': '一人份', 'range': '250-350kcal'},
     ];
     
-    final food = foods[DateTime.now().second % foods.length];
+    final food = foods[random.nextInt(foods.length)];
     
     _updateAIResult(
       foodName: food['name'] as String,
@@ -198,6 +327,8 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
       fat: food['fat'] as double,
       anxietyLabel: '灵魂充电时间',
       anxietyEmoji: '⚡',
+      portionSize: food['portion'] as String,
+      caloriesRange: food['range'] as String,
     );
   }
 
@@ -209,10 +340,13 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     required double fat,
     required String anxietyLabel,
     required String anxietyEmoji,
+    String? portionSize,
+    String? caloriesRange,
   }) {
     setState(() {
       _isScanning = false;
       _showAIFeedback = true;
+      _isNotFood = false;
       _aiFoodName = foodName;
       _aiCalories = calories;
       _aiProtein = protein;
@@ -251,10 +385,10 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                 Row(
                   children: [
                     IconButton(onPressed: widget.onNext, icon: const Icon(Icons.arrow_back)),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Add Food',
-                        style: TextStyle(
+                        _isNotFood ? '🤷 这不是食物' : 'Add Food',
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -264,11 +398,11 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                     // 泰迪熊小头像（可点击）
                     GestureDetector(
                       onTap: _showBearDialogPopup,
-                      child: const SizedBox(
+                      child: SizedBox(
                         width: 40,
                         height: 40,
                         child: CanvasBear(
-                          mood: BearMood.excited,
+                          mood: _isNotFood ? BearMood.thinking : BearMood.excited,
                           size: 40,
                           animate: true,
                         ),
@@ -279,8 +413,11 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                 
                 const SizedBox(height: 16),
                 
-                // ========== AI 推荐卡片（识别结果显示）==========
-                if (_showAIFeedback) _buildAIFeedbackCard(),
+                // ========== 🆕 非食物反馈卡片 ==========
+                if (_showAIFeedback && _isNotFood) _buildNotFoodCard(),
+                
+                // ========== AI 推荐卡片（正常食物）==========
+                if (_showAIFeedback && !_isNotFood) _buildAIFeedbackCard(),
                 
                 // 搜索栏
                 Container(
@@ -365,8 +502,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         // ========== 泰迪熊对话框 ==========
         if (_showBearDialog) _buildBearDialog(),
 
-        // ========== 浮动相机按钮（右下角，Z-Index 最高）==========
-        // ⚠️ 使用 Stack + Positioned 确保不被遮挡
+        // ========== 浮动相机按钮（右下角）==========
         Positioned(
           right: 24,
           bottom: 24,
@@ -380,7 +516,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
   Widget _buildCameraFAB() {
     return FloatingActionButton(
       onPressed: _showBearDialogPopup,
-      backgroundColor: _primaryBrown,  // 主棕色
+      backgroundColor: _primaryBrown,
       child: const Icon(
         Icons.camera_alt_rounded,
         color: Colors.white,
@@ -389,7 +525,127 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     );
   }
 
-  // ========== AI 推荐卡片 ==========
+  // ========== 🆕 非食物反馈卡片 ==========
+  Widget _buildNotFoodCard() {
+    return AnimatedBuilder(
+      animation: _shakeAnimController,
+      builder: (context, child) {
+        final shake = sin(_shakeAnimController.value * pi * 4) * 10;
+        return Transform.translate(
+          offset: Offset(shake, 0),
+          child: child,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.orange.shade300,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            // 🆕 流汗/摊手泰迪熊
+            const SizedBox(
+              width: 100,
+              height: 100,
+              child: CanvasBear(
+                mood: BearMood.thinking,  // 流汗表情
+                size: 100,
+                animate: true,
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // 拒绝标签
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.block, color: Colors.orange.shade700, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '这不是食物',
+                    style: TextStyle(
+                      color: Colors.orange.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // 检测到的物体
+            Text(
+              '检测到: $_aiFoodName',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // 🆕 吐槽台词
+            if (_bearComicLine != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      _bearRejectEmoji ?? '🤔',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _bearComicLine!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            const SizedBox(height: 16),
+            
+            // 重新拍摄按钮
+            OutlinedButton.icon(
+              onPressed: _showBearDialogPopup,
+              icon: const Icon(Icons.refresh),
+              label: const Text('重新拍摄'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _primaryBrown,
+                side: BorderSide(color: _primaryBrown),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== AI 推荐卡片（正常食物）==========
   Widget _buildAIFeedbackCard() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -487,7 +743,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$_aiCalories kcal',
+                      '${_aiCalories ?? 0} kcal',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 24,
@@ -634,7 +890,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
             
             // 提示文字
             const Text(
-              '🐻 正在分析中...',
+              '🧠 智能分析中...',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -643,7 +899,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
             ),
             const SizedBox(height: 8),
             Text(
-              '让泰迪熊看看你吃了什么好东西',
+              '正在识别是否为食物并估算分量',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 14,
@@ -663,7 +919,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
         color: Colors.black38,
         child: Center(
           child: GestureDetector(
-            onTap: () {}, // 防止点击对话框关闭
+            onTap: () {},
             child: Container(
               margin: const EdgeInsets.all(32),
               padding: const EdgeInsets.all(24),
@@ -701,12 +957,11 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                       color: _primaryBrown.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
+                    child: const Text(
                       '🐻 让我看看主人今天吃了什么好东西？',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color: _primaryBrown.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
