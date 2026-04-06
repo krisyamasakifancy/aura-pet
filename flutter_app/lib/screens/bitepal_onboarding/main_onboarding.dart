@@ -242,7 +242,7 @@ class _BitePalOnboardingState extends State<BitePalOnboarding> {
                 P28HomeCalories(onNext: _nextPage),
                 P29HomeMacros(onNext: _nextPage),
                 P30MoodCheck(onNext: _nextPage),
-                P31FoodSearch(onNext: _nextPage),
+                P31FoodSearch(),
                 P32FoodList(onNext: _nextPage),
                 P33CalorieCalculator(onNext: _nextPage),
                 P34FastingPlans(onNext: _nextPage),

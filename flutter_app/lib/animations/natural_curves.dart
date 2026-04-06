@@ -132,7 +132,7 @@ class _PressDownCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 快速下沉 + 轻微形变
-    return 1 - pow(1 - t, 2);
+    return 1 - (1 - t) * (1 - t);
   }
 }
 

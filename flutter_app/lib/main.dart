@@ -7,13 +7,13 @@ import 'providers/nutrition_provider.dart';
 import 'providers/shop_provider.dart';
 import 'providers/achievement_provider.dart';
 import 'screens/main_navigation.dart';
-import 'screens/onboarding/onboarding_screen.dart';
-import 'screens/aura_home_screen.dart';
+import 'screens/onboarding/aura_onboarding_screen.dart';
 import 'screens/aura_demo_showcase.dart';
 import 'screens/page_navigator.dart';
 import 'screens/bitepal_onboarding/main_onboarding.dart';
 import 'screens/fasting/aura_fasting_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/aura_home_screen.dart';
 import 'providers/fullstack_providers.dart';
 import 'services/monet_clock.dart';
 import 'services/haptic_audio.dart';
@@ -91,8 +91,7 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
         
         // Time-aware Monet theme
         theme: AuraPetTheme.lightTheme,
-        darkTheme: AuraPetTheme.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.light,
         
         // Initial route
         initialRoute: '/',
@@ -108,7 +107,6 @@ class _AuraPetAppState extends State<AuraPetApp> with WidgetsBindingObserver {
               return MaterialPageRoute(
                 builder: (_) => const AuraOnboardingScreen(),
               );
-            case '/auth/login':
               return MaterialPageRoute(
                 builder: (_) => const LoginScreen(),
               );

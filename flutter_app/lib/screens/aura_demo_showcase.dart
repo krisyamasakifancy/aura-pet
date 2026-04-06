@@ -302,14 +302,14 @@ class _SpringCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 模拟弹簧衰减
-    final omega = (stiffness / 1).sqrt();
-    final zeta = damping / (2 * (1 * stiffness).sqrt());
+    final omega = (stiffness / 1)math.sqrt();
+    final zeta = damping / (2 * (1 * stiffness)math.sqrt());
     
     if (zeta < 1) {
       // 欠阻尼
-      final omegaD = omega * (1 - zeta * zeta).sqrt();
-      return 1 - ((-zeta * omega * t).exp() *
-          ((zeta * omega / omegaD).sin() * t.cos() + t.sin() * omegaD));
+      final omegaD = omega * (1 - zeta * zeta)math.sqrt();
+      return 1 - ((-zeta * omega * t)math.exp() *
+          ((zeta * omega / omegaD)math.sin() * tmath.cos() + tmath.sin() * omegaD));
     }
     
     // 默认平滑曲线
