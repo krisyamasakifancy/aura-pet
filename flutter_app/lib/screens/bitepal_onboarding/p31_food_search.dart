@@ -79,7 +79,7 @@ class _P31FoodSearchState extends State<P31FoodSearch> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [const Color(0xFF6B9EB8), const Color(0xFF9FCFW0)],
+            colors: [const Color(0xFF6B9EB8), const Color(0xFF9FC5E0)],
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
