@@ -23,6 +23,7 @@ on:
 # 环境变量（安全：不输出到日志）
 env:
   GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
   STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -68,7 +69,8 @@ jobs:
       - name: Build web
         run: |
           cd flutter_app && flutter build web --release \
-            --dart-define=GEMINI_API_KEY=${{ env.GEMINI_API_KEY }}
+            --dart-define=GEMINI_API_KEY=${{ env.GEMINI_API_KEY }} \
+            --dart-define=DASHSCOPE_API_KEY=${{ env.DASHSCOPE_API_KEY }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v4

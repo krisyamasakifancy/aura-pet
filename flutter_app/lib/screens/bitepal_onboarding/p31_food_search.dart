@@ -4,796 +4,196 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import '../../widgets/canvas_bear.dart';
+import '../../widgets/furry_trio.dart';
 
-/// P31 Food Search - AI Camera Entry Point
-/// 🦞 CEO 要求：右下角相机按钮 + 泰迪熊对话 + Gemini AI 识别
-/// 🧠 升级：智能食物判定 + 非食物拒绝 + 体积估算
+/// P31: AI 智能识图页面 - Qwen-VL 中文食物识别版
+/// 兔厨负责扫描交互 + 毛绒质感 + 中文食物专家
 class P31FoodSearch extends StatefulWidget {
-  final VoidCallback onNext;
-  
-  const P31FoodSearch({super.key, required this.onNext});
+  const P31FoodSearch({super.key});
 
   @override
   State<P31FoodSearch> createState() => _P31FoodSearchState();
 }
 
-class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateMixin {
-  // ========== 状态管理 ==========
-  bool _showBearDialog = false;
-  bool _isScanning = false;
-  bool _showAIFeedback = false;
-  bool _isNotFood = false;  // 🆕 非食物标记
-  String? _selectedImagePath;
-  String? _aiFoodName;
-  int? _aiCalories;
-  double? _aiProtein;
-  double? _aiCarbs;
-  double? _aiFat;
-  String? _anxietyLabel;
-  String? _anxietyEmoji;
-  String? _bearComicLine;  // 🆕 泰迪熊吐槽台词
-  String? _bearRejectEmoji;  // 🆕 拒绝表情
+class _P31FoodSearchState extends State<P31FoodSearch>
+    with TickerProviderStateMixin {
+  bool _showScanAnimation = false;
+  bool _showResult = false;
+  bool _isNotFood = false;
   
-  final ImagePicker _picker = ImagePicker();
-  late AnimationController _scanAnimController;
+  String _foodName = '红烧肉';
+  String _chineseName = '';
+  int _calories = 450;
+  String _portion = '一人份';
+  String _caloriesRange = '400-500kcal';
+  String _anxietyLabel = '灵魂充电时间';
+  String _bearQuote = '🐰 看起来好好吃呢！';
+
+  late AnimationController _scanController;
+  late AnimationController _glowController;
   late Animation<double> _scanAnimation;
-  late AnimationController _shakeAnimController;
+  late Animation<double> _glowAnimation;
 
-  // 项目主色调（棕色）
-  static const Color _primaryBrown = Color(0xFF8B7355);
-  static const Color _accentGold = Color(0xFFD4A574);
-
-  // 🆕 泰迪熊吐槽语料库（非食物时使用）
+  // 中文吐槽语料库
   static const List<Map<String, String>> _notFoodBearQuotes = [
-    {'emoji': '😓', 'line': '主人，这个真的咬不动诶... 🐻'},
-    {'emoji': '🤔', 'line': '这看起来不像好吃的，我们要不去拍点真正的晚餐？✨'},
-    {'emoji': '😅', 'line': '小浣熊研究了半天，发现这好像不能吃诶...'},
-    {'emoji': '🫤', 'line': '呃...这个不在我的食物字典里呢，换个试试？'},
-    {'emoji': '🤷', 'line': '摊手.jpg 这个真的帮不了你拍一张美食吧！'},
-    {'emoji': '🙈', 'line': '我什么都没看到，让我看看真正的食物吧！'},
+    {'emoji': '😓', 'line': '兔兔研究了半天，这个真的不能吃诶...'},
+    {'emoji': '🤔', 'line': '这看起来不像食物呢，我们要不拍点真正的晚餐？'},
+    {'emoji': '😅', 'line': '兔厨提醒：这个好像不是红烧肉...'},
+    {'emoji': '🫤', 'line': '呃...这个不在兔兔的菜单里呢，换个试试？'},
+    {'emoji': '🤷', 'line': '兔兔摊手.jpg 让我们拍真正的美食吧！'},
+    {'emoji': '🙈', 'line': '兔兔什么都没看到！让我们看看真正的食物吧！'},
   ];
 
   @override
   void initState() {
     super.initState();
-    _scanAnimController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _scanController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
     _scanAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _scanAnimController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _scanController, curve: Curves.easeInOut),
     );
     
-    // 🆕 抖动动画（非食物时使用）
-    _shakeAnimController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
+    )..repeat(reverse: true);
+    _glowAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
   }
 
   @override
   void dispose() {
-    _scanAnimController.dispose();
-    _shakeAnimController.dispose();
+    _scanController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
-  // ========== 泰迪熊对话框 ==========
-  void _showBearDialogPopup() {
-    setState(() => _showBearDialog = true);
-  }
-
-  void _dismissBearDialog() {
-    setState(() => _showBearDialog = false);
-  }
-
-  // ========== 相机/相册选择 ==========
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      _dismissBearDialog();
-      
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-
-      if (image == null) return;
-
-      setState(() {
-        _selectedImagePath = image.path;
-        _isScanning = true;
-        _showAIFeedback = false;
-        _isNotFood = false;
-        _bearComicLine = null;
-        _bearRejectEmoji = null;
-      });
-
-      // 开始扫描动画
-      _scanAnimController.repeat();
-
-      // 调用 Gemini API
-      await _callGeminiAPI(image);
-
-    } catch (e) {
-      _showErrorSnackBar('无法访问相机/相册: $e');
-      setState(() => _isScanning = false);
-    }
-  }
-
-  // ========== 🧠 升级版 Gemini API 调用 ==========
-  Future<void> _callGeminiAPI(XFile image) async {
-    try {
-      // 读取图片并转为 base64
-      final bytes = await image.readAsBytes();
-      final base64Image = base64Encode(bytes);
-
-      // 从环境变量获取 API Key
-      const apiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-      
-      if (apiKey.isEmpty) {
-        // 没有 API Key 时使用模拟数据
-        await _simulateAIFeedback();
-        return;
-      }
-
-      // 🆕 升级版 Prompt：食物判定 + 体积估算
-      const enhancedPrompt = '''
-【智能食物分析系统 v2.0】
-
-你是一个严格的食物鉴定专家。请严格按以下步骤分析：
-
-## 第一步：食物判定（必须先执行）
-仔细分析图片内容，判断是否为"可食用食物"：
-- ✅ 可接受：水果、蔬菜、肉类、菜肴、饮品、零食、甜点、面包、米饭、面食等任何可以食用的东西
-- ❌ 不可接受：电子产品（电脑、手机、键盘）、家具（桌子、椅子）、人、动物（除非是食物本身如烤鸭）、植物（非食用）、建筑、风景、服装、书籍、化妆品等
-
-## 第二步：响应格式
-
-### 如果是食物：
-```json
-{
-  "is_food": true,
-  "food_name": "食物名称",
-  "portion_size": "一人份/二人份/多人份/小份/大份",
-  "calories": 估算热量(整数),
-  "calories_range": "100-200kcal",
-  "protein": 蛋白质(g, 浮点数),
-  "carbs": 碳水化合物(g, 浮点数),
-  "fat": 脂肪(g, 浮点数),
-  "anxiety_label": "去焦虑标签",
-  "anxiety_emoji": "表情符号",
-  "confidence": 0.0-1.0,
-  "reasoning": "简要判断依据"
-}
-```
-
-### 如果不是食物：
-```json
-{
-  "is_food": false,
-  "detected_object": "识别到的物体名称",
-  "reject_reason": "为什么这不是食物",
-  "suggestion": "建议用户拍什么"
-}
-```
-
-## 重要规则：
-1. 必须先判断 is_food，这是最重要的字段
-2. 如果不是食物，is_food 必须为 false，禁止返回任何食物数据
-3. 如果是食物，必须估算份量（一 人份/二人份/多人份）
-4. 热量必须基于份量调整（多人份热量约是单人份的2-3倍）
-5. 只返回JSON，不要其他内容
-''';
-
-      // 调用 Gemini Vision API
-      final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=$apiKey'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [{
-            'parts': [
-              {'text': enhancedPrompt},
-              {
-                'inlineData': {
-                  'mimeType': 'image/jpeg',
-                  'data': base64Image
-                }
-              }
-            ]
-          }]
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-        
-        // 解析 JSON 响应
-        final jsonMatch = RegExp(r'\{.*\}', dotAll: true).firstMatch(text);
-        if (jsonMatch != null) {
-          final result = jsonDecode(jsonMatch.group(0)!);
-          
-          // 🆕 检查是否为食物
-          final isFood = result['is_food'] == true;
-          
-          if (!isFood) {
-            // ❌ 非食物：显示吐槽界面
-            _handleNotFood(result);
-          } else {
-            // ✅ 是食物：正常显示识别结果
-            _handleFoodResult(result);
-          }
-        } else {
-          await _simulateAIFeedback();
-        }
-      } else {
-        await _simulateAIFeedback();
-      }
-
-    } catch (e) {
-      // API 调用失败时使用模拟数据
-      await _simulateAIFeedback();
-    }
-  }
-
-  // 🆕 处理非食物结果
-  void _handleNotFood(Map<String, dynamic> result) {
-    final random = Random();
-    final quote = _notFoodBearQuotes[random.nextInt(_notFoodBearQuotes.length)];
-    
+  void _startScan() {
     setState(() {
-      _isScanning = false;
-      _showAIFeedback = true;
-      _isNotFood = true;
-      _bearComicLine = result['suggestion'] ?? quote['line'];
-      _bearRejectEmoji = quote['emoji'];
-      _aiFoodName = result['detected_object'] ?? '未知物体';
-    });
-    
-    // 播放抖动动画
-    _shakeAnimController.forward().then((_) {
-      _shakeAnimController.reverse();
-    });
-  }
-
-  // 🆕 处理食物结果
-  void _handleFoodResult(Map<String, dynamic> result) {
-    // 计算热量范围
-    final calories = result['calories'] ?? 0;
-    final portionSize = result['portion_size'] ?? '一人份';
-    
-    String caloriesRange;
-    if (portionSize.contains('多') || portionSize.contains('3') || portionSize.contains('大')) {
-      caloriesRange = '${(calories * 0.8).round()}-${(calories * 1.5).round()}kcal';
-    } else if (portionSize.contains('二') || portionSize.contains('中')) {
-      caloriesRange = '${(calories * 0.6).round()}-${(calories * 1.2).round()}kcal';
-    } else {
-      caloriesRange = '${(calories * 0.7).round()}-${(calories * 1.3).round()}kcal';
-    }
-    
-    _updateAIResult(
-      foodName: result['food_name'] ?? '未知食物',
-      calories: calories,
-      protein: (result['protein'] ?? 0).toDouble(),
-      carbs: (result['carbs'] ?? 0).toDouble(),
-      fat: (result['fat'] ?? 0).toDouble(),
-      anxietyLabel: result['anxiety_label'] ?? '能量补给',
-      anxietyEmoji: result['anxiety_emoji'] ?? '⚡',
-      portionSize: portionSize,
-      caloriesRange: caloriesRange,
-    );
-  }
-
-  // ========== 模拟 AI 反馈（无 API Key 或失败时）==========
-  Future<void> _simulateAIFeedback() async {
-    // 模拟 AI 识别延迟
-    await Future.delayed(const Duration(seconds: 2));
-    
-    // 随机决定是否模拟非食物（10%概率）
-    final random = Random();
-    if (random.nextInt(10) == 0) {
-      // 模拟非食物
-      final quote = _notFoodBearQuotes[random.nextInt(_notFoodBearQuotes.length)];
-      setState(() {
-        _isScanning = false;
-        _showAIFeedback = true;
-        _isNotFood = true;
-        _bearComicLine = quote['line'];
-        _bearRejectEmoji = quote['emoji'];
-        _aiFoodName = '非食物物体';
-      });
-      _shakeAnimController.forward().then((_) => _shakeAnimController.reverse());
-      return;
-    }
-    
-    // 正常食物数据
-    final foods = [
-      {'name': '芝士蛋糕', 'cal': 420, 'protein': 8.5, 'carbs': 45.0, 'fat': 22.0, 'portion': '一人份', 'range': '350-500kcal'},
-      {'name': '水果沙拉', 'cal': 150, 'protein': 2.0, 'carbs': 35.0, 'fat': 1.0, 'portion': '一人份', 'range': '120-200kcal'},
-      {'name': '三明治套餐', 'cal': 450, 'protein': 20.0, 'carbs': 50.0, 'fat': 18.0, 'portion': '二人份', 'range': '400-600kcal'},
-      {'name': '珍珠奶茶', 'cal': 280, 'protein': 3.0, 'carbs': 55.0, 'fat': 6.0, 'portion': '一人份', 'range': '250-350kcal'},
-    ];
-    
-    final food = foods[random.nextInt(foods.length)];
-    
-    _updateAIResult(
-      foodName: food['name'] as String,
-      calories: food['cal'] as int,
-      protein: food['protein'] as double,
-      carbs: food['carbs'] as double,
-      fat: food['fat'] as double,
-      anxietyLabel: '灵魂充电时间',
-      anxietyEmoji: '⚡',
-      portionSize: food['portion'] as String,
-      caloriesRange: food['range'] as String,
-    );
-  }
-
-  void _updateAIResult({
-    required String foodName,
-    required int calories,
-    required double protein,
-    required double carbs,
-    required double fat,
-    required String anxietyLabel,
-    required String anxietyEmoji,
-    String? portionSize,
-    String? caloriesRange,
-  }) {
-    setState(() {
-      _isScanning = false;
-      _showAIFeedback = true;
+      _showScanAnimation = true;
+      _showResult = false;
       _isNotFood = false;
-      _aiFoodName = foodName;
-      _aiCalories = calories;
-      _aiProtein = protein;
-      _aiCarbs = carbs;
-      _aiFat = fat;
-      _anxietyLabel = anxietyLabel;
-      _anxietyEmoji = anxietyEmoji;
     });
-    _scanAnimController.stop();
+    _scanController.repeat();
+    
+    // 模拟 AI 识别 (2秒后显示结果)
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _scanController.stop();
+        setState(() {
+          _showScanAnimation = false;
+          _showResult = true;
+        });
+      }
+    });
   }
 
-  void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: FurryTheme.surface,
+      body: Stack(
+        children: [
+          // 主内容
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Header
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  
+                  // 搜索栏
+                  _buildSearchBar(),
+                  const SizedBox(height: 24),
+                  
+                  // 快速操作
+                  _buildQuickActions(),
+                  const SizedBox(height: 24),
+                  
+                  // 最近记录
+                  Expanded(
+                    child: _buildRecentRecords(),
+                  ),
+                  
+                  // 底部相机按钮
+                  _buildCameraFAB(),
+                ],
+              ),
+            ),
+          ),
+          
+          // 全屏扫描动画
+          if (_showScanAnimation) _buildScanOverlay(),
+          
+          // AI 识别结果
+          if (_showResult && !_isNotFood) _buildResultOverlay(),
+          if (_showResult && _isNotFood) _buildNotFoodOverlay(),
+        ],
       ),
     );
   }
 
-  // ========== 构建 UI ==========
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
+  Widget _buildHeader() {
+    return Row(
       children: [
-        // ========== 主内容 ==========
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 标题栏
-                Row(
-                  children: [
-                    IconButton(onPressed: widget.onNext, icon: const Icon(Icons.arrow_back)),
-                    Expanded(
-                      child: Text(
-                        _isNotFood ? '🤷 这不是食物' : 'Add Food',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    // 泰迪熊小头像（可点击）
-                    GestureDetector(
-                      onTap: _showBearDialogPopup,
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: CanvasBear(
-                          mood: _isNotFood ? BearMood.thinking : BearMood.excited,
-                          size: 40,
-                          animate: true,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // ========== 🆕 非食物反馈卡片 ==========
-                if (_showAIFeedback && _isNotFood) _buildNotFoodCard(),
-                
-                // ========== AI 推荐卡片（正常食物）==========
-                if (_showAIFeedback && !_isNotFood) _buildAIFeedbackCard(),
-                
-                // 搜索栏
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, color: Colors.grey.shade500),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: 'Search for food',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(fontFamily: 'Inter'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // 快速扫描卡片
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ScanCard(
-                        icon: Icons.camera_alt,
-                        label: 'Quick Scan',
-                        color: _primaryBrown,
-                        onTap: () => _pickImage(ImageSource.camera),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ScanCard(
-                        icon: Icons.photo_library,
-                        label: 'From Gallery',
-                        color: _accentGold,
-                        onTap: () => _pickImage(ImageSource.gallery),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 24),
-                
-                const Text(
-                  'Recent',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _FoodListItem(name: 'Apple', calories: 95, onTap: widget.onNext),
-                      _FoodListItem(name: 'Chicken Breast', calories: 165, onTap: widget.onNext),
-                      _FoodListItem(name: 'Brown Rice', calories: 215, onTap: widget.onNext),
-                      _FoodListItem(name: 'Greek Yogurt', calories: 100, onTap: widget.onNext),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        const Text(
+          'Add Food',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: FurryTheme.textPrimary,
+            letterSpacing: -0.5,
           ),
         ),
-
-        // ========== 扫描动画叠加层 ==========
-        if (_isScanning) _buildScanningOverlay(),
-
-        // ========== 泰迪熊对话框 ==========
-        if (_showBearDialog) _buildBearDialog(),
-
-        // ========== 浮动相机按钮（右下角）==========
-        Positioned(
-          right: 24,
-          bottom: 24,
-          child: _buildCameraFAB(),
+        const Spacer(),
+        // 兔厨小头像
+        GestureDetector(
+          onTap: () {},
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: FurryTheme.fluffyShadow,
+            ),
+            child: Center(
+              child: ChefBunny(
+                size: 32,
+                animate: true,
+                excited: true,
+              ),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  // ========== 浮动相机按钮 ==========
-  Widget _buildCameraFAB() {
-    return FloatingActionButton(
-      onPressed: _showBearDialogPopup,
-      backgroundColor: _primaryBrown,
-      child: const Icon(
-        Icons.camera_alt_rounded,
-        color: Colors.white,
-        size: 28,
-      ),
-    );
-  }
-
-  // ========== 🆕 非食物反馈卡片 ==========
-  Widget _buildNotFoodCard() {
-    return AnimatedBuilder(
-      animation: _shakeAnimController,
-      builder: (context, child) {
-        final shake = sin(_shakeAnimController.value * pi * 4) * 10;
-        return Transform.translate(
-          offset: Offset(shake, 0),
-          child: child,
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.orange.shade300,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            // 🆕 流汗/摊手泰迪熊
-            const SizedBox(
-              width: 100,
-              height: 100,
-              child: CanvasBear(
-                mood: BearMood.thinking,  // 流汗表情
-                size: 100,
-                animate: true,
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // 拒绝标签
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade100,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.block, color: Colors.orange.shade700, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '这不是食物',
-                    style: TextStyle(
-                      color: Colors.orange.shade700,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // 检测到的物体
-            Text(
-              '检测到: $_aiFoodName',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            // 🆕 吐槽台词
-            if (_bearComicLine != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      _bearRejectEmoji ?? '🤔',
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _bearComicLine!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            
-            const SizedBox(height: 16),
-            
-            // 重新拍摄按钮
-            OutlinedButton.icon(
-              onPressed: _showBearDialogPopup,
-              icon: const Icon(Icons.refresh),
-              label: const Text('重新拍摄'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _primaryBrown,
-                side: BorderSide(color: _primaryBrown),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ========== AI 推荐卡片（正常食物）==========
-  Widget _buildAIFeedbackCard() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _primaryBrown.withOpacity(0.1),
-            _accentGold.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _primaryBrown.withOpacity(0.3),
-          width: 1.5,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: FurryTheme.softShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // AI 识别标签
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _primaryBrown,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.auto_awesome, color: Colors.white, size: 14),
-                    SizedBox(width: 4),
-                    Text(
-                      'AI 推荐',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // 去焦虑标签
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _accentGold.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$_anxietyEmoji $_anxietyLabel',
-                  style: TextStyle(
-                    color: _primaryBrown.withOpacity(0.8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // 食物名称
-          Row(
-            children: [
-              if (_selectedImagePath != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(_selectedImagePath!),
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _aiFoodName ?? '',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_aiCalories ?? 0} kcal',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: _primaryBrown,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // 营养数据
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NutrientChip(label: '蛋白质', value: '${_aiProtein?.toStringAsFixed(1)}g'),
-              _NutrientChip(label: '碳水', value: '${_aiCarbs?.toStringAsFixed(1)}g'),
-              _NutrientChip(label: '脂肪', value: '${_aiFat?.toStringAsFixed(1)}g'),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // 添加按钮
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: widget.onNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryBrown,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    '添加到记录',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
+          Icon(Icons.search, color: FurryTheme.textMuted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: '搜索食物...',
+                hintStyle: TextStyle(color: FurryTheme.textMuted),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -802,46 +202,301 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     );
   }
 
-  // ========== 扫描动画叠加层 ==========
-  Widget _buildScanningOverlay() {
+  Widget _buildQuickActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: _startScan,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: FurryColors.warmGradient,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: FurryColors.bearBrown.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ChefBunny(size: 28, animate: true, excited: true),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '拍照扫描',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: _startScan,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: FurryTheme.softShadow,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.qr_code_scanner, color: FurryColors.carrotOrange, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    '扫码识别',
+                    style: TextStyle(
+                      color: FurryTheme.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentRecords() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '最近记录',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: FurryTheme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView(
+            children: [
+              _FoodListItem(name: '红烧肉', calories: 450, time: '12:30'),
+              _FoodListItem(name: '麻辣烫', calories: 380, time: '18:45'),
+              _FoodListItem(name: '奶茶', calories: 250, time: '15:30'),
+              _FoodListItem(name: '小笼包', calories: 280, time: '08:30'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCameraFAB() {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: GestureDetector(
+        onTap: () => _showBearDialog(context),
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: FurryColors.warmGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: FurryColors.bearBrown.withValues(alpha: 0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ChefBunny(size: 40, animate: true, excited: true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBearDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 30,
+              offset: const Offset(0, -10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 兔厨
+            const SizedBox(
+              width: 120,
+              height: 120,
+              child: ChefBunny(
+                size: 120,
+                animate: true,
+                excited: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 对话气泡
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                '🐰 让我看看主人今天吃了什么好东西？',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: FurryTheme.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // 操作按钮
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _startScan();
+                    },
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('拍照'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: FurryColors.carrotOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _startScan();
+                    },
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('相册'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: FurryColors.carrotOrange,
+                      side: BorderSide(color: FurryColors.carrotOrange),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                '稍后再说',
+                style: TextStyle(color: FurryTheme.textMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== 全屏扫描动画 ==========
+  Widget _buildScanOverlay() {
     return Container(
-      color: Colors.black54,
+      color: Colors.black87,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 泰迪熊
-            const SizedBox(
-              width: 120,
-              height: 120,
-              child: CanvasBear(
-                mood: BearMood.thinking,
-                size: 120,
-                animate: true,
-              ),
+            // 兔厨 + 扫描框
+            AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: FurryColors.carrotOrange.withValues(alpha: _glowAnimation.value * 0.6),
+                        blurRadius: 50,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: const SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: ChefBunny(
+                      size: 140,
+                      animate: true,
+                      excited: true,
+                    ),
+                  ),
+                );
+              },
             ),
+            const SizedBox(height: 40),
             
-            const SizedBox(height: 24),
-            
-            // 扫描框
+            // 全息扫描框
             AnimatedBuilder(
               animation: _scanAnimation,
               builder: (context, child) {
                 return Container(
-                  width: 200,
-                  height: 200,
+                  width: 240,
+                  height: 240,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: _accentGold,
+                      color: FurryColors.carrotOrange.withValues(alpha: 0.8),
                       width: 3,
                     ),
                   ),
                   child: Stack(
                     children: [
+                      // 四角装饰
+                      ..._buildCornerDecorations(),
                       // 扫描线
                       Positioned(
-                        top: _scanAnimation.value * 180,
+                        top: _scanAnimation.value * 220,
                         left: 0,
                         right: 0,
                         child: Container(
@@ -850,58 +505,35 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                _accentGold,
+                                FurryColors.carrotOrange,
                                 Colors.transparent,
                               ],
                             ),
                           ),
                         ),
                       ),
-                      // 四角装饰
-                      ...List.generate(4, (i) {
-                        final isTop = i < 2;
-                        final isLeft = i % 2 == 0;
-                        return Positioned(
-                          top: isTop ? 0 : null,
-                          bottom: isTop ? null : 0,
-                          left: isLeft ? 0 : null,
-                          right: isLeft ? null : 0,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: isTop ? BorderSide(color: _accentGold, width: 4) : BorderSide.none,
-                                bottom: !isTop ? BorderSide(color: _accentGold, width: 4) : BorderSide.none,
-                                left: isLeft ? BorderSide(color: _accentGold, width: 4) : BorderSide.none,
-                                right: !isLeft ? BorderSide(color: _accentGold, width: 4) : BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
                     ],
                   ),
                 );
               },
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 40),
             
             // 提示文字
             const Text(
-              '🧠 智能分析中...',
+              '🐰 兔厨正在分析中...',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '正在识别是否为食物并估算分量',
+              '正在识别食物并估算分量',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -911,161 +543,372 @@ class _P31FoodSearchState extends State<P31FoodSearch> with TickerProviderStateM
     );
   }
 
-  // ========== 泰迪熊对话框 ==========
-  Widget _buildBearDialog() {
-    return GestureDetector(
-      onTap: _dismissBearDialog,
-      child: Container(
-        color: Colors.black38,
-        child: Center(
-          child: GestureDetector(
-            onTap: () {},
-            child: Container(
-              margin: const EdgeInsets.all(32),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: _primaryBrown.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 泰迪熊
-                  const SizedBox(
-                    width: 150,
-                    height: 150,
-                    child: CanvasBear(
-                      mood: BearMood.excited,
-                      size: 150,
-                      animate: true,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // 对话气泡
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _primaryBrown.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Text(
-                      '🐻 让我看看主人今天吃了什么好东西？',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+  List<Widget> _buildCornerDecorations() {
+    return [
+      Positioned(
+        top: 0,
+        left: 0,
+        child: _CornerDecoration(isTop: true, isLeft: true),
+      ),
+      Positioned(
+        top: 0,
+        right: 0,
+        child: _CornerDecoration(isTop: true, isLeft: false),
+      ),
+      Positioned(
+        bottom: 0,
+        left: 0,
+        child: _CornerDecoration(isTop: false, isLeft: true),
+      ),
+      Positioned(
+        bottom: 0,
+        right: 0,
+        child: _CornerDecoration(isTop: false, isLeft: false),
+      ),
+    ];
+  }
+
+  // ========== AI 识别结果 ==========
+  Widget _buildResultOverlay() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: _buildFrostedGlassCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // AI 标签
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: FurryColors.warmGradient,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // 操作按钮
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _pickImage(ImageSource.camera),
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text('拍照'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryBrown,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                          SizedBox(width: 4),
+                          Text(
+                            'AI 识别',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: FurryColors.ellPink.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '$_anxietyLabel $_anxietyLabel',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: FurryColors.bearBrown,
                         ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // 食物名称
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _chineseName.isNotEmpty ? _chineseName : _foodName,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: FurryTheme.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    if (_chineseName.isNotEmpty)
+                      Text(
+                        _foodName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: FurryTheme.textMuted,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // 热量
+                Row(
+                  children: [
+                    Text(
+                      '$_calories',
+                      style: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w800,
+                        color: FurryColors.bearBrown,
+                        letterSpacing: -2,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'kcal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: FurryTheme.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          _caloriesRange,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: FurryTheme.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '($_portion)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: FurryTheme.textSecondary,
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // 营养素
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _NutrientChip(label: '蛋白质', value: '15.0g', color: FurryColors.carrotOrange),
+                    _NutrientChip(label: '碳水', value: '20.0g', color: FurryColors.bearMuzzle),
+                    _NutrientChip(label: '脂肪', value: '35.0g', color: FurryColors.ellPink),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // 兔厨建议
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const ChefBunny(size: 36, animate: true, excited: true),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _pickImage(ImageSource.gallery),
-                          icon: const Icon(Icons.photo_library),
-                          label: const Text('相册'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: _primaryBrown,
-                            side: BorderSide(color: _primaryBrown),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                        child: Text(
+                          _bearQuote,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // 关闭按钮
-                  TextButton(
-                    onPressed: _dismissBearDialog,
-                    child: Text(
-                      '稍后再说',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // 添加按钮
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => _showResult = false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: FurryColors.carrotOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          '添加到记录',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+
+  // ========== 非食物提示 ==========
+  Widget _buildNotFoodOverlay() {
+    final quote = _notFoodBearQuotes[Random().nextInt(_notFoodBearQuotes.length)];
+    
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: _buildFrostedGlassCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 兔厨思考表情
+                const SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: ChefBunny(
+                    size: 100,
+                    animate: true,
+                    thinking: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // 拒绝标签
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.block, color: const Color(0xFFF59E0B), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '这不是食物',
+                        style: TextStyle(
+                          color: const Color(0xFFF59E0B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // 吐槽台词
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        quote['emoji']!,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          quote['line']!,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // 重新拍摄按钮
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _showResult = false),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('重新拍摄'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: FurryColors.carrotOrange,
+                    side: BorderSide(color: FurryColors.carrotOrange),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFrostedGlassCard({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: child,
+    );
+  }
 }
 
-// ========== 小部件 ==========
+class _CornerDecoration extends StatelessWidget {
+  final bool isTop;
+  final bool isLeft;
 
-class _ScanCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  
-  const _ScanCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
+  const _CornerDecoration({required this.isTop, required this.isLeft});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        border: Border(
+          top: isTop ? BorderSide(color: FurryColors.carrotOrange, width: 4) : BorderSide.none,
+          bottom: !isTop ? BorderSide(color: FurryColors.carrotOrange, width: 4) : BorderSide.none,
+          left: isLeft ? BorderSide(color: FurryColors.carrotOrange, width: 4) : BorderSide.none,
+          right: !isLeft ? BorderSide(color: FurryColors.carrotOrange, width: 4) : BorderSide.none,
         ),
       ),
     );
@@ -1075,33 +918,65 @@ class _ScanCard extends StatelessWidget {
 class _FoodListItem extends StatelessWidget {
   final String name;
   final int calories;
-  final VoidCallback onTap;
-  
+  final String time;
+
   const _FoodListItem({
     required this.name,
     required this.calories,
-    required this.onTap,
+    required this.time,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        name,
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w500,
-        ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: FurryTheme.softShadow,
       ),
-      trailing: Text(
-        '$calories kcal',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          color: Colors.grey.shade600,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: FurryTheme.textPrimary,
+                  ),
+                ),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: FurryTheme.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: FurryColors.bearBrown.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              '$calories kcal',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: FurryColors.bearBrown,
+              ),
+            ),
+          ),
+        ],
       ),
-      onTap: onTap,
     );
   }
 }
@@ -1109,28 +984,41 @@ class _FoodListItem extends StatelessWidget {
 class _NutrientChip extends StatelessWidget {
   final String label;
   final String value;
-  
-  const _NutrientChip({required this.label, required this.value});
+  final Color color;
+
+  const _NutrientChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: FurryTheme.textMuted,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

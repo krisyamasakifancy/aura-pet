@@ -7,11 +7,23 @@
 
 ## 🔐 商用级安全配置（必读）
 
-### 获取 Gemini API Key
+### 获取 API Keys
+
+#### 1. 通义千问 Qwen-VL（中文食物识别 - 核心视觉引擎）
+
+1. **访问阿里云 DashScope**: https://dashscope.console.aliyun.com/
+2. **开通服务**: 在 DashScope 控制台开通 "视觉理解" 服务
+3. **获取 API Key**: 点击 "API-KEY管理" → 创建新的 API-KEY → 复制
+
+**特点**：
+- 中文食物识别专家（红烧肉、螺蛳粉、麻辣烫等）
+- 严格食物判定（严禁把脚识别为食物）
+- 智能份量估算
+
+#### 2. Google Gemini（可选备用）
 
 1. **访问 Google AI Studio**: https://makersuite.google.com/app/apikey
 2. **创建 API Key**: 点击 "Create API Key" → 复制生成的 Key
-3. **保管好 Key**: 不要再任何地方明文显示
 
 ### 本地开发配置
 
@@ -30,7 +42,13 @@ python config.py
 
 `.env` 文件内容示例：
 ```bash
-GEMINI_API_KEY=AIzaSy...your-key-here
+# 核心视觉引擎 - 通义千问
+DASHSCOPE_API_KEY=sk-xxxxxxxxxxxx
+
+# 备用视觉引擎 - Google Gemini
+GEMINI_API_KEY=AIzaSy...
+
+# 数据库
 DATABASE_URL=postgresql://user:pass@localhost:5432/aura_pet
 SECRET_KEY=generate-a-secure-random-key
 ```
@@ -45,7 +63,8 @@ SECRET_KEY=generate-a-secure-random-key
 
 | Secret Name | 获取方式 | 说明 |
 |------------|----------|------|
-| `GEMINI_API_KEY` | [AI Studio](https://makersuite.google.com/app/apikey) | Gemini 视觉识别 |
+| `DASHSCOPE_API_KEY` | [阿里云 DashScope](https://dashscope.console.aliyun.com/) | **核心** 通义千问视觉 |
+| `GEMINI_API_KEY` | [AI Studio](https://makersuite.google.com/app/apikey) | 备用视觉识别 |
 | `DATABASE_URL` | 你的数据库 | 生产数据库连接 |
 | `SECRET_KEY` | 本地生成 | `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
 | `DOCKER_USERNAME` | Docker Hub | 镜像仓库用户名 |
