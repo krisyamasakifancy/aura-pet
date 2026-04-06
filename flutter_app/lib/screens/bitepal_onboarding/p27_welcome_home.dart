@@ -1,34 +1,37 @@
 import 'package:flutter/material.dart';
-import '../../widgets/monet_background.dart';
-import '../../widgets/canvas_bear.dart';
 
 class P27WelcomeHome extends StatelessWidget {
   final VoidCallback onNext;
-  
   const P27WelcomeHome({super.key, required this.onNext});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFFCE4EC), Color(0xFFE3F2FD)])),
-      child: SafeArea(
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Spacer(),
-            const ConfettiAnimation(active: true),
-            const CanvasBear(mood: BearMood.celebrating, size: 200, animate: true),
+            const Icon(Icons.home, size: 80, color: Color(0xFF6B9EB8)),
             const SizedBox(height: 32),
-            const Text('Welcome to\nyour new life!', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 36, height: 1.2)),
+            const Text(
+              '欢迎回家！',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
-            Text("Let's start your journey together", style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.grey.shade600)),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: ElevatedButton(
-                onPressed: onNext,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50), foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-                child: const Text('Start Journey', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16)),
+            const Text(
+              '您的个人健康管家已就绪',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 48),
+            ElevatedButton(
+              onPressed: onNext,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B9EB8),
+                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
               ),
+              child: const Text('开始使用', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),
