@@ -20,14 +20,21 @@ class _P31FoodSearchState extends State<P31FoodSearch>
   bool _showScanAnimation = false;
   bool _showResult = false;
   bool _isNotFood = false;
+  bool _showDebug = true; // 默认显示调试面板
   
   String _foodName = '红烧肉';
   String _chineseName = '';
+  String _cuisine = '川菜';
+  String _portion = '中份';
   int _calories = 450;
-  String _portion = '一人份';
   String _caloriesRange = '400-500kcal';
-  String _anxietyLabel = '灵魂充电时间';
+  String _anxietyLabel = '川味刺激感 ✨';
+  String _advice = '这道菜油较大，建议配一碗米饭平衡';
   String _bearQuote = '🐰 看起来好好吃呢！';
+  List<String> _ingredients = ['猪肉', '糖', '酱油'];
+  
+  // 原始 JSON 用于调试
+  String _rawJson = '';
 
   late AnimationController _scanController;
   late AnimationController _glowController;
@@ -76,6 +83,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
       _showScanAnimation = true;
       _showResult = false;
       _isNotFood = false;
+      _rawJson = ''; // 清空调试面板
     });
     _scanController.repeat();
     
@@ -83,12 +91,44 @@ class _P31FoodSearchState extends State<P31FoodSearch>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         _scanController.stop();
+        
+        // 模拟返回的 JSON（实际使用时由后端返回）
+        _simulateQwenResponse();
+        
         setState(() {
           _showScanAnimation = false;
           _showResult = true;
         });
       }
     });
+  }
+
+  void _simulateQwenResponse() {
+    // 模拟 Qwen-VL 返回的营养师 JSON 格式
+    _rawJson = '''
+{
+  "is_food": true,
+  "name": "红烧肉",
+  "cuisine": "川菜",
+  "ingredients": ["五花肉", "冰糖", "酱油", "八角", "桂皮"],
+  "portion_estimate": "中份（约150克）",
+  "calories": 450,
+  "protein": 18.5,
+  "carbs": 12.0,
+  "fat": 38.0,
+  "advice": "这道菜脂肪含量较高，建议搭配一份蔬菜或一碗米饭平衡营养"
+}''';
+    
+    _chineseName = '红烧肉';
+    _foodName = 'Hong Shao Rou';
+    _cuisine = '川菜';
+    _portion = '中份';
+    _calories = 450;
+    _caloriesRange = '400-550kcal';
+    _anxietyLabel = '川味刺激感 ✨';
+    _advice = '这道菜脂肪含量较高，建议搭配一份蔬菜或一碗米饭平衡营养';
+    _ingredients = ['五花肉', '冰糖', '酱油', '八角', '桂皮'];
+    _bearQuote = '🐰 川菜 yyds！就是油大了点~';
   }
 
   @override
@@ -573,198 +613,531 @@ class _P31FoodSearchState extends State<P31FoodSearch>
     return Container(
       color: Colors.black54,
       child: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: _buildFrostedGlassCard(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // AI 标签
-                Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 调试面板开关
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => setState(() => _showDebug = !_showDebug),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black38,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _showDebug ? Icons.code_off : Icons.code,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _showDebug ? '隐藏调试' : '显示调试',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              _buildFrostedGlassCard(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        gradient: FurryColors.warmGradient,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome, color: Colors.white, size: 12),
-                          SizedBox(width: 4),
-                          Text(
-                            'AI 识别',
+                    // AI 标签
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: FurryColors.warmGradient,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                              SizedBox(width: 4),
+                              Text(
+                                'AI 营养师',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: FurryColors.ellPink.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _cuisine,
                             style: TextStyle(
-                              color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
+                              color: FurryColors.bearBrown,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: FurryColors.carrotOrange.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _anxietyLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: FurryColors.carrotOrange,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 食物名称
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _chineseName.isNotEmpty ? _chineseName : _foodName,
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: FurryTheme.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        if (_chineseName.isNotEmpty)
+                          Text(
+                            _foodName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: FurryTheme.textMuted,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // 热量
+                    Row(
+                      children: [
+                        Text(
+                          '$_calories',
+                          style: TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w800,
+                            color: FurryColors.bearBrown,
+                            letterSpacing: -2,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'kcal',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: FurryTheme.textSecondary,
+                              ),
+                            ),
+                            Text(
+                              _caloriesRange,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: FurryTheme.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '($_portion)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: FurryTheme.textSecondary,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // 食材标签
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _ingredients.map((ing) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: FurryColors.bearMuzzle.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          ing,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: FurryColors.bearBrown,
+                          ),
+                        ),
+                      )).toList(),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // 营养素
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _NutrientChip(label: '蛋白质', value: '15.0g', color: FurryColors.carrotOrange),
+                        _NutrientChip(label: '碳水', value: '20.0g', color: FurryColors.bearMuzzle),
+                        _NutrientChip(label: '脂肪', value: '35.0g', color: FurryColors.ellPink),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // 营养师建议
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.tips_and_updates,
+                              color: Color(0xFF10B981),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _advice,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: FurryTheme.textPrimary,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // 兔厨建议
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: FurryColors.ellPink.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(20),
+                        color: FurryColors.carrotOrange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        '$_anxietyLabel $_anxietyLabel',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: FurryColors.bearBrown,
+                      child: Row(
+                        children: [
+                          const ChefBunny(size: 36, animate: true, excited: true),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _bearQuote,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // 添加按钮
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => setState(() => _showResult = false),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FurryColors.carrotOrange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '添加到记录',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
+              ),
+              
+              // ========== 调试面板 ==========
+              if (_showDebug) ...[
                 const SizedBox(height: 16),
-                
-                // 食物名称
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _chineseName.isNotEmpty ? _chineseName : _foodName,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: FurryTheme.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    if (_chineseName.isNotEmpty)
-                      Text(
-                        _foodName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: FurryTheme.textMuted,
-                        ),
-                      ),
-                  ],
+                _buildDebugPanel(),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ========== 调试面板 ==========
+  Widget _buildDebugPanel() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF10B981),
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF10B981),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 12),
-                
-                // 热量
-                Row(
-                  children: [
-                    Text(
-                      '$_calories',
-                      style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w800,
-                        color: FurryColors.bearBrown,
-                        letterSpacing: -2,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'kcal',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: FurryTheme.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          _caloriesRange,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: FurryTheme.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '🐛 Qwen-VL 调试面板',
+                style: TextStyle(
+                  color: Color(0xFF10B981),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => setState(() => _showDebug = false),
+                icon: const Icon(Icons.close, color: Colors.white54, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // API 配置
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '📡 API 配置',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '($_portion)',
+                  'Endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: FurryTheme.textSecondary,
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 10,
+                    fontFamily: 'monospace',
                   ),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // 营养素
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _NutrientChip(label: '蛋白质', value: '15.0g', color: FurryColors.carrotOrange),
-                    _NutrientChip(label: '碳水', value: '20.0g', color: FurryColors.bearMuzzle),
-                    _NutrientChip(label: '脂肪', value: '35.0g', color: FurryColors.ellPink),
-                  ],
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // 兔厨建议
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: FurryColors.carrotOrange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const ChefBunny(size: 36, animate: true, excited: true),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _bearQuote,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Model: qwen-vl-max',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 10,
+                    fontFamily: 'monospace',
                   ),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // 添加按钮
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => _showResult = false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: FurryColors.carrotOrange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          '添加到记录',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
+                Text(
+                  'DASHSCOPE_API_KEY: ${_isKeyConfigured ? "✓ 已配置" : "✗ 未配置"}',
+                  style: TextStyle(
+                    color: _isKeyConfigured ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                    fontSize: 10,
+                    fontFamily: 'monospace',
                   ),
                 ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          
+          // 原始 JSON
+          const Text(
+            '📄 原始 JSON 响应',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            height: 200,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                _rawJson.isEmpty 
+                    ? '// 等待识别结果...\n// 点击「添加到记录」触发实际 API 调用'
+                    : _formatJson(_rawJson),
+                style: TextStyle(
+                  color: const Color(0xFF10B981),
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // 解析状态
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _rawJson.isNotEmpty ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _rawJson.isNotEmpty 
+                    ? '✓ JSON 解析成功'
+                    : '⏳ 等待 API 响应',
+                style: TextStyle(
+                  color: _rawJson.isNotEmpty ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  bool get _isKeyConfigured {
+    // 检查是否配置了 DASHSCOPE_API_KEY
+    const apiKey = String.fromEnvironment('DASHSCOPE_API_KEY', defaultValue: '');
+    return apiKey.isNotEmpty;
+  }
+
+  String _formatJson(String jsonStr) {
+    try {
+      final buffer = StringBuffer();
+      int indent = 0;
+      bool inString = false;
+      
+      for (int i = 0; i < jsonStr.length; i++) {
+        final char = jsonStr[i];
+        
+        if (char == '"' && (i == 0 || jsonStr[i-1] != '\\')) {
+          inString = !inString;
+          buffer.write(char);
+        } else if (!inString) {
+          if (char == '{' || char == '[') {
+            buffer.write(char);
+            buffer.write('\n');
+            indent += 2;
+            buffer.write(' ' * indent);
+          } else if (char == '}' || char == ']') {
+            buffer.write('\n');
+            indent -= 2;
+            buffer.write(' ' * indent);
+            buffer.write(char);
+          } else if (char == ',') {
+            buffer.write(char);
+            buffer.write('\n');
+            buffer.write(' ' * indent);
+          } else if (char == ':') {
+            buffer.write(': ');
+          } else if (char == ' ' && jsonStr[i-1] != '"' && jsonStr[i+1] != '"') {
+            // 跳过多余空格
+          } else {
+            buffer.write(char);
+          }
+        } else {
+          buffer.write(char);
+        }
+      }
+      
+      return buffer.toString();
+    } catch (e) {
+      return jsonStr;
+    }
   }
 
   // ========== 非食物提示 ==========

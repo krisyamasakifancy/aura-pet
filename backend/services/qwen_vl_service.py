@@ -79,70 +79,28 @@ class QwenVLService:
             FoodAnalysisResult: 食物分析结果
         """
         # 中文食物识别 Prompt
-        prompt = '''你是一个专业的食物识别专家，特别擅长识别中餐。
+        prompt = '''你是一位拥有10年经验的中国注册营养师，精通川鲁粤淮扬等所有菜系。
 
-## 第一步：严格判定是否为食物
-请仔细分析图片内容，判断是否为"可食用食物"：
+分析这张图片，严格按以下 JSON 格式返回，不要输出任何其他内容：
 
-✅ 可接受的食物（请精确识别中文名）：
-- 中餐：红烧肉、糖醋里脊、鱼香肉丝、宫保鸡丁、麻婆豆腐、火锅、麻辣烫、螺蛳粉、热干面、小笼包、饺子、包子、炒饭、炒面、米线、烧烤、烤串、奶茶、珍珠奶茶、咖啡
-- 西餐：牛排、意面、披萨、汉堡、三明治、沙拉、蛋糕、面包
-- 日料：寿司、刺身、拉面、天妇罗
-- 其他：水果、蔬菜、零食、甜点、饮品等任何可食用物品
-
-❌ 绝对不是食物：
-- 人体部位（脚、手、腿等）- 严禁误识别为食物！
-- 动物（除非是明确可食用的食材如烤鸭、白切鸡）
-- 日常物品（手机、电脑、书籍、衣服、鞋子、家具）
-- 植物（非食用花卉、树木）
-- 化妆品、药品
-- 建筑、风景
-
-## 第二步：食物识别（如果是食物）
-请返回精确的食物信息：
-
-## 第三步：非食物处理（如果不是食物）
-如果检测到的是非食物（如脚、手、电脑等），必须：
-1. 明确标注 is_food = false
-2. 描述检测到的物体
-3. 给出友好的建议
-
-请按以下JSON格式返回：
-```json
 {
-  "is_food": true或false,
-  "food_name": "食物名称（英文）",
-  "chinese_name": "食物中文名称（如：红烧肉）",
-  "portion_size": "一人份/二人份/多人份/小份/大份",
-  "calories": 估算热量(整数),
-  "calories_range": "热量范围如 300-400kcal",
-  "protein": 蛋白质(g),
-  "carbs": 碳水化合物(g),
-  "fat": 脂肪(g),
-  "anxiety_label": "去焦虑标签（如：灵魂充电、快乐源泉）",
-  "anxiety_emoji": "表情符号",
-  "confidence": 置信度(0-1),
-  "reasoning": "简要判断依据"
+  "is_food": true/false,
+  "name": "菜品的准确名称（如：鱼香肉丝、螺蛳粉、麻辣烫）",
+  "cuisine": "菜系（川菜/粤菜/鲁菜/淮扬菜/东北菜/其他）",
+  "ingredients": ["主要食材1", "食材2", "食材3"],
+  "portion_estimate": "分量估算（小份/中份/大份/约XXX克）",
+  "calories": 数字（单位千卡，基于分量估算的真实值）,
+  "protein": 数字（克）,
+  "carbs": 数字（克）,
+  "fat": 数字（克）,
+  "advice": "一句具体的营养建议（如：这道菜油较大，建议配一碗米饭平衡）"
 }
-```
 
-如果 is_food = false：
-```json
-{
-  "is_food": false,
-  "detected_object": "检测到的物体",
-  "reject_reason": "为什么这不是食物",
-  "suggestion": "建议用户拍摄真正的食物"
-}
-```
-
-## 重要规则：
-1. 必须先严格判断 is_food，这是最重要的事！
-2. 如果图片中有人体部位（特别是脚），is_food 必须为 false！
-3. 如果不确定是否是食物，倾向于返回 is_food = false
-4. 优先识别中文食物名称
-5. 份量决定热量范围（多人份热量约是单人份的2-3倍）
-6. 只返回JSON，不要其他内容'''
+约束条件：
+1. 如果图片中没有食物（只有手、桌子、餐具、包装袋），返回 is_food: false
+2. 热量估算必须基于分量，不能乱猜
+3. 如果是混合菜品（如麻辣烫），按主要食材加权计算
+4. 禁止返回"无法识别"之类的模糊回答'''
 
         try:
             # 构建请求
@@ -225,7 +183,7 @@ class QwenVLService:
         return self._get_mock_result().__dict__
     
     def _normalize_result(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """标准化结果"""
+        """标准化结果 - 适配营养师 JSON 格式"""
         is_food = data.get("is_food", True)
         
         if not is_food:
@@ -240,32 +198,91 @@ class QwenVLService:
                 "carbs": 0.0,
                 "fat": 0.0,
                 "confidence": 0.0,
-                "anxiety_label": "",
+                "anxiety_label": "无法识别",
                 "anxiety_emoji": "🤔",
-                "detected_object": data.get("detected_object", "未知物体"),
-                "reject_reason": data.get("reject_reason", "这不是食物"),
-                "suggestion": data.get("suggestion", "请拍摄真正的食物"),
+                "detected_object": "非食物内容",
+                "reject_reason": "图片中没有食物",
+                "suggestion": "请拍摄真正的食物",
                 "raw_response": data,
             }
         else:
+            # 新版营养师 JSON 格式
+            name = data.get("name", "未知菜品")
+            cuisine = data.get("cuisine", "其他")
+            ingredients = data.get("ingredients", [])
+            portion = data.get("portion_estimate", "中份")
+            advice = data.get("advice", "")
+            
+            # 根据分量调整热量系数
+            portion_coef = 1.0
+            if "小份" in portion:
+                portion_coef = 0.7
+            elif "大份" in portion:
+                portion_coef = 1.5
+            elif "XXX克" in portion or "约" in portion:
+                # 尝试提取克数
+                import re
+                match = re.search(r'(\d+)', portion)
+                if match:
+                    grams = int(match.group(1))
+                    portion_coef = grams / 200  # 假设中份约200g
+            
+            base_calories = float(data.get("calories", 300))
+            calories = int(base_calories * portion_coef)
+            
             return {
                 "is_food": True,
-                "food_name": data.get("food_name", "未知食物"),
-                "chinese_name": data.get("chinese_name"),
-                "portion_size": data.get("portion_size", "一人份"),
-                "calories": data.get("calories", 0),
-                "calories_range": data.get("calories_range", ""),
+                "food_name": name,
+                "chinese_name": name,
+                "cuisine": cuisine,
+                "ingredients": ingredients,
+                "portion_size": portion,
+                "calories": calories,
+                "calories_range": f"{calories - 50}-{calories + 100}kcal",
                 "protein": float(data.get("protein", 0)),
                 "carbs": float(data.get("carbs", 0)),
                 "fat": float(data.get("fat", 0)),
-                "confidence": float(data.get("confidence", 0.5)),
-                "anxiety_label": data.get("anxiety_label", "能量补给"),
-                "anxiety_emoji": data.get("anxiety_emoji", "⚡"),
+                "confidence": 0.9,
+                "anxiety_label": self._generate_anxiety_label(cuisine, advice),
+                "anxiety_emoji": self._generate_emoji(cuisine),
+                "advice": advice,
                 "detected_object": None,
                 "reject_reason": None,
                 "suggestion": None,
-                "raw_response": data,
+                "raw_response": data,  # 原始 JSON 用于调试
             }
+    
+    def _generate_anxiety_label(self, cuisine: str, advice: str) -> str:
+        """根据菜系生成去焦虑标签"""
+        labels = {
+            "川菜": "川味刺激感 ✨",
+            "粤菜": "清淡鲜美 🍃",
+            "鲁菜": "浓郁醇香 🥢",
+            "淮扬菜": "精细美味 🎋",
+            "东北菜": "实在管饱 🍖",
+        }
+        
+        for key, label in labels.items():
+            if key in cuisine:
+                return label
+        
+        if "油" in advice or "大" in advice:
+            return "快乐因子注入中 ⚡"
+        elif "清淡" in advice or "平衡" in advice:
+            return "健康好选择 💚"
+        else:
+            return "灵魂充电时间 ⚡"
+    
+    def _generate_emoji(self, cuisine: str) -> str:
+        """根据菜系生成表情"""
+        emojis = {
+            "川菜": "🌶️",
+            "粤菜": "🦐",
+            "鲁菜": "🥘",
+            "淮扬菜": "🍜",
+            "东北菜": "🥟",
+        }
+        return emojis.get(cuisine, "🍽️")
     
     def _get_mock_result(self) -> FoodAnalysisResult:
         """获取模拟结果（用于测试或 API 不可用时）"""
