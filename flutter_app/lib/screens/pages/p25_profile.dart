@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../widgets/furry_trio.dart';
 import '../../widgets/fancy_design.dart';
-import '../../widgets/canvas_bear.dart';
 
-/// P25: 个人数据面板 - 看板化重构
-/// 遵循 awesome-design-md 专业财报风格
+/// P25: 个人数据面板 - 毛绒三友版
+/// 看板化重构 + 角色水印
 class P25ProfileScreen extends StatelessWidget {
   const P25ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FancyDesign.surfaceLight,
+      backgroundColor: FurryTheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -45,24 +45,21 @@ class P25ProfileScreen extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        // 泰迪熊头像
+        // 毛绒三友头像
         Container(
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: FurryTheme.cardBg,
             shape: BoxShape.circle,
-            boxShadow: FancyDesign.shadowCard,
+            boxShadow: FurryTheme.fluffyShadow,
           ),
-          child: const Center(
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: CanvasBear(
-                mood: BearMood.heartEyes,
-                size: 40,
-                animate: true,
-              ),
+          child: Center(
+            child: FurryTrioDisplay(
+              activeCharacter: FurryTrio.dataBear,
+              onBearTap: () {},
+              onBunnyTap: () {},
+              onEllTap: () {},
             ),
           ),
         ),
@@ -76,7 +73,7 @@ class P25ProfileScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: FancyDesign.textPrimary,
+                  color: FurryTheme.textPrimary,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -85,7 +82,7 @@ class P25ProfileScreen extends StatelessWidget {
                 'Professional Dashboard',
                 style: TextStyle(
                   fontSize: 13,
-                  color: FancyDesign.textSecondary.withValues(alpha: 0.8),
+                  color: FurryTheme.textSecondary.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -97,13 +94,13 @@ class P25ProfileScreen extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: FancyDesign.shadowSubtle,
+            color: FurryTheme.cardBg,
+            borderRadius: BorderRadius.circular(FurryTheme.radiusMd),
+            boxShadow: FurryTheme.softShadow,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.settings_outlined,
-            color: FancyDesign.primaryBrown,
+            color: FurryColors.bearBrown,
             size: 22,
           ),
         ),
@@ -122,7 +119,7 @@ class P25ProfileScreen extends StatelessWidget {
               width: 4,
               height: 20,
               decoration: BoxDecoration(
-                color: FancyDesign.primaryBrown,
+                color: FurryColors.bearBrown,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -132,7 +129,7 @@ class P25ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: FancyDesign.textPrimary,
+                color: FurryTheme.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -171,39 +168,51 @@ class P25ProfileScreen extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.1,
+          childAspectRatio: 1.0,
           children: [
-            DataReportCard(
-              title: 'BMI 指数',
-              value: '22.4',
-              subtitle: '理想范围',
-              icon: Icons.monitor_weight_outlined,
-              trend: '+0.3',
-              trendPositive: true,
+            _CharacterWatermarkCard(
+              character: FurryTrio.dataBear,
+              child: DataReportCard(
+                title: 'BMI 指数',
+                value: '22.4',
+                subtitle: '理想范围',
+                icon: Icons.monitor_weight_outlined,
+                trend: '+0.3',
+                trendPositive: true,
+              ),
             ),
-            DataReportCard(
-              title: 'BMR 基础代谢',
-              value: '1,580',
-              subtitle: 'kcal/天',
-              icon: Icons.bolt_outlined,
-              trend: '+20',
-              trendPositive: true,
+            _CharacterWatermarkCard(
+              character: FurryTrio.dataBear,
+              child: DataReportCard(
+                title: 'BMR 基础代谢',
+                value: '1,580',
+                subtitle: 'kcal/天',
+                icon: Icons.bolt_outlined,
+                trend: '+20',
+                trendPositive: true,
+              ),
             ),
-            DataReportCard(
-              title: 'TDEE 总消耗',
-              value: '2,340',
-              subtitle: 'kcal/天',
-              icon: Icons.local_fire_department_outlined,
-              trend: '+180',
-              trendPositive: true,
+            _CharacterWatermarkCard(
+              character: FurryTrio.cheerEll,
+              child: DataReportCard(
+                title: 'TDEE 总消耗',
+                value: '2,340',
+                subtitle: 'kcal/天',
+                icon: Icons.local_fire_department_outlined,
+                trend: '+180',
+                trendPositive: true,
+              ),
             ),
-            DataReportCard(
-              title: '体脂率',
-              value: '18.5',
-              subtitle: '% 偏低',
-              icon: Icons.percent_outlined,
-              trend: '-1.2',
-              trendPositive: true,
+            _CharacterWatermarkCard(
+              character: FurryTrio.chefBunny,
+              child: DataReportCard(
+                title: '体脂率',
+                value: '18.5',
+                subtitle: '% 偏低',
+                icon: Icons.percent_outlined,
+                trend: '-1.2',
+                trendPositive: true,
+              ),
             ),
           ],
         ),
@@ -221,7 +230,7 @@ class P25ProfileScreen extends StatelessWidget {
               width: 4,
               height: 20,
               decoration: BoxDecoration(
-                color: FancyDesign.accentGold,
+                color: FurryColors.bearMuzzle,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -231,7 +240,7 @@ class P25ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: FancyDesign.textPrimary,
+                color: FurryTheme.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -244,13 +253,13 @@ class P25ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              _buildMacroRow('蛋白质', 65, 80, 'g', Icons.egg_outlined),
+              _buildMacroRow('蛋白质', 65, 80, 'g', Icons.egg_outlined, FurryColors.carrotOrange),
               const SizedBox(height: 16),
-              _buildMacroRow('碳水', 180, 250, 'g', Icons.grain_outlined),
+              _buildMacroRow('碳水', 180, 250, 'g', Icons.grain_outlined, FurryColors.bearMuzzle),
               const SizedBox(height: 16),
-              _buildMacroRow('脂肪', 45, 65, 'g', Icons.water_drop_outlined),
+              _buildMacroRow('脂肪', 45, 65, 'g', Icons.water_drop_outlined, FurryColors.bowPink),
               const SizedBox(height: 16),
-              _buildMacroRow('膳食纤维', 18, 30, 'g', Icons.grass_outlined),
+              _buildMacroRow('膳食纤维', 18, 30, 'g', Icons.grass_outlined, const Color(0xFF10B981)),
             ],
           ),
         ),
@@ -258,9 +267,9 @@ class P25ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMacroRow(String label, int current, int target, String unit, IconData icon) {
+  Widget _buildMacroRow(String label, int current, int target, String unit, IconData icon, Color color) {
     final progress = current / target;
-    final progressColor = progress > 1.0 ? FancyDesign.warning : FancyDesign.primaryBrown;
+    final progressColor = progress > 1.0 ? FancyDesign.warning : color;
     
     return Column(
       children: [
@@ -270,8 +279,8 @@ class P25ProfileScreen extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: progressColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: progressColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: progressColor, size: 18),
             ),
@@ -287,7 +296,7 @@ class P25ProfileScreen extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: FancyDesign.textPrimary,
+                          color: FurryTheme.textPrimary,
                         ),
                       ),
                       const Spacer(),
@@ -302,14 +311,34 @@ class P25ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // 进度条
+                  // 毛绒风格进度条
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      backgroundColor: Colors.black.withValues(alpha: 0.05),
-                      valueColor: AlwaysStoppedAnimation(progressColor),
-                      minHeight: 6,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: progress.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [progressColor, progressColor.withValues(alpha: 0.7)],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: progressColor.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -331,7 +360,7 @@ class P25ProfileScreen extends StatelessWidget {
               width: 4,
               height: 20,
               decoration: BoxDecoration(
-                color: FancyDesign.info,
+                color: const Color(0xFF3B82F6),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -341,7 +370,7 @@ class P25ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: FancyDesign.textPrimary,
+                color: FurryTheme.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -350,7 +379,7 @@ class P25ProfileScreen extends StatelessWidget {
         const SizedBox(height: 16),
         
         StatusCallout(
-          title: '今日营养摄入评估',
+          title: '🐻 今日营养摄入评估',
           description: '已达成 78% 的每日目标，继续保持！碳水略高，建议晚餐减少主食。',
           type: StatusType.success,
           icon: Icons.auto_awesome,
@@ -358,7 +387,7 @@ class P25ProfileScreen extends StatelessWidget {
         const SizedBox(height: 12),
         
         StatusCallout(
-          title: '运动建议',
+          title: '🐘 运动建议',
           description: '今日步数 6,234，建议再走 3,766 步达到目标',
           type: StatusType.warning,
           icon: Icons.directions_walk,
@@ -377,7 +406,7 @@ class P25ProfileScreen extends StatelessWidget {
               width: 4,
               height: 20,
               decoration: BoxDecoration(
-                color: FancyDesign.textMuted,
+                color: FurryTheme.textMuted,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -387,7 +416,7 @@ class P25ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: FancyDesign.textPrimary,
+                color: FurryTheme.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -399,25 +428,28 @@ class P25ProfileScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickActionButton(
+                emoji: '🐰',
                 icon: Icons.camera_alt_outlined,
                 label: '拍照录入',
-                color: FancyDesign.primaryBrown,
+                color: FurryColors.carrotOrange,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _QuickActionButton(
+                emoji: '🔍',
                 icon: Icons.search_outlined,
                 label: '搜索食物',
-                color: FancyDesign.accentGold,
+                color: FurryColors.bearMuzzle,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _QuickActionButton(
+                emoji: '📊',
                 icon: Icons.bar_chart_outlined,
                 label: '查看报告',
-                color: FancyDesign.info,
+                color: const Color(0xFF3B82F6),
               ),
             ),
           ],
@@ -427,12 +459,57 @@ class P25ProfileScreen extends StatelessWidget {
   }
 }
 
+/// 带角色水印的卡片
+class _CharacterWatermarkCard extends StatelessWidget {
+  final FurryTrio character;
+  final Widget child;
+
+  const _CharacterWatermarkCard({
+    required this.character,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        // 角色水印
+        Positioned(
+          right: 8,
+          bottom: 8,
+          child: Opacity(
+            opacity: 0.15,
+            child: Transform.scale(
+              scale: 0.8,
+              child: _buildCharacter(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCharacter() {
+    switch (character) {
+      case FurryTrio.dataBear:
+        return const DataBear(size: 60, animate: false);
+      case FurryTrio.chefBunny:
+        return const ChefBunny(size: 60, animate: false);
+      case FurryTrio.cheerEll:
+        return const CheerEll(size: 60, animate: false);
+    }
+  }
+}
+
 class _QuickActionButton extends StatelessWidget {
+  final String emoji;
   final IconData icon;
   final String label;
   final Color color;
 
   const _QuickActionButton({
+    required this.emoji,
     required this.icon,
     required this.label,
     required this.color,
@@ -443,30 +520,20 @@ class _QuickActionButton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: FancyDesign.shadowCard,
+        color: FurryTheme.cardBg,
+        borderRadius: BorderRadius.circular(FurryTheme.radiusMd),
+        boxShadow: FurryTheme.fluffyShadow,
       ),
       child: Column(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withValues(alpha: 0.8)],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 28)),
           const SizedBox(height: 8),
           Text(
             label,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: FancyDesign.textPrimary,
+              color: FurryTheme.textPrimary,
             ),
           ),
         ],
