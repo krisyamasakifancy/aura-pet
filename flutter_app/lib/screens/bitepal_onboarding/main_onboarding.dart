@@ -258,7 +258,7 @@ class _BitePalOnboardingState extends State<BitePalOnboarding> {
                 P43WeeklyReport(onNext: _nextPage),
                 P44BadgeDetail(onNext: _nextPage),
                 P45NotificationSettings(onNext: _nextPage),
-                P46About(onComplete: widget.onComplete ?? _nextPage),
+                P46About(onNext: widget.onComplete ?? _nextPage),
               ],
             ),
             // Page indicator (show after splash)

@@ -143,7 +143,7 @@ class _PressUpCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 弹性上升
-    return 1 - pow(1 - t, 3);
+    return 1.0 - pow(1.0 - t, 3.0).toDouble();
   }
 }
 
@@ -154,7 +154,7 @@ class _RippleSpreadCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 快速扩散 → 急剧减速
-    return 1 - pow(1 - t, 3);
+    return 1.0 - pow(1.0 - t, 3.0).toDouble();
   }
 }
 
@@ -165,7 +165,7 @@ class _SpringDangleCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 重力 + 弹性
-    return 1 - cos(t * pi * 0.5) * exp(-t * 3);
+    return 1.0 - cos(t * pi * 0.5) * exp(-t * 3.0);
   }
 }
 
@@ -176,7 +176,7 @@ class _FeatherFallCurve extends Curve {
   @override
   double transformInternal(double t) {
     // 飘落感：先慢后快，模拟重力
-    return pow(t, 1.5);
+    return pow(t, 1.5).toDouble();
   }
 }
 

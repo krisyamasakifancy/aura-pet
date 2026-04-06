@@ -576,11 +576,11 @@ class PetSpeciesPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     
     for (int i = 0; i < 3; i++) {
-      final y = -15 - i * 18;
+      final y = -15.0 - i * 18.0;
       final path = Path()
-        ..moveTo(-20 + i * 3, y)
-        ..lineTo(-15 + i * 3, y - 12)
-        ..lineTo(-10 + i * 3, y);
+        ..moveTo(-20.0 + i * 3.0, y)
+        ..lineTo(-15.0 + i * 3.0, y - 12.0)
+        ..lineTo(-10.0 + i * 3.0, y);
       canvas.drawPath(path, spinePaint);
     }
   }
