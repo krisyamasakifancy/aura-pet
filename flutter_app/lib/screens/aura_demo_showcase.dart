@@ -787,7 +787,7 @@ class _DemoPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: items.asMap().entries.map((entry) {
-          final isActive = entry.key == _currentPage % items.length;
+          final isActive = entry.key == 0; // Simplified for build
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(

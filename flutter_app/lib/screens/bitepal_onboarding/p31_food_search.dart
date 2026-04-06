@@ -451,8 +451,8 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: const [
                 ChefBunny(size: 80, animate: true, excited: true),
-                DataBear(size: 80, animate: true, celebrate: true),
-                CheerEll(size: 80, animate: true, celebrate: true),
+                DataBear(size: 80, animate: true, celebrating: true),
+                CheerEll(size: 80, animate: true, celebrating: true),
               ],
             ),
             const SizedBox(height: 16),
@@ -539,9 +539,9 @@ class _P31FoodSearchState extends State<P31FoodSearch>
               children: const [
                 ChefBunny(size: 80, animate: true, excited: true),
                 SizedBox(width: 16),
-                DataBear(size: 80, animate: true, celebrate: true),
+                DataBear(size: 80, animate: true, celebrating: true),
                 SizedBox(width: 16),
-                CheerEll(size: 80, animate: true, celebrate: true),
+                CheerEll(size: 80, animate: true, celebrating: true),
               ],
             ),
             const SizedBox(height: 40),
@@ -637,7 +637,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
           // Data Bear
           Column(
             children: [
-              const DataBear(size: 60, animate: true, celebrate: true),
+              const DataBear(size: 60, animate: true, celebrating: true),
               const SizedBox(height: 8),
               Text(
                 '🐻 熊仔',
@@ -718,7 +718,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DataBear(size: 60, animate: true, celebrate: true),
+            const DataBear(size: 60, animate: true, celebrating: true),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
