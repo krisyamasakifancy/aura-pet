@@ -169,6 +169,7 @@ class FurryCharacterState<T extends FurryCharacter> extends State<T>
 class DataBear extends FurryCharacter {
   final bool sleeping;
   final bool celebrating;
+  final bool thinking;  // 困惑/思考状态
   
   const DataBear({
     super.key,
@@ -177,6 +178,7 @@ class DataBear extends FurryCharacter {
     super.onTap,
     this.sleeping = false,
     this.celebrating = false,
+    this.thinking = false,
   });
   
   @override
@@ -189,6 +191,7 @@ class _DataBearState extends FurryCharacterState<DataBear> {
     return _DataBearPainter(
       sleeping: widget.sleeping,
       celebrating: widget.celebrating,
+      thinking: widget.thinking,
       bounceOffset: widget.animate ? _bounce.value : 0,
     );
   }
@@ -197,11 +200,13 @@ class _DataBearState extends FurryCharacterState<DataBear> {
 class _DataBearPainter extends CustomPainter {
   final bool sleeping;
   final bool celebrating;
+  final bool thinking;
   final double bounceOffset;
   
   _DataBearPainter({
     required this.sleeping,
     required this.celebrating,
+    required this.thinking,
     required this.bounceOffset,
   });
 
@@ -264,6 +269,8 @@ class _DataBearPainter extends CustomPainter {
       _drawNightcap(canvas, center, s);
     } else if (celebrating) {
       _drawCelebratingFace(canvas, center, s);
+    } else if (thinking) {
+      _drawThinkingFace(canvas, center, s);
     } else {
       _drawHappyFace(canvas, center, s);
     }
@@ -381,6 +388,57 @@ class _DataBearPainter extends CustomPainter {
     textPainter.layout();
     textPainter.paint(canvas, 
       Offset(center.dx + s * 0.7, center.dy - s * 0.7 + bounceOffset));
+  }
+  
+  void _drawThinkingFace(Canvas canvas, Offset center, double s) {
+    // 困惑的眼睛（一边上一边下）
+    final eyePaint = Paint()..color = Colors.black;
+    
+    // 左眼 - 困惑（问号眼）
+    canvas.drawCircle(
+      Offset(center.dx - s * 0.32, center.dy - s * 0.18 + bounceOffset),
+      s * 0.12, eyePaint,
+    );
+    
+    // 右眼 - 困惑
+    canvas.drawCircle(
+      Offset(center.dx + s * 0.32, center.dy - s * 0.12 + bounceOffset),
+      s * 0.12, eyePaint,
+    );
+    
+    // 高光
+    final highlightPaint = Paint()..color = Colors.white;
+    canvas.drawCircle(
+      Offset(center.dx - s * 0.28, center.dy - s * 0.22 + bounceOffset),
+      s * 0.04, highlightPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + s * 0.36, center.dy - s * 0.16 + bounceOffset),
+      s * 0.04, highlightPaint,
+    );
+    
+    // 嘴巴 - 困惑的 O 形
+    final mouthPaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    
+    canvas.drawCircle(
+      Offset(center.dx, center.dy + s * 0.28 + bounceOffset),
+      s * 0.1, mouthPaint,
+    );
+    
+    // 问号气泡
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '❓',
+        style: TextStyle(fontSize: 18),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, 
+      Offset(center.dx + s * 0.6, center.dy - s * 0.8 + bounceOffset));
   }
   
   void _drawNightcap(Canvas canvas, Offset center, double s) {
@@ -739,6 +797,7 @@ class _ChefBunnyPainter extends CustomPainter {
 class CheerEll extends FurryCharacter {
   final bool celebrating;
   final bool waving;
+  final bool thinking;  // 困惑/思考状态
   
   const CheerEll({
     super.key,
@@ -747,6 +806,7 @@ class CheerEll extends FurryCharacter {
     super.onTap,
     this.celebrating = false,
     this.waving = false,
+    this.thinking = false,
   });
   
   @override
@@ -759,6 +819,7 @@ class _CheerEllState extends FurryCharacterState<CheerEll> {
     return _CheerEllPainter(
       celebrating: widget.celebrating,
       waving: widget.waving,
+      thinking: widget.thinking,
       bounceOffset: widget.animate ? _bounce.value : 0,
     );
   }
@@ -767,11 +828,13 @@ class _CheerEllState extends FurryCharacterState<CheerEll> {
 class _CheerEllPainter extends CustomPainter {
   final bool celebrating;
   final bool waving;
+  final bool thinking;
   final double bounceOffset;
   
   _CheerEllPainter({
     required this.celebrating,
     required this.waving,
+    required this.thinking,
     required this.bounceOffset,
   });
 
@@ -813,7 +876,11 @@ class _CheerEllPainter extends CustomPainter {
       _drawCelebratingFace(canvas, center, s);
     } else if (waving) {
       _drawWavingFace(canvas, center, s);
+    } else if (thinking) {
+      _drawThinkingFace(canvas, center, s);
     } else {
+      _drawHappyFace(canvas, center, s);
+    }
       _drawHappyFace(canvas, center, s);
     }
     
@@ -952,6 +1019,54 @@ class _CheerEllPainter extends CustomPainter {
       ),
       0, math.pi, false, mouthPaint,
     );
+  }
+  
+  void _drawThinkingFace(Canvas canvas, Offset center, double s) {
+    // 困惑的眼睛
+    final eyePaint = Paint()..color = const Color(0xFF4A4A4A);
+    
+    canvas.drawCircle(
+      Offset(center.dx - s * 0.25, center.dy - s * 0.08 + bounceOffset),
+      s * 0.12, eyePaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + s * 0.25, center.dy - s * 0.02 + bounceOffset),
+      s * 0.12, eyePaint,
+    );
+    
+    // 高光
+    final highlightPaint = Paint()..color = Colors.white;
+    canvas.drawCircle(
+      Offset(center.dx - s * 0.21, center.dy - s * 0.12 + bounceOffset),
+      s * 0.04, highlightPaint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + s * 0.29, center.dy - s * 0.06 + bounceOffset),
+      s * 0.04, highlightPaint,
+    );
+    
+    // 嘴巴 - O 形困惑
+    final mouthPaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    
+    canvas.drawCircle(
+      Offset(center.dx, center.dy + s * 0.32 + bounceOffset),
+      s * 0.08, mouthPaint,
+    );
+    
+    // 问号气泡
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '❓',
+        style: TextStyle(fontSize: 16),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, 
+      Offset(center.dx + s * 0.5, center.dy - s * 0.8 + bounceOffset));
   }
   
   void _drawCelebratingFace(Canvas canvas, Offset center, double s) {
