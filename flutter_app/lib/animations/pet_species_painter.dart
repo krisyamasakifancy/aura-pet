@@ -615,7 +615,7 @@ class PetSpeciesPainter extends CustomPainter {
   void _drawWings(Canvas canvas) {
     final wingPaint = Paint()
       ..color = secondaryColor.withOpacity(0.6)
-      ..style = PaintingStyle.fill];
+      ..style = PaintingStyle.fill;
     
     // 左翼
     canvas.save();

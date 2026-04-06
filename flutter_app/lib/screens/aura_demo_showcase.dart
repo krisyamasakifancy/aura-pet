@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'dart:ui';
+import 'dart:math' as math;
 
 /// 全量屏幕展示器 - 45屏视觉全家桶
 /// 单页垂直滚动 + 预渲染优化 + Spring Physics 转场

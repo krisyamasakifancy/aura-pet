@@ -127,7 +127,17 @@ class _BitePalOnboardingState extends State<BitePalOnboarding> {
   void _updateQuote() {
     setState(() {
       // Default motivational quote
-      _currentQuote = QuoteEngine.instance.getMotivationQuote();
+      _currentQuote = '💪 坚持下去，你是最棒的！';
+    });
+  }
+
+  void _onStateChanged() {
+    // Handle state changes
+  }
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
     });
   }
 
