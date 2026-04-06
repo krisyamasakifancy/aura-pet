@@ -64,7 +64,7 @@ class _P19UserReviewsState extends State<P19UserReviews> {
                     children: [
                       // Stars
                       Row(
-                        mainAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           review['rating'] as int,
                           (_) => const Icon(Icons.star, color: Colors.amber, size: 28),
@@ -96,7 +96,7 @@ class _P19UserReviewsState extends State<P19UserReviews> {
             ),
             const SizedBox(height: 16),
             Row(
-              mainAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: _reviews.asMap().entries.map((e) {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -127,7 +127,7 @@ class _P19UserReviewsState extends State<P19UserReviews> {
               ],
             ),
             const SizedBox(height: 16),
-            CapsuleButton(text: 'Continue', onPressed: onNext),
+            CapsuleButton(text: 'Continue', onPressed: widget.onNext),
           ],
         ),
       ),

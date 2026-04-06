@@ -308,7 +308,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: FurryColors.warmGradient,
+                gradient: FurryTheme.warmGradient,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -405,7 +405,7 @@ class _P31FoodSearchState extends State<P31FoodSearch>
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            gradient: FurryColors.warmGradient,
+            gradient: FurryTheme.warmGradient,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
